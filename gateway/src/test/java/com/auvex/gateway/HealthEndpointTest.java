@@ -4,22 +4,21 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.auvex.gateway.support.AbstractPostgresIntegrationTest;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.web.servlet.MockMvc;
 
 /**
  * Proves the gateway comes up as a real web service and reports its health.
  *
  * <p>The docker-compose stack and, later, the AWS load balancer both decide whether the gateway is
- * alive by calling /actuator/health. This test pins that contract so it can't silently break: the
- * endpoint must exist and report UP once the context is ready.
+ * alive by calling /actuator/health. With a real database wired in (base class), this also confirms
+ * the datasource health contributes "UP" rather than dragging the probe down.
  */
-@SpringBootTest
 @AutoConfigureMockMvc
-class HealthEndpointTest {
+class HealthEndpointTest extends AbstractPostgresIntegrationTest {
 
   @Autowired private MockMvc mockMvc;
 
