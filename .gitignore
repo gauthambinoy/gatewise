@@ -9,6 +9,7 @@ JOURNAL.md
 TECHNICAL_REPORT.md
 docs/JOURNAL.md
 docs/TECHNICAL_REPORT.md
+docs/design/
 
 # build artifacts
 .gradle/

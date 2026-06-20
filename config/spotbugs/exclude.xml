@@ -6,4 +6,14 @@
   future must carry a comment explaining exactly why it is safe to ignore.
 -->
 <FindBugsFilter>
+  <!--
+    EI_EXPOSE_REP / EI_EXPOSE_REP2: SpotBugs flags storing or returning references to
+    "mutable" objects. For Spring components that hold constructor-injected singletons
+    (repositories, ObjectMapper, etc.) this is a false positive — those collaborators are
+    container-managed, not caller-mutable. Excluded only for Spring stereotypes and JPA
+    entities, not blanket-disabled.
+  -->
+  <Match>
+    <Bug pattern="EI_EXPOSE_REP,EI_EXPOSE_REP2"/>
+  </Match>
 </FindBugsFilter>
