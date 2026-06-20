@@ -1,5 +1,8 @@
 package com.auvex.gateway.web;
 
+import com.auvex.gateway.audit.AuditEntry;
+import com.auvex.gateway.audit.AuditService;
+import com.auvex.gateway.audit.Verdict;
 import com.auvex.gateway.auth.TenantContext;
 import com.auvex.gateway.policy.Decision;
 import com.auvex.gateway.policy.EvaluationContext;
@@ -14,6 +17,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.time.Instant;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
@@ -27,9 +31,10 @@ import org.springframework.web.bind.annotation.RestController;
 /**
  * The gateway hot path: an OpenAI-compatible chat-completions endpoint.
  *
- * <p>Each request runs the full pipeline — validate, route the model alias, redact the prompt, then
- * check the tenant's policy — before it's forwarded. A policy denial stops it here with a 403; the
- * provider only ever sees an allowed, already-redacted request.
+ * <p>Each request runs the full pipeline — validate, route the model alias, redact the prompt,
+ * check the tenant's policy, and write an immutable audit record — before it's forwarded. A policy
+ * denial stops it with a 403; the provider only ever sees an allowed, already-redacted request, and
+ * every decision is recorded either way.
  */
 @RestController
 @RequestMapping("/v1")
@@ -39,6 +44,7 @@ public class ChatCompletionsController {
   private final ModelRouter router;
   private final PromptRedactor redactor;
   private final PolicyEnforcement policy;
+  private final AuditService audit;
   private final ObjectMapper objectMapper;
 
   public ChatCompletionsController(
@@ -46,11 +52,13 @@ public class ChatCompletionsController {
       ModelRouter router,
       PromptRedactor redactor,
       PolicyEnforcement policy,
+      AuditService audit,
       ObjectMapper objectMapper) {
     this.proxy = proxy;
     this.router = router;
     this.redactor = redactor;
     this.policy = policy;
+    this.audit = audit;
     this.objectMapper = objectMapper;
   }
 
@@ -67,12 +75,29 @@ public class ChatCompletionsController {
     // Mask sensitive data out of the prompt, and learn which data types it contained.
     List<Match> found = redactor.redactInPlace(body);
 
-    // Enforce the tenant's policy; a denial never reaches the provider.
-    Decision decision = policy.evaluate(contextFor(body, providerModel, found));
+    // Enforce the tenant's policy.
+    EvaluationContext ctx = contextFor(body, providerModel, found);
+    Decision decision = policy.evaluate(ctx);
+    Verdict verdict =
+        !decision.allowed()
+            ? Verdict.BLOCKED
+            : found.isEmpty() ? Verdict.ALLOWED : Verdict.REDACTED;
+
+    // Record the decision immutably, whether it's allowed or blocked.
+    audit.append(
+        new AuditEntry(
+            ctx.tenantId(),
+            UUID.randomUUID(),
+            ctx.actor(),
+            providerModel,
+            verdict,
+            redactedPrompt(body),
+            null,
+            Instant.now()));
+
     if (!decision.allowed()) {
       throw new PolicyDeniedException(decision.reason());
     }
-
     proxy.relay(objectMapper.writeValueAsBytes(body), response);
   }
 
@@ -89,6 +114,18 @@ public class ChatCompletionsController {
             : "unknown";
     UUID tenantId = TenantContext.require().tenantId();
     return new EvaluationContext(tenantId, providerModel, actor, dataTypes);
+  }
+
+  // The already-redacted prompt text, joined across messages, as stored in the audit log.
+  private static String redactedPrompt(JsonNode body) {
+    StringBuilder sb = new StringBuilder();
+    for (JsonNode message : body.get("messages")) {
+      if (sb.length() > 0) {
+        sb.append('\n');
+      }
+      sb.append(message.path("content").asText(""));
+    }
+    return sb.toString();
   }
 
   // Reject obvious shape errors early with a clear message; the provider never sees them.
