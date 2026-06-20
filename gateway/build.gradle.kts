@@ -8,9 +8,12 @@ description =
     "Auvex gateway — the proxy hot path that redacts, routes, governs and logs every LLM call."
 
 dependencies {
-    // Core Spring context only for now. Web, data and the proxy machinery arrive
-    // in their own roadmap slices so each ships with its own tests.
-    implementation("org.springframework.boot:spring-boot-starter")
+    // Web stack so the gateway runs as a real HTTP service, plus Actuator for a
+    // /actuator/health probe used by the docker-compose healthcheck now and the
+    // AWS load balancer later. The proxy / redaction / policy machinery lands in
+    // its own roadmap slices, each shipping with its own tests.
+    implementation("org.springframework.boot:spring-boot-starter-web")
+    implementation("org.springframework.boot:spring-boot-starter-actuator")
 
     testImplementation("org.springframework.boot:spring-boot-starter-test")
 }
