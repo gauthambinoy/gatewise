@@ -1,0 +1,53 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Auvex · Dashboard</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.31.0/dist/tabler-icons.min.css">
+<link rel="stylesheet" href="styles.css"></head><body>
+<div class="topbar"><a class="back" href="index.html"><i class="ti ti-arrow-left"></i>All screens</a><span class="name">Dashboard</span><span style="font-size:12px;color:var(--color-text-tertiary)">Auvex design</span></div>
+<div class="wrap full">
+
+<div style="display:flex; gap:0; border:0.5px solid var(--color-border-tertiary); border-radius:var(--border-radius-lg); overflow:hidden; min-height:520px;">
+  <div style="width:170px; background:var(--color-background-secondary); border-right:0.5px solid var(--color-border-tertiary); padding:16px 12px; display:flex; flex-direction:column; gap:4px;">
+    <div style="display:flex; align-items:center; gap:8px; padding:4px 8px 16px;"><div style="width:26px; height:26px; border-radius:7px; background:var(--color-text-info); display:flex; align-items:center; justify-content:center;"><i class="ti ti-shield-lock" style="font-size:16px; color:var(--color-background-primary);"></i></div><span style="font-size:16px; font-weight:500;">Auvex</span></div>
+    <div style="display:flex; align-items:center; gap:10px; padding:8px 10px; border-radius:var(--border-radius-md); background:var(--color-background-info); color:var(--color-text-info); font-size:13px; font-weight:500;"><i class="ti ti-layout-dashboard" style="font-size:17px;"></i>Dashboard</div>
+    <div style="display:flex; align-items:center; gap:10px; padding:8px 10px; color:var(--color-text-secondary); font-size:13px;"><i class="ti ti-shield-check" style="font-size:17px;"></i>Policies</div>
+    <div style="display:flex; align-items:center; gap:10px; padding:8px 10px; color:var(--color-text-secondary); font-size:13px;"><i class="ti ti-list-search" style="font-size:17px;"></i>Audit log</div>
+    <div style="display:flex; align-items:center; gap:10px; padding:8px 10px; color:var(--color-text-secondary); font-size:13px;"><i class="ti ti-chart-bar" style="font-size:17px;"></i>Usage &amp; cost</div>
+    <div style="display:flex; align-items:center; gap:10px; padding:8px 10px; color:var(--color-text-secondary); font-size:13px;"><i class="ti ti-router" style="font-size:17px;"></i>Models</div>
+    <div style="margin-top:auto; display:flex; align-items:center; gap:10px; padding:8px 10px; color:var(--color-text-secondary); font-size:13px;"><i class="ti ti-settings" style="font-size:17px;"></i>Settings</div>
+  </div>
+  <div style="flex:1; padding:18px 20px; min-width:0;">
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:18px;"><div><div style="font-size:18px; font-weight:500;">Overview</div><div style="font-size:12px; color:var(--color-text-tertiary);">Acme Corp · live traffic</div></div><div style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--color-text-success);"><span style="width:8px; height:8px; border-radius:50%; background:var(--color-text-success); display:inline-block;"></span>Gateway healthy</div></div>
+    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(120px,1fr)); gap:12px; margin-bottom:16px;">
+      <div style="background:var(--color-background-secondary); border-radius:var(--border-radius-md); padding:12px 14px;"><div style="font-size:12px; color:var(--color-text-secondary);">Requests today</div><div style="font-size:23px; font-weight:500;">48,210</div></div>
+      <div style="background:var(--color-background-secondary); border-radius:var(--border-radius-md); padding:12px 14px;"><div style="font-size:12px; color:var(--color-text-secondary);">PII redacted</div><div style="font-size:23px; font-weight:500; color:var(--color-text-info);">1,934</div></div>
+      <div style="background:var(--color-background-secondary); border-radius:var(--border-radius-md); padding:12px 14px;"><div style="font-size:12px; color:var(--color-text-secondary);">Blocked</div><div style="font-size:23px; font-weight:500; color:var(--color-text-danger);">76</div></div>
+      <div style="background:var(--color-background-secondary); border-radius:var(--border-radius-md); padding:12px 14px;"><div style="font-size:12px; color:var(--color-text-secondary);">Cost today</div><div style="font-size:23px; font-weight:500;">$312</div></div>
+    </div>
+    <div style="display:grid; grid-template-columns:1.5fr 1fr; gap:16px;">
+      <div style="background:var(--color-background-primary); border:0.5px solid var(--color-border-tertiary); border-radius:var(--border-radius-lg); padding:14px 16px;">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;"><span style="font-size:14px; font-weight:500;">Recent requests</span><span style="font-size:12px; color:var(--color-text-tertiary);">live</span></div>
+        <div style="display:flex; align-items:center; gap:10px; padding:8px 0; border-top:0.5px solid var(--color-border-tertiary);"><i class="ti ti-circle-check" style="font-size:18px; color:var(--color-text-success);"></i><div style="flex:1; min-width:0;"><div style="font-size:13px;">gpt-4o · support-bot</div><div style="font-size:11px; color:var(--color-text-tertiary);">allowed · 820ms</div></div><span style="font-size:11px; color:var(--color-text-tertiary);">2s ago</span></div>
+        <div style="display:flex; align-items:center; gap:10px; padding:8px 0; border-top:0.5px solid var(--color-border-tertiary);"><i class="ti ti-eye-off" style="font-size:18px; color:var(--color-text-info);"></i><div style="flex:1; min-width:0;"><div style="font-size:13px;">claude-3.5 · finance-app</div><div style="font-size:11px; color:var(--color-text-info);">2 emails + 1 card redacted</div></div><span style="font-size:11px; color:var(--color-text-tertiary);">9s ago</span></div>
+        <div style="display:flex; align-items:center; gap:10px; padding:8px 0; border-top:0.5px solid var(--color-border-tertiary);"><i class="ti ti-ban" style="font-size:18px; color:var(--color-text-danger);"></i><div style="flex:1; min-width:0;"><div style="font-size:13px;">gpt-4o · hr-tools</div><div style="font-size:11px; color:var(--color-text-danger);">blocked · policy: no-PII-to-external</div></div><span style="font-size:11px; color:var(--color-text-tertiary);">14s ago</span></div>
+        <div style="display:flex; align-items:center; gap:10px; padding:8px 0; border-top:0.5px solid var(--color-border-tertiary);"><i class="ti ti-circle-check" style="font-size:18px; color:var(--color-text-success);"></i><div style="flex:1; min-width:0;"><div style="font-size:13px;">mistral-large · data-team</div><div style="font-size:11px; color:var(--color-text-tertiary);">allowed · cached · 40ms</div></div><span style="font-size:11px; color:var(--color-text-tertiary);">21s ago</span></div>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:16px;">
+        <div style="background:var(--color-background-primary); border:0.5px solid var(--color-border-tertiary); border-radius:var(--border-radius-lg); padding:14px 16px;">
+          <div style="font-size:14px; font-weight:500; margin-bottom:12px;">Leaks prevented</div>
+          <div style="display:flex; flex-direction:column; gap:10px;">
+            <div><div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:4px;"><span style="color:var(--color-text-secondary);">Emails</span><span>1,120</span></div><div style="height:6px; background:var(--color-background-tertiary); border-radius:4px;"><div style="width:80%; height:6px; background:var(--color-text-info); border-radius:4px;"></div></div></div>
+            <div><div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:4px;"><span style="color:var(--color-text-secondary);">Cards / IBAN</span><span>540</span></div><div style="height:6px; background:var(--color-background-tertiary); border-radius:4px;"><div style="width:48%; height:6px; background:var(--color-text-info); border-radius:4px;"></div></div></div>
+            <div><div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:4px;"><span style="color:var(--color-text-secondary);">Secrets / keys</span><span>274</span></div><div style="height:6px; background:var(--color-background-tertiary); border-radius:4px;"><div style="width:25%; height:6px; background:var(--color-text-info); border-radius:4px;"></div></div></div>
+          </div>
+        </div>
+        <div style="background:var(--color-background-primary); border:0.5px solid var(--color-border-tertiary); border-radius:var(--border-radius-lg); padding:14px 16px;">
+          <div style="font-size:14px; font-weight:500; margin-bottom:10px;">Top models</div>
+          <div style="display:flex; justify-content:space-between; font-size:13px; padding:5px 0; color:var(--color-text-secondary);"><span style="color:var(--color-text-primary);">gpt-4o</span><span>51%</span></div>
+          <div style="display:flex; justify-content:space-between; font-size:13px; padding:5px 0; color:var(--color-text-secondary);"><span style="color:var(--color-text-primary);">claude-3.5</span><span>33%</span></div>
+          <div style="display:flex; justify-content:space-between; font-size:13px; padding:5px 0; color:var(--color-text-secondary);"><span style="color:var(--color-text-primary);">mistral-large</span><span>16%</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div></body></html>

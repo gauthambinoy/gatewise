@@ -2,6 +2,7 @@ package com.auvex.gateway;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 
 /**
  * Boots the Auvex gateway.
@@ -12,6 +13,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  * just the entry point that stands up the Spring context all of that hangs off.
  */
 @SpringBootApplication
+@ConfigurationPropertiesScan // picks up @ConfigurationProperties types like OpenRouterProperties
 public class GatewayApplication {
 
   /** Starts the Spring context and, in later slices, the gateway HTTP server. */
