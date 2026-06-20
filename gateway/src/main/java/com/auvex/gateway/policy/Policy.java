@@ -68,6 +68,22 @@ public class Policy {
     this.enabled = enabled;
   }
 
+  /** Replaces this rule's mutable fields (used by the update endpoint). */
+  public void update(
+      String name,
+      String effect,
+      String resourceType,
+      String resourceValue,
+      int priority,
+      boolean enabled) {
+    this.name = name;
+    this.effect = effect;
+    this.resourceType = resourceType;
+    this.resourceValue = resourceValue;
+    this.priority = priority;
+    this.enabled = enabled;
+  }
+
   public UUID getId() {
     return id;
   }

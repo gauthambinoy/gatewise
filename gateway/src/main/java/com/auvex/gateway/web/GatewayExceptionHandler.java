@@ -7,6 +7,7 @@ import java.util.Map;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -48,6 +49,23 @@ public class GatewayExceptionHandler {
   @ExceptionHandler(UpstreamUnavailableException.class)
   public ResponseEntity<Map<String, Object>> handleUpstream(UpstreamUnavailableException e) {
     return error(HttpStatus.GATEWAY_TIMEOUT, e.getMessage(), "upstream_error");
+  }
+
+  /** A resource that doesn't exist for this tenant → 404. */
+  @ExceptionHandler(NotFoundException.class)
+  public ResponseEntity<Map<String, Object>> handleNotFound(NotFoundException e) {
+    return error(HttpStatus.NOT_FOUND, e.getMessage(), "not_found");
+  }
+
+  /** Bean-validation failure on a request body → 400, naming the first bad field. */
+  @ExceptionHandler(MethodArgumentNotValidException.class)
+  public ResponseEntity<Map<String, Object>> handleValidation(MethodArgumentNotValidException e) {
+    String message =
+        e.getBindingResult().getFieldErrors().stream()
+            .findFirst()
+            .map(fieldError -> fieldError.getField() + ": " + fieldError.getDefaultMessage())
+            .orElse("Invalid request.");
+    return error(HttpStatus.BAD_REQUEST, message, "invalid_request_error");
   }
 
   private ResponseEntity<Map<String, Object>> error(
