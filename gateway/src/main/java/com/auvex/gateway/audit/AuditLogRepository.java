@@ -6,9 +6,30 @@ import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 /** Data access for audit-log rows. */
 public interface AuditLogRepository extends JpaRepository<AuditLog, Long> {
+
+  /** Total calls for a tenant (for the usage summary). */
+  long countByTenantId(UUID tenantId);
+
+  /** Calls for a tenant with a given verdict. */
+  long countByTenantIdAndVerdict(UUID tenantId, String verdict);
+
+  /** Per-model call counts for a tenant. */
+  @Query(
+      "SELECT a.model AS model, COUNT(a) AS count FROM AuditLog a"
+          + " WHERE a.tenantId = :tenantId GROUP BY a.model")
+  List<ModelCount> countByModel(@Param("tenantId") UUID tenantId);
+
+  /** Projection for the per-model aggregation. */
+  interface ModelCount {
+    String getModel();
+
+    long getCount();
+  }
 
   /** The current head of a tenant's chain (its most recent entry), if any. */
   Optional<AuditLog> findTopByTenantIdOrderByIdDesc(UUID tenantId);
