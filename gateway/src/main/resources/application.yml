@@ -2,7 +2,19 @@ spring:
   application:
     name: auvex-gateway
 
-# The HTTP listener is wired up when the proxy endpoint lands (roadmap 2.1).
 # Port is env-overridable so the same image runs unchanged in any environment.
 server:
   port: ${SERVER_PORT:8080}
+
+# Actuator exposes a health probe for container and load-balancer checks. Kept
+# to health + info only, with no details over HTTP, so nothing sensitive leaks.
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: never
