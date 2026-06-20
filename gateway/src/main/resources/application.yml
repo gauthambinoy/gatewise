@@ -1,0 +1,8 @@
+spring:
+  application:
+    name: auvex-gateway
+
+# The HTTP listener is wired up when the proxy endpoint lands (roadmap 2.1).
+# Port is env-overridable so the same image runs unchanged in any environment.
+server:
+  port: ${SERVER_PORT:8080}

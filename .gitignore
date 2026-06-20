@@ -1,0 +1,27 @@
+# secrets — never commit
+.env
+*.env
+!.env.example
+
+# private working docs (CLAUDE.md §7b) — keep local, never push
+ROADMAP.md
+JOURNAL.md
+TECHNICAL_REPORT.md
+docs/JOURNAL.md
+docs/TECHNICAL_REPORT.md
+
+# build artifacts
+.gradle/
+build/
+bin/
+out/
+node_modules/
+dist/
+coverage/
+*.log
+
+# os / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

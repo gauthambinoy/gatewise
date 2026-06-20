@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  SpotBugs exclusion filter.
+
+  Empty by design: we fix findings rather than hide them. Anything added here in
+  future must carry a comment explaining exactly why it is safe to ignore.
+-->
+<FindBugsFilter>
+</FindBugsFilter>

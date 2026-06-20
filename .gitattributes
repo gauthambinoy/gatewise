@@ -1,0 +1,19 @@
+# Keep line endings consistent everywhere, regardless of who clones on what OS.
+# Text files are stored as LF in the repo; tooling and CI (Linux) stay happy.
+* text=auto eol=lf
+
+# Windows batch files must stay CRLF or they misbehave on Windows.
+*.bat text eol=crlf
+
+# The Gradle wrapper is a shell script — it MUST be LF so Linux CI can run it.
+gradlew text eol=lf
+
+# Binary assets: never apply line-ending or text filters to these.
+*.jar binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.woff binary
+*.woff2 binary
