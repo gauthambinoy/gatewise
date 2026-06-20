@@ -5,6 +5,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.auvex.gateway.audit.AuditLog;
+import com.auvex.gateway.audit.AuditLogRepository;
 import com.auvex.gateway.auth.ApiKeyHasher;
 import com.auvex.gateway.policy.Policy;
 import com.auvex.gateway.policy.PolicyRepository;
@@ -15,6 +17,7 @@ import com.auvex.gateway.tenant.Tenant;
 import com.auvex.gateway.tenant.TenantRepository;
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import okhttp3.mockwebserver.MockResponse;
@@ -59,6 +62,7 @@ class ChatCompletionsProxyTest extends AbstractPostgresIntegrationTest {
   @Autowired private TenantRepository tenants;
   @Autowired private ApiKeyRepository apiKeys;
   @Autowired private PolicyRepository policies;
+  @Autowired private AuditLogRepository auditLog;
 
   // "smart" is a configured alias that routes to the provider model openai/gpt-4o.
   private static final String VALID_BODY =
@@ -250,6 +254,31 @@ class ChatCompletionsProxyTest extends AbstractPostgresIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(body))
         .andExpect(status().isForbidden());
+  }
+
+  @Test
+  void auditStoresTheRedactedPromptNotTheRawData() throws Exception { // T28 (security)
+    UPSTREAM.enqueue(
+        new MockResponse().setHeader("Content-Type", "application/json").setBody("{\"ok\":true}"));
+    TenantAuth ta = newTenant();
+    String body =
+        "{\"model\":\"smart\",\"messages\":[{\"role\":\"user\","
+            + "\"content\":\"charge card 4012888888881881\"}]}";
+
+    mvc.perform(
+            post("/v1/chat/completions")
+                .header("Authorization", "Bearer " + ta.rawKey())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body))
+        .andExpect(status().isOk());
+
+    List<AuditLog> rows = auditLog.findByTenantIdOrderByIdAsc(ta.tenantId());
+    assertThat(rows).isNotEmpty();
+    AuditLog last = rows.get(rows.size() - 1);
+    assertThat(last.getPromptRedacted())
+        .doesNotContain("4012888888881881")
+        .contains("CARD_REDACTED");
+    assertThat(last.getVerdict()).isEqualTo("redacted");
   }
 
   @Test
