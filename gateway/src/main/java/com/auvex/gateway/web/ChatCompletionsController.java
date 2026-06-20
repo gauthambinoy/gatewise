@@ -1,8 +1,10 @@
 package com.auvex.gateway.web;
 
 import com.auvex.gateway.proxy.UpstreamProxy;
+import com.auvex.gateway.routing.ModelRouter;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -22,10 +24,13 @@ import org.springframework.web.bind.annotation.RestController;
 public class ChatCompletionsController {
 
   private final UpstreamProxy proxy;
+  private final ModelRouter router;
   private final ObjectMapper objectMapper;
 
-  public ChatCompletionsController(UpstreamProxy proxy, ObjectMapper objectMapper) {
+  public ChatCompletionsController(
+      UpstreamProxy proxy, ModelRouter router, ObjectMapper objectMapper) {
     this.proxy = proxy;
+    this.router = router;
     this.objectMapper = objectMapper;
   }
 
@@ -34,6 +39,10 @@ public class ChatCompletionsController {
   public void chatCompletions(@RequestBody JsonNode body, HttpServletResponse response)
       throws IOException {
     validate(body);
+    // Resolve the client's alias to a real provider model and rewrite it before forwarding;
+    // an unknown alias is refused here (the routing table is the model allow-list).
+    String providerModel = router.resolve(body.get("model").asText());
+    ((ObjectNode) body).put("model", providerModel);
     proxy.relay(objectMapper.writeValueAsBytes(body), response);
   }
 

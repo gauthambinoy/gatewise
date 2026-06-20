@@ -49,3 +49,12 @@ auvex:
     base-url: ${OPENROUTER_BASE_URL:https://openrouter.ai/api/v1}
     model: ${OPENROUTER_MODEL:openai/gpt-oss-120b:free}
     api-key: ${OPENROUTER_API_KEY:}
+
+  # Client-facing model aliases → the real provider model each routes to. One alias
+  # switches the whole upstream target, and anything not listed here is refused —
+  # so this table is also the model allow-list.
+  routing:
+    models:
+      fast: openai/gpt-4o-mini
+      smart: openai/gpt-4o
+      default: openai/gpt-oss-120b:free

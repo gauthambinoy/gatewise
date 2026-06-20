@@ -1,6 +1,7 @@
 package com.auvex.gateway.web;
 
 import com.auvex.gateway.proxy.UpstreamUnavailableException;
+import com.auvex.gateway.routing.ModelNotAllowedException;
 import java.util.Map;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -28,6 +29,12 @@ public class GatewayExceptionHandler {
   public ResponseEntity<Map<String, Object>> handleUnreadable(HttpMessageNotReadableException e) {
     return error(
         HttpStatus.BAD_REQUEST, "Request body is not valid JSON.", "invalid_request_error");
+  }
+
+  /** A request for a model alias the gateway isn't configured to allow → 400. */
+  @ExceptionHandler(ModelNotAllowedException.class)
+  public ResponseEntity<Map<String, Object>> handleModelNotAllowed(ModelNotAllowedException e) {
+    return error(HttpStatus.BAD_REQUEST, e.getMessage(), "invalid_request_error");
   }
 
   /** Upstream provider unreachable or too slow → 504. */

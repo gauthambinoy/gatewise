@@ -57,8 +57,9 @@ class ChatCompletionsProxyTest extends AbstractPostgresIntegrationTest {
   @Autowired private TenantRepository tenants;
   @Autowired private ApiKeyRepository apiKeys;
 
+  // "smart" is a configured alias that routes to the provider model openai/gpt-4o.
   private static final String VALID_BODY =
-      "{\"model\":\"openai/gpt-4o\",\"messages\":[{\"role\":\"user\",\"content\":\"hey\"}]}";
+      "{\"model\":\"smart\",\"messages\":[{\"role\":\"user\",\"content\":\"hey\"}]}";
 
   // Creates a tenant + active key and returns the raw key to authenticate with.
   private String authKey() {
@@ -150,6 +151,39 @@ class ChatCompletionsProxyTest extends AbstractPostgresIntegrationTest {
   }
 
   @Test
+  void aliasIsRewrittenToProviderModel() throws Exception { // T16
+    UPSTREAM.enqueue(
+        new MockResponse().setHeader("Content-Type", "application/json").setBody("{\"ok\":true}"));
+    String key = authKey();
+    String body = "{\"model\":\"fast\",\"messages\":[{\"role\":\"user\",\"content\":\"hi\"}]}";
+
+    mvc.perform(
+            post("/v1/chat/completions")
+                .header("Authorization", "Bearer " + key)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body))
+        .andExpect(status().isOk());
+
+    // The alias "fast" must reach the provider as openai/gpt-4o-mini, not as "fast".
+    String forwarded = UPSTREAM.takeRequest().getBody().readUtf8();
+    assertThat(forwarded).contains("openai/gpt-4o-mini").doesNotContain("\"fast\"");
+  }
+
+  @Test
+  void unknownModelIsRejected() throws Exception { // T17
+    String key = authKey();
+    String body =
+        "{\"model\":\"no-such-model\",\"messages\":[{\"role\":\"user\",\"content\":\"hi\"}]}";
+
+    mvc.perform(
+            post("/v1/chat/completions")
+                .header("Authorization", "Bearer " + key)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body))
+        .andExpect(status().isBadRequest());
+  }
+
+  @Test
   void streamingResponseIsRelayed() throws Exception { // T15
     String sse =
         "data: {\"choices\":[{\"delta\":{\"content\":\"He\"}}]}\n\n"
@@ -159,7 +193,7 @@ class ChatCompletionsProxyTest extends AbstractPostgresIntegrationTest {
         new MockResponse().setHeader("Content-Type", "text/event-stream").setBody(sse));
     String key = authKey();
     String streamingBody =
-        "{\"model\":\"openai/gpt-4o\","
+        "{\"model\":\"smart\","
             + "\"messages\":[{\"role\":\"user\",\"content\":\"hi\"}],"
             + "\"stream\":true}";
 
