@@ -1,6 +1,12 @@
 package com.auvex.gateway.web;
 
+import com.auvex.gateway.auth.TenantContext;
+import com.auvex.gateway.policy.Decision;
+import com.auvex.gateway.policy.EvaluationContext;
+import com.auvex.gateway.policy.PolicyDeniedException;
+import com.auvex.gateway.policy.PolicyEnforcement;
 import com.auvex.gateway.proxy.UpstreamProxy;
+import com.auvex.gateway.redaction.Match;
 import com.auvex.gateway.redaction.PromptRedactor;
 import com.auvex.gateway.routing.ModelRouter;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -8,6 +14,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.List;
+import java.util.Locale;
+import java.util.Set;
+import java.util.UUID;
+import java.util.stream.Collectors;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -16,9 +27,9 @@ import org.springframework.web.bind.annotation.RestController;
 /**
  * The gateway hot path: an OpenAI-compatible chat-completions endpoint.
  *
- * <p>It validates the standard payload, then forwards it to the configured provider and relays the
- * response straight back (streamed responses included). Redaction, routing and policy enforcement
- * slot in around this in later slices; for now it's a faithful, authenticated passthrough.
+ * <p>Each request runs the full pipeline — validate, route the model alias, redact the prompt, then
+ * check the tenant's policy — before it's forwarded. A policy denial stops it here with a 403; the
+ * provider only ever sees an allowed, already-redacted request.
  */
 @RestController
 @RequestMapping("/v1")
@@ -27,13 +38,19 @@ public class ChatCompletionsController {
   private final UpstreamProxy proxy;
   private final ModelRouter router;
   private final PromptRedactor redactor;
+  private final PolicyEnforcement policy;
   private final ObjectMapper objectMapper;
 
   public ChatCompletionsController(
-      UpstreamProxy proxy, ModelRouter router, PromptRedactor redactor, ObjectMapper objectMapper) {
+      UpstreamProxy proxy,
+      ModelRouter router,
+      PromptRedactor redactor,
+      PolicyEnforcement policy,
+      ObjectMapper objectMapper) {
     this.proxy = proxy;
     this.router = router;
     this.redactor = redactor;
+    this.policy = policy;
     this.objectMapper = objectMapper;
   }
 
@@ -42,13 +59,36 @@ public class ChatCompletionsController {
   public void chatCompletions(@RequestBody JsonNode body, HttpServletResponse response)
       throws IOException {
     validate(body);
-    // Resolve the client's alias to a real provider model and rewrite it before forwarding;
-    // an unknown alias is refused here (the routing table is the model allow-list).
+
+    // Resolve the client's alias to a real provider model (the routing table is the allow-list).
     String providerModel = router.resolve(body.get("model").asText());
     ((ObjectNode) body).put("model", providerModel);
-    // Mask sensitive data out of the prompt before it leaves the network.
-    redactor.redactInPlace(body);
+
+    // Mask sensitive data out of the prompt, and learn which data types it contained.
+    List<Match> found = redactor.redactInPlace(body);
+
+    // Enforce the tenant's policy; a denial never reaches the provider.
+    Decision decision = policy.evaluate(contextFor(body, providerModel, found));
+    if (!decision.allowed()) {
+      throw new PolicyDeniedException(decision.reason());
+    }
+
     proxy.relay(objectMapper.writeValueAsBytes(body), response);
+  }
+
+  // Build the policy evaluation context from the tenant, model, caller and detected data types.
+  private static EvaluationContext contextFor(
+      JsonNode body, String providerModel, List<Match> found) {
+    Set<String> dataTypes =
+        found.stream()
+            .map(match -> match.type().name().toLowerCase(Locale.ROOT))
+            .collect(Collectors.toUnmodifiableSet());
+    String actor =
+        body.hasNonNull("user") && body.get("user").isTextual()
+            ? body.get("user").asText()
+            : "unknown";
+    UUID tenantId = TenantContext.require().tenantId();
+    return new EvaluationContext(tenantId, providerModel, actor, dataTypes);
   }
 
   // Reject obvious shape errors early with a clear message; the provider never sees them.

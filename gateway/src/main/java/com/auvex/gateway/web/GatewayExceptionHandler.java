@@ -1,5 +1,6 @@
 package com.auvex.gateway.web;
 
+import com.auvex.gateway.policy.PolicyDeniedException;
 import com.auvex.gateway.proxy.UpstreamUnavailableException;
 import com.auvex.gateway.routing.ModelNotAllowedException;
 import java.util.Map;
@@ -35,6 +36,12 @@ public class GatewayExceptionHandler {
   @ExceptionHandler(ModelNotAllowedException.class)
   public ResponseEntity<Map<String, Object>> handleModelNotAllowed(ModelNotAllowedException e) {
     return error(HttpStatus.BAD_REQUEST, e.getMessage(), "invalid_request_error");
+  }
+
+  /** A request blocked by the tenant's policy → 403. */
+  @ExceptionHandler(PolicyDeniedException.class)
+  public ResponseEntity<Map<String, Object>> handlePolicyDenied(PolicyDeniedException e) {
+    return error(HttpStatus.FORBIDDEN, e.getMessage(), "policy_violation");
   }
 
   /** Upstream provider unreachable or too slow → 504. */

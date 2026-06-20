@@ -6,6 +6,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.auvex.gateway.auth.ApiKeyHasher;
+import com.auvex.gateway.policy.Policy;
+import com.auvex.gateway.policy.PolicyRepository;
 import com.auvex.gateway.support.AbstractPostgresIntegrationTest;
 import com.auvex.gateway.tenant.ApiKey;
 import com.auvex.gateway.tenant.ApiKeyRepository;
@@ -56,6 +58,7 @@ class ChatCompletionsProxyTest extends AbstractPostgresIntegrationTest {
   @Autowired private MockMvc mvc;
   @Autowired private TenantRepository tenants;
   @Autowired private ApiKeyRepository apiKeys;
+  @Autowired private PolicyRepository policies;
 
   // "smart" is a configured alias that routes to the provider model openai/gpt-4o.
   private static final String VALID_BODY =
@@ -68,6 +71,16 @@ class ChatCompletionsProxyTest extends AbstractPostgresIntegrationTest {
     apiKeys.save(new ApiKey(t.getId(), "default", ApiKeyHasher.hash(raw), raw.substring(0, 12)));
     return raw;
   }
+
+  // Creates a fresh tenant + active key, returning the ids needed to attach policies.
+  private TenantAuth newTenant() {
+    Tenant t = tenants.save(new Tenant("Acme", "acme-" + UUID.randomUUID()));
+    String raw = "auvex_" + UUID.randomUUID().toString().replace("-", "");
+    apiKeys.save(new ApiKey(t.getId(), "default", ApiKeyHasher.hash(raw), raw.substring(0, 12)));
+    return new TenantAuth(t.getId(), raw);
+  }
+
+  private record TenantAuth(UUID tenantId, String rawKey) {}
 
   // The MockWebServer is shared across tests; drop any request recorded by an earlier
   // test so each test inspects only its own (a disconnected request has a null path).
@@ -191,6 +204,52 @@ class ChatCompletionsProxyTest extends AbstractPostgresIntegrationTest {
         .doesNotContain("4012888888881881")
         .doesNotContain("a@b.io")
         .contains("CARD_REDACTED");
+  }
+
+  @Test
+  void denyPolicyBlocksTheRequest() throws Exception {
+    TenantAuth ta = newTenant();
+    policies.save(new Policy(ta.tenantId(), "block-all", "deny", "model", "*", 100, true));
+
+    mvc.perform(
+            post("/v1/chat/completions")
+                .header("Authorization", "Bearer " + ta.rawKey())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(VALID_BODY))
+        .andExpect(status().isForbidden());
+  }
+
+  @Test
+  void allowPolicyPermitsTheRequest() throws Exception {
+    UPSTREAM.enqueue(
+        new MockResponse().setHeader("Content-Type", "application/json").setBody("{\"ok\":true}"));
+    TenantAuth ta = newTenant();
+    policies.save(new Policy(ta.tenantId(), "allow-all", "allow", "model", "*", 1, true));
+
+    mvc.perform(
+            post("/v1/chat/completions")
+                .header("Authorization", "Bearer " + ta.rawKey())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(VALID_BODY))
+        .andExpect(status().isOk());
+  }
+
+  @Test
+  void blockedDataTypeFromRedactionIsDenied() throws Exception {
+    TenantAuth ta = newTenant();
+    policies.save(new Policy(ta.tenantId(), "allow-all", "allow", "model", "*", 1, true));
+    policies.save(
+        new Policy(ta.tenantId(), "no-cards", "deny", "data_type", "credit_card", 100, true));
+    String body =
+        "{\"model\":\"smart\",\"messages\":[{\"role\":\"user\","
+            + "\"content\":\"pay with 4012888888881881\"}]}";
+
+    mvc.perform(
+            post("/v1/chat/completions")
+                .header("Authorization", "Bearer " + ta.rawKey())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body))
+        .andExpect(status().isForbidden());
   }
 
   @Test
