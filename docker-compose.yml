@@ -47,6 +47,10 @@ services:
       OPENROUTER_BASE_URL: ${OPENROUTER_BASE_URL:-https://openrouter.ai/api/v1}
       OPENROUTER_MODEL: ${OPENROUTER_MODEL:-openai/gpt-oss-120b:free}
       OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-local-dev-placeholder-key}
+      # Point the gateway at the postgres service; Flyway migrates on startup.
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-auvex}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-auvex}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-auvex}
     ports:
       - "${SERVER_PORT:-8080}:8080"
     depends_on:

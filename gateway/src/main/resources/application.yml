@@ -2,6 +2,21 @@ spring:
   application:
     name: auvex-gateway
 
+  # Postgres + Flyway. Flyway owns the schema via versioned SQL migrations;
+  # Hibernate only validates against it (ddl-auto: validate), so the running app
+  # and the migrations can never silently drift apart.
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/auvex}
+    username: ${SPRING_DATASOURCE_USERNAME:auvex}
+    password: ${SPRING_DATASOURCE_PASSWORD:auvex}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
 # Port is env-overridable so the same image runs unchanged in any environment.
 server:
   port: ${SERVER_PORT:8080}

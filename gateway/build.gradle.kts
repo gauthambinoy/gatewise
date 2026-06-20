@@ -17,8 +17,19 @@ dependencies {
     // Bean Validation (Hibernate Validator) so typed config can be checked at
     // startup — e.g. a missing API key fails the boot instead of a live call.
     implementation("org.springframework.boot:spring-boot-starter-validation")
+    // Persistence: JPA over Postgres, with Flyway owning the schema via versioned
+    // SQL migrations. The JDBC driver is needed only at runtime.
+    implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+    implementation("org.flywaydb:flyway-core")
+    implementation("org.flywaydb:flyway-database-postgresql")
+    runtimeOnly("org.postgresql:postgresql")
 
     testImplementation("org.springframework.boot:spring-boot-starter-test")
+    // Integration tests run against a real Postgres in a throwaway container, so
+    // they exercise the actual migrations and SQL rather than an in-memory fake.
+    testImplementation("org.springframework.boot:spring-boot-testcontainers")
+    testImplementation("org.testcontainers:junit-jupiter")
+    testImplementation("org.testcontainers:postgresql")
 }
 
 // Dependency versions are governed by the Spring Boot BOM (3.5.15) via the
