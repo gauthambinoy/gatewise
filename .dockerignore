@@ -1,0 +1,32 @@
+# Keep the build context small and force a clean in-image build — never ship
+# host build state, caches, secrets or local-only docs into the image.
+.git
+.gitignore
+.gitattributes
+
+# Gradle / build output (the image builds these itself)
+.gradle
+**/.gradle
+build
+**/build
+
+# Node (the console has its own image later)
+node_modules
+**/node_modules
+dist
+
+# Editors / OS
+.idea
+.vscode
+.DS_Store
+Thumbs.db
+*.log
+
+# Secrets and private working docs
+.env
+*.env
+!.env.example
+docs
+ROADMAP.md
+JOURNAL.md
+TECHNICAL_REPORT.md

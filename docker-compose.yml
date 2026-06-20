@@ -1,0 +1,60 @@
+name: auvex
+
+# One-command local stack: Postgres + Redis + the gateway, every service
+# health-gated so `docker compose up --wait` only returns once it's truly up.
+# Boots from a clean clone with no extra setup (CLAUDE.md §6d). Values fall back
+# to sane local defaults, so it runs without a .env file but honours one if present.
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-auvex}
+      POSTGRES_USER: ${POSTGRES_USER:-auvex}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-auvex}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      # $$ escapes compose interpolation so the shell expands the container's env.
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-auvex} -d $${POSTGRES_DB:-auvex}"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  redis:
+    image: redis:7-alpine
+    # No persistence locally — it's a cache; keep it fast and disposable.
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+
+  gateway:
+    build:
+      context: .
+      dockerfile: gateway/Dockerfile
+    environment:
+      SERVER_PORT: 8080
+    ports:
+      - "${SERVER_PORT:-8080}:8080"
+    depends_on:
+      # Don't start the gateway until its backing services are actually ready.
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8080/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 45s
+
+volumes:
+  pgdata:
