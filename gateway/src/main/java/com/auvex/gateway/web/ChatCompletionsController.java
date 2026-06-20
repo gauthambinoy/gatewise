@@ -1,6 +1,7 @@
 package com.auvex.gateway.web;
 
 import com.auvex.gateway.proxy.UpstreamProxy;
+import com.auvex.gateway.redaction.PromptRedactor;
 import com.auvex.gateway.routing.ModelRouter;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -25,12 +26,14 @@ public class ChatCompletionsController {
 
   private final UpstreamProxy proxy;
   private final ModelRouter router;
+  private final PromptRedactor redactor;
   private final ObjectMapper objectMapper;
 
   public ChatCompletionsController(
-      UpstreamProxy proxy, ModelRouter router, ObjectMapper objectMapper) {
+      UpstreamProxy proxy, ModelRouter router, PromptRedactor redactor, ObjectMapper objectMapper) {
     this.proxy = proxy;
     this.router = router;
+    this.redactor = redactor;
     this.objectMapper = objectMapper;
   }
 
@@ -43,6 +46,8 @@ public class ChatCompletionsController {
     // an unknown alias is refused here (the routing table is the model allow-list).
     String providerModel = router.resolve(body.get("model").asText());
     ((ObjectNode) body).put("model", providerModel);
+    // Mask sensitive data out of the prompt before it leaves the network.
+    redactor.redactInPlace(body);
     proxy.relay(objectMapper.writeValueAsBytes(body), response);
   }
 

@@ -170,6 +170,30 @@ class ChatCompletionsProxyTest extends AbstractPostgresIntegrationTest {
   }
 
   @Test
+  void redactsSensitiveDataBeforeForwarding() throws Exception { // redaction wired into the proxy
+    UPSTREAM.enqueue(
+        new MockResponse().setHeader("Content-Type", "application/json").setBody("{\"ok\":true}"));
+    String key = authKey();
+    String body =
+        "{\"model\":\"smart\",\"messages\":[{\"role\":\"user\","
+            + "\"content\":\"my card is 4012888888881881 and email a@b.io\"}]}";
+
+    mvc.perform(
+            post("/v1/chat/completions")
+                .header("Authorization", "Bearer " + key)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body))
+        .andExpect(status().isOk());
+
+    // What reaches the provider must be masked, never the raw PII.
+    String forwarded = UPSTREAM.takeRequest().getBody().readUtf8();
+    assertThat(forwarded)
+        .doesNotContain("4012888888881881")
+        .doesNotContain("a@b.io")
+        .contains("CARD_REDACTED");
+  }
+
+  @Test
   void unknownModelIsRejected() throws Exception { // T17
     String key = authKey();
     String body =
