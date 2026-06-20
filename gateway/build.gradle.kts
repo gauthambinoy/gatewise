@@ -14,6 +14,9 @@ dependencies {
     // its own roadmap slices, each shipping with its own tests.
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
+    // Bean Validation (Hibernate Validator) so typed config can be checked at
+    // startup — e.g. a missing API key fails the boot instead of a live call.
+    implementation("org.springframework.boot:spring-boot-starter-validation")
 
     testImplementation("org.springframework.boot:spring-boot-starter-test")
 }

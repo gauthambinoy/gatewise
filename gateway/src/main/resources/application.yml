@@ -18,3 +18,12 @@ management:
       probes:
         enabled: true
       show-details: never
+
+# Upstream LLM provider (OpenRouter — an OpenAI-compatible endpoint). The API key
+# has NO default on purpose: the gateway must refuse to start without one rather
+# than boot into a silently broken state (enforced by OpenRouterProperties).
+auvex:
+  openrouter:
+    base-url: ${OPENROUTER_BASE_URL:https://openrouter.ai/api/v1}
+    model: ${OPENROUTER_MODEL:openai/gpt-oss-120b:free}
+    api-key: ${OPENROUTER_API_KEY:}
