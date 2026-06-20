@@ -2,6 +2,13 @@ spring:
   application:
     name: auvex-gateway
 
+  # Serve each request on a Java 21 virtual thread. The gateway is I/O-bound — it
+  # spends most of a request waiting on the upstream model provider — so a cheap
+  # thread-per-request model scales far better here than a fixed platform pool.
+  threads:
+    virtual:
+      enabled: true
+
   # Postgres + Flyway. Flyway owns the schema via versioned SQL migrations;
   # Hibernate only validates against it (ddl-auto: validate), so the running app
   # and the migrations can never silently drift apart.
