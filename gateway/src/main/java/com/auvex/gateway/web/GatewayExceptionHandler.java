@@ -1,0 +1,44 @@
+package com.auvex.gateway.web;
+
+import com.auvex.gateway.proxy.UpstreamUnavailableException;
+import java.util.Map;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+/**
+ * Translates gateway errors into clean, OpenAI-style JSON instead of leaking stack traces.
+ *
+ * <p>Every response is {@code {"error": {"message", "type"}}}, the shape OpenAI-compatible clients
+ * already understand, with an HTTP status that matches what went wrong.
+ */
+@RestControllerAdvice
+public class GatewayExceptionHandler {
+
+  /** A syntactically valid body that isn't a usable chat-completions payload → 400. */
+  @ExceptionHandler(InvalidRequestException.class)
+  public ResponseEntity<Map<String, Object>> handleInvalid(InvalidRequestException e) {
+    return error(HttpStatus.BAD_REQUEST, e.getMessage(), "invalid_request_error");
+  }
+
+  /** Body that couldn't be parsed as JSON at all → 400. */
+  @ExceptionHandler(HttpMessageNotReadableException.class)
+  public ResponseEntity<Map<String, Object>> handleUnreadable(HttpMessageNotReadableException e) {
+    return error(
+        HttpStatus.BAD_REQUEST, "Request body is not valid JSON.", "invalid_request_error");
+  }
+
+  /** Upstream provider unreachable or too slow → 504. */
+  @ExceptionHandler(UpstreamUnavailableException.class)
+  public ResponseEntity<Map<String, Object>> handleUpstream(UpstreamUnavailableException e) {
+    return error(HttpStatus.GATEWAY_TIMEOUT, e.getMessage(), "upstream_error");
+  }
+
+  private ResponseEntity<Map<String, Object>> error(
+      HttpStatus status, String message, String type) {
+    return ResponseEntity.status(status)
+        .body(Map.of("error", Map.of("message", message, "type", type)));
+  }
+}

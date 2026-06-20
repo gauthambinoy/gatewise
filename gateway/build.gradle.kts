@@ -30,6 +30,10 @@ dependencies {
     testImplementation("org.springframework.boot:spring-boot-testcontainers")
     testImplementation("org.testcontainers:junit-jupiter")
     testImplementation("org.testcontainers:postgresql")
+    // A real local HTTP server standing in for the upstream model provider, so the
+    // proxy is tested over an actual socket (status passthrough, streaming, timeouts).
+    // Pinned explicitly: the Spring Boot BOM doesn't manage mockwebserver's version.
+    testImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
 }
 
 // Dependency versions are governed by the Spring Boot BOM (3.5.15) via the
