@@ -1,0 +1,50 @@
+name: CI
+
+# Build, test and run every quality gate on each push and PR to main.
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# A newer push to the same ref cancels the older run — saves CI minutes.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+# Least privilege: this job only needs to read the repo.
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build · test · quality gates
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21 (Temurin)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Set up Gradle (with build cache + wrapper validation)
+        uses: gradle/actions/setup-gradle@v4
+
+      # `build` runs Spotless, Checkstyle, SpotBugs, the tests and JaCoCo — the
+      # exact same gates we run locally, so green here means green everywhere.
+      - name: Build and verify
+        run: ./gradlew build --no-daemon --stacktrace
+
+      - name: Upload test & coverage reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gateway-reports
+          path: |
+            gateway/build/reports/tests/test
+            gateway/build/reports/jacoco
+            gateway/build/reports/spotbugs
+          if-no-files-found: ignore
