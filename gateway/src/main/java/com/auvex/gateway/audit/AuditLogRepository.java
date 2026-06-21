@@ -63,6 +63,28 @@ public interface AuditLogRepository extends JpaRepository<AuditLog, Long> {
     long getTotal();
   }
 
+  /** Per-actor usage for a tenant: requests, redacted, blocked counts and cost. */
+  @Query(
+      "SELECT a.actor AS actor, COUNT(a) AS requests,"
+          + " SUM(CASE WHEN a.verdict = 'redacted' THEN 1 ELSE 0 END) AS redacted,"
+          + " SUM(CASE WHEN a.verdict = 'blocked' THEN 1 ELSE 0 END) AS blocked,"
+          + " COALESCE(SUM(a.costUsd), 0) AS cost"
+          + " FROM AuditLog a WHERE a.tenantId = :tenantId GROUP BY a.actor")
+  List<UserUsage> usageByActor(@Param("tenantId") UUID tenantId);
+
+  /** Projection for the per-actor usage aggregation. */
+  interface UserUsage {
+    String getActor();
+
+    long getRequests();
+
+    long getRedacted();
+
+    long getBlocked();
+
+    BigDecimal getCost();
+  }
+
   /** The current head of a tenant's chain (its most recent entry), if any. */
   Optional<AuditLog> findTopByTenantIdOrderByIdDesc(UUID tenantId);
 
