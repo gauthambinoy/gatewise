@@ -27,6 +27,9 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-data-redis")
     // Kafka, for the opt-in async audit pipeline (the audit write never blocks the call).
     implementation("org.springframework.kafka:spring-kafka")
+    // BouncyCastle: X.509 generation for the egress proxy's TLS interception (root CA + leaf certs).
+    // Not in the Spring Boot BOM, so the version is pinned explicitly.
+    implementation("org.bouncycastle:bcpkix-jdk18on:1.78.1")
 
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     // Integration tests run against a real Postgres in a throwaway container, so
