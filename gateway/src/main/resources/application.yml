@@ -80,3 +80,9 @@ auvex:
     enabled: ${AUVEX_BUDGET_ENABLED:true}
     max-calls: ${AUVEX_BUDGET_MAX_CALLS:100000}
     window: ${AUVEX_BUDGET_WINDOW:1d}
+
+  # Fallback provider, tried (non-streaming) when the primary can't be reached or 5xxs.
+  failover:
+    enabled: ${AUVEX_FAILOVER_ENABLED:false}
+    base-url: ${AUVEX_FAILOVER_BASE_URL:}
+    api-key: ${AUVEX_FAILOVER_API_KEY:}
