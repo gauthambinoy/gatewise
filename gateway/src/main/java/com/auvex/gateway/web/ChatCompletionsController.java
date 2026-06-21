@@ -1,7 +1,7 @@
 package com.auvex.gateway.web;
 
 import com.auvex.gateway.audit.AuditEntry;
-import com.auvex.gateway.audit.AuditService;
+import com.auvex.gateway.audit.AuditSink;
 import com.auvex.gateway.audit.Verdict;
 import com.auvex.gateway.auth.TenantContext;
 import com.auvex.gateway.budget.BudgetService;
@@ -48,7 +48,7 @@ public class ChatCompletionsController {
   private final ModelRouter router;
   private final PromptRedactor redactor;
   private final PolicyEnforcement policy;
-  private final AuditService audit;
+  private final AuditSink auditSink;
   private final BudgetService budget;
   private final ResponseCache cache;
   private final ObjectMapper objectMapper;
@@ -58,7 +58,7 @@ public class ChatCompletionsController {
       ModelRouter router,
       PromptRedactor redactor,
       PolicyEnforcement policy,
-      AuditService audit,
+      AuditSink auditSink,
       BudgetService budget,
       ResponseCache cache,
       ObjectMapper objectMapper) {
@@ -66,7 +66,7 @@ public class ChatCompletionsController {
     this.router = router;
     this.redactor = redactor;
     this.policy = policy;
-    this.audit = audit;
+    this.auditSink = auditSink;
     this.budget = budget;
     this.cache = cache;
     this.objectMapper = objectMapper;
@@ -89,7 +89,7 @@ public class ChatCompletionsController {
     EvaluationContext ctx = contextFor(body, providerModel, found);
     Decision decision = policy.evaluate(ctx);
     if (!decision.allowed()) {
-      audit.append(auditEntry(ctx, providerModel, Verdict.BLOCKED, body));
+      auditSink.record(auditEntry(ctx, providerModel, Verdict.BLOCKED, body));
       throw new PolicyDeniedException(decision.reason());
     }
 
@@ -100,7 +100,7 @@ public class ChatCompletionsController {
 
     // Record the allowed call, then forward it.
     Verdict verdict = found.isEmpty() ? Verdict.ALLOWED : Verdict.REDACTED;
-    audit.append(auditEntry(ctx, providerModel, verdict, body));
+    auditSink.record(auditEntry(ctx, providerModel, verdict, body));
 
     byte[] forwarded = objectMapper.writeValueAsBytes(body);
     if (body.path("stream").asBoolean(false)) {

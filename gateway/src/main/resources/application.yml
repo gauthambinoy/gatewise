@@ -30,6 +30,18 @@ spring:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
 
+  # Kafka is only connected to when async auditing is enabled.
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    consumer:
+      group-id: auvex-audit
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+
 # Port is env-overridable so the same image runs unchanged in any environment.
 server:
   port: ${SERVER_PORT:8080}
@@ -86,3 +98,9 @@ auvex:
     enabled: ${AUVEX_FAILOVER_ENABLED:false}
     base-url: ${AUVEX_FAILOVER_BASE_URL:}
     api-key: ${AUVEX_FAILOVER_API_KEY:}
+
+  # Audit transport: synchronous by default; async publishes to Kafka and a consumer persists,
+  # so the audit write never blocks the live call.
+  audit:
+    async: ${AUVEX_AUDIT_ASYNC:false}
+    topic: ${AUVEX_AUDIT_TOPIC:auvex.audit}

@@ -25,6 +25,8 @@ dependencies {
     runtimeOnly("org.postgresql:postgresql")
     // Redis-backed response cache so repeat requests can skip the upstream call.
     implementation("org.springframework.boot:spring-boot-starter-data-redis")
+    // Kafka, for the opt-in async audit pipeline (the audit write never blocks the call).
+    implementation("org.springframework.kafka:spring-kafka")
 
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     // Integration tests run against a real Postgres in a throwaway container, so
@@ -36,6 +38,9 @@ dependencies {
     // proxy is tested over an actual socket (status passthrough, streaming, timeouts).
     // Pinned explicitly: the Spring Boot BOM doesn't manage mockwebserver's version.
     testImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
+    // Kafka broker in a container + an await helper, for the async audit pipeline test.
+    testImplementation("org.testcontainers:kafka")
+    testImplementation("org.awaitility:awaitility")
 }
 
 // Dependency versions are governed by the Spring Boot BOM (3.5.15) via the
