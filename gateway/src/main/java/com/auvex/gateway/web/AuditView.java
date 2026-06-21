@@ -1,10 +1,11 @@
 package com.auvex.gateway.web;
 
 import com.auvex.gateway.audit.AuditLog;
+import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
-/** The public representation of one audit entry, including its chain hashes. */
+/** The public representation of one audit entry, including its chain hashes, tokens and cost. */
 public record AuditView(
     Long id,
     UUID requestId,
@@ -14,7 +15,10 @@ public record AuditView(
     String promptRedacted,
     String prevHash,
     String entryHash,
-    OffsetDateTime createdAt) {
+    OffsetDateTime createdAt,
+    Integer promptTokens,
+    Integer completionTokens,
+    BigDecimal costUsd) {
 
   /** Projects a stored audit row into its API view. */
   public static AuditView of(AuditLog row) {
@@ -27,6 +31,9 @@ public record AuditView(
         row.getPromptRedacted(),
         row.getPrevHash(),
         row.getEntryHash(),
-        row.getCreatedAt());
+        row.getCreatedAt(),
+        row.getPromptTokens(),
+        row.getCompletionTokens(),
+        row.getCostUsd());
   }
 }

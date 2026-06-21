@@ -44,6 +44,9 @@ public final class AuditChain {
     frame(sb, entry.responseRedacted());
     frame(
         sb, DateTimeFormatter.ISO_INSTANT.format(entry.createdAt().truncatedTo(ChronoUnit.MICROS)));
+    frame(sb, entry.promptTokens() == null ? null : entry.promptTokens().toString());
+    frame(sb, entry.completionTokens() == null ? null : entry.completionTokens().toString());
+    frame(sb, entry.costUsd() == null ? null : entry.costUsd().toPlainString());
     return sb.toString();
   }
 

@@ -51,7 +51,10 @@ public class AuditService {
             entry.responseRedacted(),
             prevHash,
             entryHash,
-            createdAt);
+            createdAt,
+            entry.promptTokens(),
+            entry.completionTokens(),
+            entry.costUsd());
     return repository.save(row);
   }
 
@@ -92,6 +95,9 @@ public class AuditService {
         Verdict.from(row.getVerdict()),
         row.getPromptRedacted(),
         row.getResponseRedacted(),
-        row.getCreatedAt().toInstant());
+        row.getCreatedAt().toInstant(),
+        row.getPromptTokens(),
+        row.getCompletionTokens(),
+        row.getCostUsd());
   }
 }

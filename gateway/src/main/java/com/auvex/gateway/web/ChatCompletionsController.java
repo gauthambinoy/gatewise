@@ -10,6 +10,9 @@ import com.auvex.gateway.policy.Decision;
 import com.auvex.gateway.policy.EvaluationContext;
 import com.auvex.gateway.policy.PolicyDeniedException;
 import com.auvex.gateway.policy.PolicyEnforcement;
+import com.auvex.gateway.pricing.CostCalculator;
+import com.auvex.gateway.pricing.TokenUsage;
+import com.auvex.gateway.pricing.UsageExtractor;
 import com.auvex.gateway.proxy.CachedResponse;
 import com.auvex.gateway.proxy.UpstreamProxy;
 import com.auvex.gateway.redaction.Match;
@@ -20,6 +23,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.List;
@@ -36,9 +40,10 @@ import org.springframework.web.bind.annotation.RestController;
  * The gateway hot path: an OpenAI-compatible chat-completions endpoint.
  *
  * <p>Each request runs the full pipeline — validate, route the model alias, redact the prompt,
- * check the tenant's policy, and write an immutable audit record — before it's forwarded. A policy
- * denial stops it with a 403; the provider only ever sees an allowed, already-redacted request, and
- * every decision is recorded either way.
+ * check the tenant's policy and budget — before it's forwarded. A policy denial stops it with a
+ * 403; the provider only ever sees an allowed, already-redacted request. Every decision is recorded
+ * in the audit log, and for completed non-streaming calls the token usage and cost are recorded
+ * too.
  */
 @RestController
 @RequestMapping("/v1")
@@ -51,6 +56,8 @@ public class ChatCompletionsController {
   private final AuditSink auditSink;
   private final BudgetService budget;
   private final ResponseCache cache;
+  private final UsageExtractor usageExtractor;
+  private final CostCalculator costCalculator;
   private final ObjectMapper objectMapper;
 
   public ChatCompletionsController(
@@ -61,6 +68,8 @@ public class ChatCompletionsController {
       AuditSink auditSink,
       BudgetService budget,
       ResponseCache cache,
+      UsageExtractor usageExtractor,
+      CostCalculator costCalculator,
       ObjectMapper objectMapper) {
     this.proxy = proxy;
     this.router = router;
@@ -69,6 +78,8 @@ public class ChatCompletionsController {
     this.auditSink = auditSink;
     this.budget = budget;
     this.cache = cache;
+    this.usageExtractor = usageExtractor;
+    this.costCalculator = costCalculator;
     this.objectMapper = objectMapper;
   }
 
@@ -89,7 +100,7 @@ public class ChatCompletionsController {
     EvaluationContext ctx = contextFor(body, providerModel, found);
     Decision decision = policy.evaluate(ctx);
     if (!decision.allowed()) {
-      auditSink.record(auditEntry(ctx, providerModel, Verdict.BLOCKED, body));
+      auditSink.record(auditEntry(ctx, providerModel, Verdict.BLOCKED, body, null, null, null));
       throw new PolicyDeniedException(decision.reason());
     }
 
@@ -98,39 +109,55 @@ public class ChatCompletionsController {
       throw new BudgetExceededException("Call budget exceeded for this tenant.");
     }
 
-    // Record the allowed call, then forward it.
-    Verdict verdict = found.isEmpty() ? Verdict.ALLOWED : Verdict.REDACTED;
-    auditSink.record(auditEntry(ctx, providerModel, verdict, body));
-
     byte[] forwarded = objectMapper.writeValueAsBytes(body);
+    Verdict verdict = found.isEmpty() ? Verdict.ALLOWED : Verdict.REDACTED;
+
     if (body.path("stream").asBoolean(false)) {
-      proxy.relay(forwarded, response); // streaming: straight through, no cache/failover
-    } else {
-      serveBuffered(ctx.tenantId(), forwarded, response);
+      // Streaming: token usage isn't available, so record without cost and stream straight through.
+      auditSink.record(auditEntry(ctx, providerModel, verdict, body, null, null, null));
+      proxy.relay(forwarded, response);
+      return;
     }
+
+    // Non-streaming: get the (possibly cached) response, price it, record it, then return it.
+    CachedResponse result = fetchBuffered(ctx.tenantId(), forwarded);
+    TokenUsage usage = usageExtractor.extract(result.body());
+    auditSink.record(
+        auditEntry(
+            ctx,
+            providerModel,
+            verdict,
+            body,
+            usage == null ? null : usage.promptTokens(),
+            usage == null ? null : usage.completionTokens(),
+            costCalculator.cost(providerModel, usage)));
+    writeResponse(response, result);
   }
 
-  // Non-streaming path: serve from cache if present, else fetch (with failover) and cache a
-  // success.
-  private void serveBuffered(UUID tenantId, byte[] forwarded, HttpServletResponse response)
-      throws IOException {
-    CachedResponse result;
-    if (cache.enabled()) {
-      String key = cache.keyFor(tenantId, forwarded);
-      result = cache.get(key);
-      if (result == null) {
-        result = proxy.fetch(forwarded);
-        if (result.isSuccessful()) {
-          cache.put(key, result);
-        }
-      }
-    } else {
-      result = proxy.fetch(forwarded);
+  // Get the response for a non-streaming request: from cache if present, else fetch (with
+  // failover).
+  private CachedResponse fetchBuffered(UUID tenantId, byte[] forwarded) {
+    if (!cache.enabled()) {
+      return proxy.fetch(forwarded);
     }
-    response.setStatus(result.status());
+    String key = cache.keyFor(tenantId, forwarded);
+    CachedResponse cached = cache.get(key);
+    if (cached != null) {
+      return cached;
+    }
+    CachedResponse fresh = proxy.fetch(forwarded);
+    if (fresh.isSuccessful()) {
+      cache.put(key, fresh);
+    }
+    return fresh;
+  }
+
+  private static void writeResponse(HttpServletResponse response, CachedResponse cached)
+      throws IOException {
+    response.setStatus(cached.status());
     response.setCharacterEncoding(StandardCharsets.UTF_8.name());
-    response.setContentType(result.contentType());
-    response.getOutputStream().write(result.body().getBytes(StandardCharsets.UTF_8));
+    response.setContentType(cached.contentType());
+    response.getOutputStream().write(cached.body().getBytes(StandardCharsets.UTF_8));
   }
 
   // Build the policy evaluation context from the tenant, model, caller and detected data types.
@@ -148,9 +175,15 @@ public class ChatCompletionsController {
     return new EvaluationContext(tenantId, providerModel, actor, dataTypes);
   }
 
-  // Builds the audit record for a request with a given verdict.
+  // Builds the audit record for a request with a given verdict and (optional) token usage + cost.
   private static AuditEntry auditEntry(
-      EvaluationContext ctx, String model, Verdict verdict, JsonNode body) {
+      EvaluationContext ctx,
+      String model,
+      Verdict verdict,
+      JsonNode body,
+      Integer promptTokens,
+      Integer completionTokens,
+      BigDecimal cost) {
     return new AuditEntry(
         ctx.tenantId(),
         UUID.randomUUID(),
@@ -159,7 +192,10 @@ public class ChatCompletionsController {
         verdict,
         redactedPrompt(body),
         null,
-        Instant.now());
+        Instant.now(),
+        promptTokens,
+        completionTokens,
+        cost);
   }
 
   // The already-redacted prompt text, joined across messages, as stored in the audit log.
