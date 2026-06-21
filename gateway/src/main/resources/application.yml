@@ -80,6 +80,8 @@ auvex:
       fast: openai/gpt-4o-mini
       smart: openai/gpt-4o
       claude: anthropic/claude-3-5-sonnet-20241022
+      gemini: google/gemini-1.5-pro
+      azure-gpt4: azure/gpt-4o
       default: openai/gpt-oss-120b:free
 
   # Native Anthropic: when enabled, anthropic/* models go directly to Anthropic's /v1/messages
@@ -91,6 +93,22 @@ auvex:
     api-key: ${ANTHROPIC_API_KEY:}
     version: ${ANTHROPIC_VERSION:2023-06-01}
     max-tokens: ${ANTHROPIC_MAX_TOKENS:1024}
+
+  # Native Google Gemini: when enabled, google/* models go directly to Gemini's generateContent API
+  # (translated to/from the OpenAI shape). Off by default.
+  gemini:
+    enabled: ${AUVEX_GEMINI_ENABLED:false}
+    base-url: ${GEMINI_BASE_URL:https://generativelanguage.googleapis.com}
+    api-key: ${GEMINI_API_KEY:}
+    max-tokens: ${GEMINI_MAX_TOKENS:1024}
+
+  # Native Azure OpenAI: when enabled, azure/* models go to your Azure deployment (OpenAI shape, so
+  # no body translation — just the deployment URL + api-key auth). Off by default.
+  azure:
+    enabled: ${AUVEX_AZURE_ENABLED:false}
+    endpoint: ${AZURE_OPENAI_ENDPOINT:}
+    api-key: ${AZURE_OPENAI_API_KEY:}
+    api-version: ${AZURE_OPENAI_API_VERSION:2024-06-01}
 
   # Response cache: a repeat non-streaming request returns the stored response and
   # skips the upstream call. Disable to send every call upstream.
