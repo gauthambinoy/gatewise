@@ -29,7 +29,8 @@ public class DefaultPolicyEngine implements PolicyEngine {
     }
 
     PolicyRule winner = matching.stream().min(RulePrecedence.WINNER).orElseThrow();
+    // ALLOW and REDACT both permit (masking is always applied); only DENY blocks.
     return new Decision(
-        winner.effect() == Effect.ALLOW, List.of(winner), DecisionReasons.describe(winner));
+        winner.effect() != Effect.DENY, List.of(winner), DecisionReasons.describe(winner));
   }
 }

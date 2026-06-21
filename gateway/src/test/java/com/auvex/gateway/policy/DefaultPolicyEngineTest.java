@@ -122,6 +122,34 @@ class DefaultPolicyEngineTest {
   }
 
   @Test
+  void redactRuleAllows() { // V12 — REDACT permits (masking is always applied)
+    Decision d =
+        engine.evaluate(
+            ctx(Set.of("email")),
+            List.of(rule(Effect.REDACT, ResourceType.DATA_TYPE, "email", 100)));
+    assertThat(d.allowed()).isTrue();
+    assertThat(d.matchedRules()).first().extracting(PolicyRule::effect).isEqualTo(Effect.REDACT);
+  }
+
+  @Test
+  void redactBeatsAllowButStillAllows() { // V13 — REDACT is more restrictive than ALLOW
+    PolicyRule allow = rule(Effect.ALLOW, ResourceType.MODEL, MODEL, 100);
+    PolicyRule redact = rule(Effect.REDACT, ResourceType.MODEL, MODEL, 100);
+    Decision d = engine.evaluate(ctx(Set.of()), List.of(allow, redact));
+    assertThat(d.allowed()).isTrue();
+    assertThat(d.matchedRules()).first().isEqualTo(redact);
+  }
+
+  @Test
+  void denyBeatsRedactOnPriorityTie() { // V14 — DENY > REDACT
+    PolicyRule redact = rule(Effect.REDACT, ResourceType.MODEL, MODEL, 100);
+    PolicyRule deny = rule(Effect.DENY, ResourceType.MODEL, MODEL, 100);
+    Decision d = engine.evaluate(ctx(Set.of()), List.of(redact, deny));
+    assertThat(d.allowed()).isFalse();
+    assertThat(d.matchedRules()).first().isEqualTo(deny);
+  }
+
+  @Test
   void rulesFromAnotherTenantAreIgnored() { // V11
     PolicyRule otherTenant =
         new PolicyRule(

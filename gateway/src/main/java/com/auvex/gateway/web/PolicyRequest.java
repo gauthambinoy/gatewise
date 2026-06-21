@@ -11,7 +11,10 @@ import jakarta.validation.constraints.Pattern;
  */
 public record PolicyRequest(
     @NotBlank String name,
-    @NotBlank @Pattern(regexp = "allow|deny", message = "effect must be 'allow' or 'deny'")
+    @NotBlank
+        @Pattern(
+            regexp = "allow|deny|redact",
+            message = "effect must be 'allow', 'deny' or 'redact'")
         String effect,
     @NotBlank
         @Pattern(

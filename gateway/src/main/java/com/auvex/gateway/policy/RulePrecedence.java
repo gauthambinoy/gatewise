@@ -5,9 +5,9 @@ import java.util.Comparator;
 /**
  * The total order that picks one winner among matching rules.
  *
- * <p>Higher priority wins; on a tie DENY beats ALLOW (most-restrictive); a final id tiebreak keeps
- * the cited winner stable without ever changing the outcome. The winner is the {@code min} under
- * this comparator.
+ * <p>Higher priority wins; on a tie the most-restrictive effect wins (DENY &gt; REDACT &gt; ALLOW);
+ * a final id tiebreak keeps the cited winner stable without ever changing the outcome. The winner
+ * is the {@code min} under this comparator.
  */
 public final class RulePrecedence {
 
@@ -16,6 +16,15 @@ public final class RulePrecedence {
   public static final Comparator<PolicyRule> WINNER =
       Comparator.comparingInt(PolicyRule::priority)
           .reversed()
-          .thenComparingInt(rule -> rule.effect() == Effect.DENY ? 0 : 1)
+          .thenComparingInt(RulePrecedence::restrictiveness)
           .thenComparing(PolicyRule::id);
+
+  // Lower is more restrictive, so it wins the min().
+  private static int restrictiveness(PolicyRule rule) {
+    return switch (rule.effect()) {
+      case DENY -> 0;
+      case REDACT -> 1;
+      case ALLOW -> 2;
+    };
+  }
 }
