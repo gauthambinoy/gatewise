@@ -137,3 +137,10 @@ auvex:
     enabled: ${AUVEX_DEMO_ENABLED:false}
     key: ${AUVEX_DEMO_KEY:auvex_demo_key}
     tenant-name: ${AUVEX_DEMO_TENANT:Demo Org}
+
+  # Response redaction: mask PII the model returns, for the audit record. enforce=true also strips
+  # it from what the caller receives (default off = audit-only). The prompt is always redacted.
+  redaction:
+    response:
+      enabled: ${AUVEX_REDACT_RESPONSE:true}
+      enforce: ${AUVEX_REDACT_RESPONSE_ENFORCE:false}
