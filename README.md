@@ -97,7 +97,18 @@ The full set of diagrams — architecture, request sequence, ER, component map, 
 
 ## Screenshots
 
-Captured from a real production build once the admin console exists — never staged. (Placeholder until Phase 4.)
+Real captures of the running console (gateway → Postgres, not mocked):
+
+| | |
+|---|---|
+| ![Dashboard](docs/screenshots/dashboard.png) | ![Dashboard (dark)](docs/screenshots/dashboard-dark.png) |
+| **Dashboard** — usage, leaks prevented, recent requests | **Dark theme** — one toggle, design-token driven |
+| ![Policies](docs/screenshots/policies.png) | ![Policy editor](docs/screenshots/policy-editor.png) |
+| **Policies** — allow / redact / deny, most-restrictive wins | **Policy editor** — the three-way action |
+| ![Audit log](docs/screenshots/audit-log.png) | ![Team & roles](docs/screenshots/team-roles.png) |
+| **Audit log** — search, filter, live **chain-verified** badge | **Team & roles** — owner / security-admin / auditor |
+
+Metrics read $0 until a real `OPENROUTER_API_KEY` drives live traffic through the gateway.
 
 ## Approach & decisions
 
