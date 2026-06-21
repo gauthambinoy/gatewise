@@ -4,17 +4,24 @@ import { ApiError, api } from '../lib/api'
 import type { SsoProvider } from '../lib/types'
 
 const PROVIDER_ICON: Record<string, string> = { google: 'ti-brand-google', okta: 'ti-key' }
+const DEMO_KEY = 'auvex_demo_key'
 
 export function Login() {
   const { login } = useAuth()
   const [key, setKey] = useState('')
   const [error, setError] = useState<string>()
   const [busy, setBusy] = useState(false)
+  const [demoBusy, setDemoBusy] = useState(false)
   const [providers, setProviders] = useState<SsoProvider[]>([])
 
   useEffect(() => {
     api.providers().then(setProviders).catch(() => setProviders([]))
   }, [])
+
+  function messageFor(err: unknown, fallback: string): string {
+    if (err instanceof ApiError && err.status === 401) return 'That API key was not recognized.'
+    return err instanceof Error ? err.message : fallback
+  }
 
   async function submit(e: FormEvent) {
     e.preventDefault()
@@ -23,15 +30,21 @@ export function Login() {
     try {
       await login(key)
     } catch (err) {
-      setError(
-        err instanceof ApiError && err.status === 401
-          ? 'That API key was not recognized.'
-          : err instanceof Error
-            ? err.message
-            : 'Sign-in failed.',
-      )
+      setError(messageFor(err, 'Sign-in failed.'))
     } finally {
       setBusy(false)
+    }
+  }
+
+  async function tryDemo() {
+    setError(undefined)
+    setDemoBusy(true)
+    try {
+      await login(DEMO_KEY)
+    } catch {
+      setError('The demo sandbox isn’t available on this server.')
+    } finally {
+      setDemoBusy(false)
     }
   }
 
@@ -61,18 +74,46 @@ export function Login() {
           </div>
           <span style={{ fontSize: 20, fontWeight: 600 }}>Auvex</span>
         </div>
-        <div
-          className="sub"
-          style={{ textAlign: 'center', fontSize: 13, marginBottom: 22 }}
-        >
+        <div className="sub" style={{ textAlign: 'center', fontSize: 13, marginBottom: 20 }}>
           Sign in to your console
+        </div>
+
+        {/* One-click sandbox — no key needed. */}
+        <button
+          className="btn-primary"
+          onClick={tryDemo}
+          disabled={demoBusy}
+          style={{
+            width: '100%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 8,
+            padding: 11,
+            fontSize: 13,
+            fontWeight: 500,
+          }}
+        >
+          <i className="ti ti-sparkles" />
+          {demoBusy ? 'Loading demo…' : 'Try the live demo'}
+        </button>
+        <div className="muted" style={{ textAlign: 'center', fontSize: 11, margin: '6px 0 4px' }}>
+          A sandbox org with sample data — no sign-up.
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '14px 0' }}>
+          <div style={{ flex: 1, height: 1, background: 'var(--color-border-tertiary)' }} />
+          <span className="muted" style={{ fontSize: 11 }}>
+            or sign in
+          </span>
+          <div style={{ flex: 1, height: 1, background: 'var(--color-border-tertiary)' }} />
         </div>
 
         {providers.map((p) => (
           <button
             key={p.name}
             disabled
-            title={p.configured ? 'SSO sign-in is being wired up' : 'Configure this provider to enable SSO'}
+            title="SSO needs an OAuth client to be configured for this provider"
             style={{
               width: '100%',
               display: 'flex',
@@ -87,13 +128,16 @@ export function Login() {
           >
             <i className={`ti ${PROVIDER_ICON[p.name] ?? 'ti-key'}`} />
             Continue with {p.name}
+            <span className="badge" style={{ fontSize: 9, padding: '1px 6px' }}>
+              soon
+            </span>
           </button>
         ))}
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '16px 0' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '12px 0' }}>
           <div style={{ flex: 1, height: 1, background: 'var(--color-border-tertiary)' }} />
           <span className="muted" style={{ fontSize: 11 }}>
-            use an API key
+            or use an API key
           </span>
           <div style={{ flex: 1, height: 1, background: 'var(--color-border-tertiary)' }} />
         </div>
@@ -106,7 +150,6 @@ export function Login() {
             placeholder="auvex_sk_…"
             value={key}
             onChange={(e) => setKey(e.target.value)}
-            autoFocus
             style={{ width: '100%', marginBottom: 12, fontFamily: 'var(--font-mono)' }}
           />
           {error && (
@@ -119,9 +162,8 @@ export function Login() {
           )}
           <button
             type="submit"
-            className="btn-primary"
             disabled={busy || !key.trim()}
-            style={{ width: '100%', padding: 11, fontSize: 13, fontWeight: 500 }}
+            style={{ width: '100%', padding: 11, fontSize: 13 }}
           >
             {busy ? 'Signing in…' : 'Sign in'}
           </button>
