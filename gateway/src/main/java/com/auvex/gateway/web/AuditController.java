@@ -11,6 +11,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -53,6 +54,16 @@ public class AuditController {
     }
     List<AuditView> views = page.getContent().stream().map(AuditView::of).toList();
     return new AuditPage(views, page.getNumber(), page.getSize(), page.getTotalElements());
+  }
+
+  /** Returns one of the tenant's audit entries, or 404 if it isn't theirs. */
+  @GetMapping("/{id}")
+  public AuditView get(@PathVariable Long id) {
+    UUID tenantId = TenantContext.require().tenantId();
+    return entries
+        .findByIdAndTenantId(id, tenantId)
+        .map(AuditView::of)
+        .orElseThrow(() -> new NotFoundException("Audit entry " + id + " not found."));
   }
 
   /** Re-verifies the tenant's hash chain. */

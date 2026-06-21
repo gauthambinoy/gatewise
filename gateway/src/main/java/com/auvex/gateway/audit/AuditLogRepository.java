@@ -91,6 +91,9 @@ public interface AuditLogRepository extends JpaRepository<AuditLog, Long> {
   /** A tenant's chain oldest-first, for verification. */
   List<AuditLog> findByTenantIdOrderByIdAsc(UUID tenantId);
 
+  /** One entry, only if it belongs to the tenant (for the request-detail view). */
+  Optional<AuditLog> findByIdAndTenantId(Long id, UUID tenantId);
+
   /** A page of a tenant's entries, for the query API. */
   Page<AuditLog> findByTenantId(UUID tenantId, Pageable pageable);
 

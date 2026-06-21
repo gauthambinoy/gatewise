@@ -13,6 +13,7 @@ import com.auvex.gateway.tenant.ApiKey;
 import com.auvex.gateway.tenant.ApiKeyRepository;
 import com.auvex.gateway.tenant.Tenant;
 import com.auvex.gateway.tenant.TenantRepository;
+import com.jayway.jsonpath.JsonPath;
 import java.time.Instant;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
@@ -92,6 +93,24 @@ class AuditQueryIntegrationTest extends AbstractPostgresIntegrationTest {
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.total").value(1))
         .andExpect(jsonPath("$.entries[0].model").value("claude-3"));
+  }
+
+  @Test
+  void fetchesASingleEntryById() throws Exception {
+    TenantAuth a = newTenant();
+    appendEntry(a.tenantId(), Verdict.REDACTED, "one specific prompt", "gpt-4o");
+
+    String list =
+        mvc.perform(get("/v1/audit").header("Authorization", "Bearer " + a.key()))
+            .andReturn()
+            .getResponse()
+            .getContentAsString();
+    int id = JsonPath.read(list, "$.entries[0].id");
+
+    mvc.perform(get("/v1/audit/" + id).header("Authorization", "Bearer " + a.key()))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.promptRedacted").value("one specific prompt"))
+        .andExpect(jsonPath("$.model").value("gpt-4o"));
   }
 
   @Test
