@@ -3,6 +3,7 @@
 
 import type {
   ApiKey,
+  AuditEntry,
   AuditPage,
   CreatedKey,
   Member,
@@ -78,10 +79,17 @@ export const api = {
   usage: () => request<UsageSummary>('GET', '/v1/usage'),
   usageByUser: () => request<UserUsage[]>('GET', '/v1/usage/users'),
 
-  audit: (params: AuditQuery = {}) => request<AuditPage>('GET', '/v1/audit' + query(params)),
+  audit: (params: AuditQuery = {}) =>
+    request<AuditPage>(
+      'GET',
+      '/v1/audit' +
+        query({ verdict: params.verdict, q: params.q, page: params.page, size: params.size }),
+    ),
+  auditEntry: (id: string | number) => request<AuditEntry>('GET', `/v1/audit/${id}`),
   verify: () => request<VerifyResult>('GET', '/v1/audit/verify'),
 
   policies: () => request<Policy[]>('GET', '/v1/policies'),
+  policy: (id: string) => request<Policy>('GET', `/v1/policies/${id}`),
   createPolicy: (p: PolicyInput) => request<Policy>('POST', '/v1/policies', p),
   updatePolicy: (id: string, p: PolicyInput) => request<Policy>('PUT', `/v1/policies/${id}`, p),
   deletePolicy: (id: string) => request<void>('DELETE', `/v1/policies/${id}`),
