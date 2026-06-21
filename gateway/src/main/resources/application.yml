@@ -74,3 +74,9 @@ auvex:
   cache:
     enabled: ${AUVEX_CACHE_ENABLED:true}
     ttl: ${AUVEX_CACHE_TTL:5m}
+
+  # Per-tenant call budget: forwarded calls beyond max-calls in the window get a 429.
+  budget:
+    enabled: ${AUVEX_BUDGET_ENABLED:true}
+    max-calls: ${AUVEX_BUDGET_MAX_CALLS:100000}
+    window: ${AUVEX_BUDGET_WINDOW:1d}

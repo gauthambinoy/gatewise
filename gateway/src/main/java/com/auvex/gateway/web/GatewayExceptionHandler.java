@@ -45,6 +45,12 @@ public class GatewayExceptionHandler {
     return error(HttpStatus.FORBIDDEN, e.getMessage(), "policy_violation");
   }
 
+  /** A tenant that has used up its call budget → 429. */
+  @ExceptionHandler(BudgetExceededException.class)
+  public ResponseEntity<Map<String, Object>> handleBudget(BudgetExceededException e) {
+    return error(HttpStatus.TOO_MANY_REQUESTS, e.getMessage(), "rate_limit_exceeded");
+  }
+
   /** Upstream provider unreachable or too slow → 504. */
   @ExceptionHandler(UpstreamUnavailableException.class)
   public ResponseEntity<Map<String, Object>> handleUpstream(UpstreamUnavailableException e) {

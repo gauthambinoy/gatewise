@@ -4,6 +4,7 @@ import com.auvex.gateway.audit.AuditEntry;
 import com.auvex.gateway.audit.AuditService;
 import com.auvex.gateway.audit.Verdict;
 import com.auvex.gateway.auth.TenantContext;
+import com.auvex.gateway.budget.BudgetService;
 import com.auvex.gateway.cache.ResponseCache;
 import com.auvex.gateway.policy.Decision;
 import com.auvex.gateway.policy.EvaluationContext;
@@ -48,6 +49,7 @@ public class ChatCompletionsController {
   private final PromptRedactor redactor;
   private final PolicyEnforcement policy;
   private final AuditService audit;
+  private final BudgetService budget;
   private final ResponseCache cache;
   private final ObjectMapper objectMapper;
 
@@ -57,6 +59,7 @@ public class ChatCompletionsController {
       PromptRedactor redactor,
       PolicyEnforcement policy,
       AuditService audit,
+      BudgetService budget,
       ResponseCache cache,
       ObjectMapper objectMapper) {
     this.proxy = proxy;
@@ -64,6 +67,7 @@ public class ChatCompletionsController {
     this.redactor = redactor;
     this.policy = policy;
     this.audit = audit;
+    this.budget = budget;
     this.cache = cache;
     this.objectMapper = objectMapper;
   }
@@ -81,29 +85,22 @@ public class ChatCompletionsController {
     // Mask sensitive data out of the prompt, and learn which data types it contained.
     List<Match> found = redactor.redactInPlace(body);
 
-    // Enforce the tenant's policy.
+    // Enforce the tenant's policy; a denial is recorded, then stops the request.
     EvaluationContext ctx = contextFor(body, providerModel, found);
     Decision decision = policy.evaluate(ctx);
-    Verdict verdict =
-        !decision.allowed()
-            ? Verdict.BLOCKED
-            : found.isEmpty() ? Verdict.ALLOWED : Verdict.REDACTED;
-
-    // Record the decision immutably, whether it's allowed or blocked.
-    audit.append(
-        new AuditEntry(
-            ctx.tenantId(),
-            UUID.randomUUID(),
-            ctx.actor(),
-            providerModel,
-            verdict,
-            redactedPrompt(body),
-            null,
-            Instant.now()));
-
     if (!decision.allowed()) {
+      audit.append(auditEntry(ctx, providerModel, Verdict.BLOCKED, body));
       throw new PolicyDeniedException(decision.reason());
     }
+
+    // Enforce the tenant's call budget before doing any upstream work.
+    if (!budget.allows(ctx.tenantId())) {
+      throw new BudgetExceededException("Call budget exceeded for this tenant.");
+    }
+
+    // Record the allowed call, then forward it.
+    Verdict verdict = found.isEmpty() ? Verdict.ALLOWED : Verdict.REDACTED;
+    audit.append(auditEntry(ctx, providerModel, verdict, body));
 
     byte[] forwarded = objectMapper.writeValueAsBytes(body);
     boolean streaming = body.path("stream").asBoolean(false);
@@ -145,6 +142,20 @@ public class ChatCompletionsController {
             : "unknown";
     UUID tenantId = TenantContext.require().tenantId();
     return new EvaluationContext(tenantId, providerModel, actor, dataTypes);
+  }
+
+  // Builds the audit record for a request with a given verdict.
+  private static AuditEntry auditEntry(
+      EvaluationContext ctx, String model, Verdict verdict, JsonNode body) {
+    return new AuditEntry(
+        ctx.tenantId(),
+        UUID.randomUUID(),
+        ctx.actor(),
+        model,
+        verdict,
+        redactedPrompt(body),
+        null,
+        Instant.now());
   }
 
   // The already-redacted prompt text, joined across messages, as stored in the audit log.

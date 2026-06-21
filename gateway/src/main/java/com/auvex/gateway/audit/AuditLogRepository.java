@@ -18,6 +18,10 @@ public interface AuditLogRepository extends JpaRepository<AuditLog, Long> {
   /** Calls for a tenant with a given verdict. */
   long countByTenantIdAndVerdict(UUID tenantId, String verdict);
 
+  /** Forwarded calls for a tenant in a window — the budget basis. */
+  long countByTenantIdAndVerdictInAndCreatedAtAfter(
+      UUID tenantId, java.util.Collection<String> verdicts, java.time.OffsetDateTime after);
+
   /** Per-model call counts for a tenant. */
   @Query(
       "SELECT a.model AS model, COUNT(a) AS count FROM AuditLog a"
