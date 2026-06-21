@@ -54,7 +54,8 @@ public class AuditService {
             createdAt,
             entry.promptTokens(),
             entry.completionTokens(),
-            entry.costUsd());
+            entry.costUsd(),
+            entry.redactionCounts());
     return repository.save(row);
   }
 
@@ -98,6 +99,7 @@ public class AuditService {
         row.getCreatedAt().toInstant(),
         row.getPromptTokens(),
         row.getCompletionTokens(),
-        row.getCostUsd());
+        row.getCostUsd(),
+        row.getRedactionCounts());
   }
 }

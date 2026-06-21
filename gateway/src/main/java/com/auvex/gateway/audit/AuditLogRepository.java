@@ -46,6 +46,23 @@ public interface AuditLogRepository extends JpaRepository<AuditLog, Long> {
           + " FROM AuditLog a WHERE a.tenantId = :tenantId")
   long sumTokensByTenantId(@Param("tenantId") UUID tenantId);
 
+  /** Total redactions per data type for a tenant, summed across the jsonb tallies. */
+  @Query(
+      value =
+          "SELECT kv.key AS type, SUM(kv.value::int) AS total"
+              + " FROM audit_log a, jsonb_each_text(a.redaction_counts) AS kv"
+              + " WHERE a.tenant_id = :tenantId AND a.redaction_counts IS NOT NULL"
+              + " GROUP BY kv.key",
+      nativeQuery = true)
+  List<TypeCount> sumRedactionByType(@Param("tenantId") UUID tenantId);
+
+  /** Projection for the per-type redaction aggregation. */
+  interface TypeCount {
+    String getType();
+
+    long getTotal();
+  }
+
   /** The current head of a tenant's chain (its most recent entry), if any. */
   Optional<AuditLog> findTopByTenantIdOrderByIdDesc(UUID tenantId);
 

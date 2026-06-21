@@ -26,8 +26,10 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -95,12 +97,14 @@ public class ChatCompletionsController {
 
     // Mask sensitive data out of the prompt, and learn which data types it contained.
     List<Match> found = redactor.redactInPlace(body);
+    Map<String, Integer> redactionCounts = countByType(found);
 
     // Enforce the tenant's policy; a denial is recorded, then stops the request.
     EvaluationContext ctx = contextFor(body, providerModel, found);
     Decision decision = policy.evaluate(ctx);
     if (!decision.allowed()) {
-      auditSink.record(auditEntry(ctx, providerModel, Verdict.BLOCKED, body, null, null, null));
+      auditSink.record(
+          auditEntry(ctx, providerModel, Verdict.BLOCKED, body, null, null, null, redactionCounts));
       throw new PolicyDeniedException(decision.reason());
     }
 
@@ -114,7 +118,8 @@ public class ChatCompletionsController {
 
     if (body.path("stream").asBoolean(false)) {
       // Streaming: token usage isn't available, so record without cost and stream straight through.
-      auditSink.record(auditEntry(ctx, providerModel, verdict, body, null, null, null));
+      auditSink.record(
+          auditEntry(ctx, providerModel, verdict, body, null, null, null, redactionCounts));
       proxy.relay(forwarded, response);
       return;
     }
@@ -130,7 +135,8 @@ public class ChatCompletionsController {
             body,
             usage == null ? null : usage.promptTokens(),
             usage == null ? null : usage.completionTokens(),
-            costCalculator.cost(providerModel, usage)));
+            costCalculator.cost(providerModel, usage),
+            redactionCounts));
     writeResponse(response, result);
   }
 
@@ -175,7 +181,8 @@ public class ChatCompletionsController {
     return new EvaluationContext(tenantId, providerModel, actor, dataTypes);
   }
 
-  // Builds the audit record for a request with a given verdict and (optional) token usage + cost.
+  // Builds the audit record for a request with a given verdict, optional token usage + cost, and
+  // the per-type redaction tallies.
   private static AuditEntry auditEntry(
       EvaluationContext ctx,
       String model,
@@ -183,7 +190,8 @@ public class ChatCompletionsController {
       JsonNode body,
       Integer promptTokens,
       Integer completionTokens,
-      BigDecimal cost) {
+      BigDecimal cost,
+      Map<String, Integer> redactionCounts) {
     return new AuditEntry(
         ctx.tenantId(),
         UUID.randomUUID(),
@@ -195,7 +203,17 @@ public class ChatCompletionsController {
         Instant.now(),
         promptTokens,
         completionTokens,
-        cost);
+        cost,
+        redactionCounts);
+  }
+
+  // Tally how many of each data type were redacted (e.g. {"email":2,"credit_card":1}).
+  private static Map<String, Integer> countByType(List<Match> found) {
+    Map<String, Integer> counts = new HashMap<>();
+    for (Match match : found) {
+      counts.merge(match.type().name().toLowerCase(Locale.ROOT), 1, Integer::sum);
+    }
+    return counts;
   }
 
   // The already-redacted prompt text, joined across messages, as stored in the audit log.

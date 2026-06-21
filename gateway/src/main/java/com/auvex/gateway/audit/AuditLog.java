@@ -8,7 +8,10 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
+import java.util.Map;
 import java.util.UUID;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 /** One persisted, hash-chained audit record. Maps the {@code audit_log} table. */
 @Entity
@@ -57,6 +60,11 @@ public class AuditLog {
   @Column(name = "cost_usd")
   private BigDecimal costUsd;
 
+  // Per-type masking tallies (e.g. {"email":2}); analytics metadata, not part of the hash chain.
+  @JdbcTypeCode(SqlTypes.JSON)
+  @Column(name = "redaction_counts", columnDefinition = "jsonb")
+  private Map<String, Integer> redactionCounts;
+
   /** JPA requires a no-arg constructor; not for application use. */
   protected AuditLog() {}
 
@@ -74,7 +82,8 @@ public class AuditLog {
       OffsetDateTime createdAt,
       Integer promptTokens,
       Integer completionTokens,
-      BigDecimal costUsd) {
+      BigDecimal costUsd,
+      Map<String, Integer> redactionCounts) {
     this.tenantId = tenantId;
     this.requestId = requestId;
     this.actor = actor;
@@ -88,6 +97,7 @@ public class AuditLog {
     this.promptTokens = promptTokens;
     this.completionTokens = completionTokens;
     this.costUsd = costUsd;
+    this.redactionCounts = redactionCounts;
   }
 
   public Long getId() {
@@ -144,5 +154,9 @@ public class AuditLog {
 
   public BigDecimal getCostUsd() {
     return costUsd;
+  }
+
+  public Map<String, Integer> getRedactionCounts() {
+    return redactionCounts;
   }
 }
