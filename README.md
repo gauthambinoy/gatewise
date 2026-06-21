@@ -21,7 +21,9 @@ curl https://your-auvex/v1/chat/completions \
 
 ## Live demo
 
-Not yet deployed — the AWS deployment (Terraform, HTTPS, a live URL) is the final phase. Until then, run it locally in one command (below).
+Run the whole stack in one command — `docker compose up -d --build` — then open **http://localhost:3000** and click **"Try the live demo"**: it signs you into a sandbox org pre-seeded with sample policies, members and routing (no key, no sign-up). A public hosted URL is the AWS deploy phase.
+
+![Login](docs/screenshots/login.png)
 
 ## Cost
 
@@ -29,7 +31,9 @@ Not yet deployed — the AWS deployment (Terraform, HTTPS, a live URL) is the fi
 
 ## Hero demo
 
-A screenshot/GIF of the core flow will be added here from a real production run once the admin console and deployment land. No staged or mocked images.
+![Dashboard](docs/screenshots/dashboard.png)
+
+The admin console, served from the same stack — see [more screenshots below](#screenshots). All real captures of the running app, never mocked.
 
 ## Quick start
 
