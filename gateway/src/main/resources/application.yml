@@ -131,3 +131,9 @@ auvex:
       okta:
         issuer: ${OKTA_ISSUER:}
         client-id: ${OKTA_CLIENT_ID:}
+
+  # Demo seed for the console's "Try the live demo" button. Off by default; never enable in prod.
+  demo:
+    enabled: ${AUVEX_DEMO_ENABLED:false}
+    key: ${AUVEX_DEMO_KEY:auvex_demo_key}
+    tenant-name: ${AUVEX_DEMO_TENANT:Demo Org}
