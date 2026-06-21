@@ -6,7 +6,10 @@ import com.auvex.gateway.audit.Verdict;
 import com.auvex.gateway.auth.TenantContext;
 import com.auvex.gateway.budget.BudgetService;
 import com.auvex.gateway.cache.ResponseCache;
+import com.auvex.gateway.config.InjectionProperties;
 import com.auvex.gateway.config.RedactionProperties;
+import com.auvex.gateway.injection.InjectionFinding;
+import com.auvex.gateway.injection.InjectionScanner;
 import com.auvex.gateway.policy.Decision;
 import com.auvex.gateway.policy.EvaluationContext;
 import com.auvex.gateway.policy.PolicyDeniedException;
@@ -66,6 +69,8 @@ public class ChatCompletionsController {
   private final CostCalculator costCalculator;
   private final ResponseRedactor responseRedactor;
   private final RedactionProperties redaction;
+  private final InjectionScanner injectionScanner;
+  private final InjectionProperties injectionProperties;
   private final ObjectMapper objectMapper;
 
   public ChatCompletionsController(
@@ -80,6 +85,8 @@ public class ChatCompletionsController {
       CostCalculator costCalculator,
       ResponseRedactor responseRedactor,
       RedactionProperties redaction,
+      InjectionScanner injectionScanner,
+      InjectionProperties injectionProperties,
       ObjectMapper objectMapper) {
     this.proxy = proxy;
     this.router = router;
@@ -92,6 +99,8 @@ public class ChatCompletionsController {
     this.costCalculator = costCalculator;
     this.responseRedactor = responseRedactor;
     this.redaction = redaction;
+    this.injectionScanner = injectionScanner;
+    this.injectionProperties = injectionProperties;
     this.objectMapper = objectMapper;
   }
 
@@ -109,8 +118,29 @@ public class ChatCompletionsController {
     List<Match> found = redactor.redactInPlace(body);
     Map<String, Integer> redactionCounts = countByType(found);
 
-    // Enforce the tenant's policy; a denial is recorded, then stops the request.
     EvaluationContext ctx = contextFor(body, providerModel, found);
+
+    // Screen for prompt injection / jailbreak; when blocking is on, a hit is recorded and stops it.
+    if (injectionProperties.enabled() && injectionProperties.block()) {
+      List<InjectionFinding> injections = injectionScanner.scan(redactedPrompt(body));
+      if (!injections.isEmpty()) {
+        auditSink.record(
+            auditEntry(
+                ctx,
+                providerModel,
+                Verdict.BLOCKED,
+                body,
+                null,
+                null,
+                null,
+                null,
+                redactionCounts));
+        throw new PromptInjectionException(
+            "Request blocked: possible prompt injection (" + injections.get(0).category() + ").");
+      }
+    }
+
+    // Enforce the tenant's policy; a denial is recorded, then stops the request.
     Decision decision = policy.evaluate(ctx);
     if (!decision.allowed()) {
       auditSink.record(

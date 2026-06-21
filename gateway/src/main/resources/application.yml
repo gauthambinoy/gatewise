@@ -173,3 +173,9 @@ auvex:
     response:
       enabled: ${AUVEX_REDACT_RESPONSE:true}
       enforce: ${AUVEX_REDACT_RESPONSE_ENFORCE:false}
+
+  # Prompt-injection / jailbreak screening. enabled scans every prompt; block rejects a matching
+  # request with 403 (default: detect-and-allow, so it's observed before it's enforced).
+  injection:
+    enabled: ${AUVEX_INJECTION_ENABLED:true}
+    block: ${AUVEX_INJECTION_BLOCK:false}

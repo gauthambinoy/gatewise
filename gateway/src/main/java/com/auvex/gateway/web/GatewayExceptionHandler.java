@@ -45,6 +45,12 @@ public class GatewayExceptionHandler {
     return error(HttpStatus.FORBIDDEN, e.getMessage(), "policy_violation");
   }
 
+  /** A request blocked because the prompt looks like an injection / jailbreak → 403. */
+  @ExceptionHandler(PromptInjectionException.class)
+  public ResponseEntity<Map<String, Object>> handleInjection(PromptInjectionException e) {
+    return error(HttpStatus.FORBIDDEN, e.getMessage(), "prompt_injection");
+  }
+
   /** A tenant that has used up its call budget → 429. */
   @ExceptionHandler(BudgetExceededException.class)
   public ResponseEntity<Map<String, Object>> handleBudget(BudgetExceededException e) {
