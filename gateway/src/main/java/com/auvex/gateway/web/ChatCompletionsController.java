@@ -103,30 +103,34 @@ public class ChatCompletionsController {
     audit.append(auditEntry(ctx, providerModel, verdict, body));
 
     byte[] forwarded = objectMapper.writeValueAsBytes(body);
-    boolean streaming = body.path("stream").asBoolean(false);
-    if (cache.enabled() && !streaming) {
-      serveFromCacheOrUpstream(ctx.tenantId(), forwarded, response);
+    if (body.path("stream").asBoolean(false)) {
+      proxy.relay(forwarded, response); // streaming: straight through, no cache/failover
     } else {
-      proxy.relay(forwarded, response);
+      serveBuffered(ctx.tenantId(), forwarded, response);
     }
   }
 
-  // Non-streaming path: serve a cached response if present, else fetch, cache a success, and
-  // return.
-  private void serveFromCacheOrUpstream(
-      UUID tenantId, byte[] forwarded, HttpServletResponse response) throws IOException {
-    String key = cache.keyFor(tenantId, forwarded);
-    CachedResponse cached = cache.get(key);
-    if (cached == null) {
-      cached = proxy.fetch(forwarded);
-      if (cached.isSuccessful()) {
-        cache.put(key, cached);
+  // Non-streaming path: serve from cache if present, else fetch (with failover) and cache a
+  // success.
+  private void serveBuffered(UUID tenantId, byte[] forwarded, HttpServletResponse response)
+      throws IOException {
+    CachedResponse result;
+    if (cache.enabled()) {
+      String key = cache.keyFor(tenantId, forwarded);
+      result = cache.get(key);
+      if (result == null) {
+        result = proxy.fetch(forwarded);
+        if (result.isSuccessful()) {
+          cache.put(key, result);
+        }
       }
+    } else {
+      result = proxy.fetch(forwarded);
     }
-    response.setStatus(cached.status());
+    response.setStatus(result.status());
     response.setCharacterEncoding(StandardCharsets.UTF_8.name());
-    response.setContentType(cached.contentType());
-    response.getOutputStream().write(cached.body().getBytes(StandardCharsets.UTF_8));
+    response.setContentType(result.contentType());
+    response.getOutputStream().write(result.body().getBytes(StandardCharsets.UTF_8));
   }
 
   // Build the policy evaluation context from the tenant, model, caller and detected data types.

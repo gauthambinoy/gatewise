@@ -1,5 +1,6 @@
 package com.auvex.gateway.proxy;
 
+import com.auvex.gateway.config.FailoverProperties;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -11,18 +12,22 @@ import org.springframework.web.client.RestClient;
 /**
  * Forwards a chat-completions request to the upstream provider and relays the response.
  *
- * <p>The response is streamed straight through to the caller rather than buffered, so a normal JSON
- * reply and a server-sent-events stream are handled the same way — and on a virtual thread the
- * blocking copy costs almost nothing. The upstream status code is passed through verbatim (a
- * provider 429 stays a 429), so callers see the real provider behaviour.
+ * <p>The streaming path ({@link #relay}) copies the response straight through to the caller. The
+ * buffered path ({@link #fetch}) reads the whole response — which is what caching and provider
+ * failover need. The upstream status code is passed through verbatim (a provider 429 stays a 429).
  */
 @Component
 public class UpstreamProxy {
 
   private final RestClient openRouter;
+  private final RestClient failoverClient;
+  private final FailoverProperties failover;
 
-  public UpstreamProxy(RestClient openRouterRestClient) {
+  public UpstreamProxy(
+      RestClient openRouterRestClient, RestClient failoverRestClient, FailoverProperties failover) {
     this.openRouter = openRouterRestClient;
+    this.failoverClient = failoverRestClient;
+    this.failover = failover;
   }
 
   /**
@@ -57,28 +62,55 @@ public class UpstreamProxy {
   }
 
   /**
-   * Forwards the request and returns the fully-buffered response, for the cacheable (non-streaming)
-   * path. The status is passed through as-is so the caller can decide whether to cache it.
+   * Forwards the request and returns the fully-buffered response (non-streaming path).
+   *
+   * <p>If the primary can't be reached, or returns a 5xx, and failover is enabled, the fallback
+   * provider is tried. Only when both fail does this raise a 504.
    */
   public CachedResponse fetch(byte[] requestBody) {
+    CachedResponse primary;
     try {
-      return openRouter
-          .post()
-          .uri("/chat/completions")
-          .contentType(MediaType.APPLICATION_JSON)
-          .body(requestBody)
-          .exchange(
-              (request, response) -> {
-                MediaType contentType = response.getHeaders().getContentType();
-                byte[] body = response.getBody().readAllBytes();
-                return new CachedResponse(
-                    response.getStatusCode().value(),
-                    contentType != null ? contentType.toString() : MediaType.APPLICATION_JSON_VALUE,
-                    new String(body, StandardCharsets.UTF_8));
-              });
+      primary = fetchFrom(openRouter, requestBody);
     } catch (ResourceAccessException e) {
-      throw new UpstreamUnavailableException(
-          "The upstream model provider is unavailable or timed out.", e);
+      return failoverOrFail(requestBody, e);
     }
+    if (failover.enabled() && primary.status() >= 500) {
+      try {
+        return fetchFrom(failoverClient, requestBody);
+      } catch (ResourceAccessException e) {
+        return primary; // fallback is down too — surface the primary's 5xx
+      }
+    }
+    return primary;
+  }
+
+  private CachedResponse failoverOrFail(byte[] requestBody, ResourceAccessException cause) {
+    if (failover.enabled()) {
+      try {
+        return fetchFrom(failoverClient, requestBody);
+      } catch (ResourceAccessException e) {
+        throw new UpstreamUnavailableException(
+            "Both the primary and fallback providers are unavailable.", e);
+      }
+    }
+    throw new UpstreamUnavailableException(
+        "The upstream model provider is unavailable or timed out.", cause);
+  }
+
+  private static CachedResponse fetchFrom(RestClient client, byte[] requestBody) {
+    return client
+        .post()
+        .uri("/chat/completions")
+        .contentType(MediaType.APPLICATION_JSON)
+        .body(requestBody)
+        .exchange(
+            (request, response) -> {
+              MediaType contentType = response.getHeaders().getContentType();
+              byte[] body = response.getBody().readAllBytes();
+              return new CachedResponse(
+                  response.getStatusCode().value(),
+                  contentType != null ? contentType.toString() : MediaType.APPLICATION_JSON_VALUE,
+                  new String(body, StandardCharsets.UTF_8));
+            });
   }
 }
