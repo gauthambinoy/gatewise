@@ -6,6 +6,7 @@ import com.auvex.gateway.audit.Verdict;
 import com.auvex.gateway.auth.TenantContext;
 import com.auvex.gateway.budget.BudgetService;
 import com.auvex.gateway.cache.ResponseCache;
+import com.auvex.gateway.config.RedactionProperties;
 import com.auvex.gateway.policy.Decision;
 import com.auvex.gateway.policy.EvaluationContext;
 import com.auvex.gateway.policy.PolicyDeniedException;
@@ -17,6 +18,8 @@ import com.auvex.gateway.proxy.CachedResponse;
 import com.auvex.gateway.proxy.UpstreamProxy;
 import com.auvex.gateway.redaction.Match;
 import com.auvex.gateway.redaction.PromptRedactor;
+import com.auvex.gateway.redaction.ResponseRedaction;
+import com.auvex.gateway.redaction.ResponseRedactor;
 import com.auvex.gateway.routing.ModelRouter;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -26,6 +29,7 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -60,6 +64,8 @@ public class ChatCompletionsController {
   private final ResponseCache cache;
   private final UsageExtractor usageExtractor;
   private final CostCalculator costCalculator;
+  private final ResponseRedactor responseRedactor;
+  private final RedactionProperties redaction;
   private final ObjectMapper objectMapper;
 
   public ChatCompletionsController(
@@ -72,6 +78,8 @@ public class ChatCompletionsController {
       ResponseCache cache,
       UsageExtractor usageExtractor,
       CostCalculator costCalculator,
+      ResponseRedactor responseRedactor,
+      RedactionProperties redaction,
       ObjectMapper objectMapper) {
     this.proxy = proxy;
     this.router = router;
@@ -82,6 +90,8 @@ public class ChatCompletionsController {
     this.cache = cache;
     this.usageExtractor = usageExtractor;
     this.costCalculator = costCalculator;
+    this.responseRedactor = responseRedactor;
+    this.redaction = redaction;
     this.objectMapper = objectMapper;
   }
 
@@ -104,7 +114,8 @@ public class ChatCompletionsController {
     Decision decision = policy.evaluate(ctx);
     if (!decision.allowed()) {
       auditSink.record(
-          auditEntry(ctx, providerModel, Verdict.BLOCKED, body, null, null, null, redactionCounts));
+          auditEntry(
+              ctx, providerModel, Verdict.BLOCKED, body, null, null, null, null, redactionCounts));
       throw new PolicyDeniedException(decision.reason());
     }
 
@@ -114,30 +125,50 @@ public class ChatCompletionsController {
     }
 
     byte[] forwarded = objectMapper.writeValueAsBytes(body);
-    Verdict verdict = found.isEmpty() ? Verdict.ALLOWED : Verdict.REDACTED;
 
     if (body.path("stream").asBoolean(false)) {
-      // Streaming: token usage isn't available, so record without cost and stream straight through.
+      // Streaming: no buffered response or token usage, so record the request-side decision and
+      // stream straight through. (Capturing a streamed response is a later step.)
+      Verdict verdict = found.isEmpty() ? Verdict.ALLOWED : Verdict.REDACTED;
       auditSink.record(
-          auditEntry(ctx, providerModel, verdict, body, null, null, null, redactionCounts));
+          auditEntry(ctx, providerModel, verdict, body, null, null, null, null, redactionCounts));
       proxy.relay(forwarded, response);
       return;
     }
 
-    // Non-streaming: get the (possibly cached) response, price it, record it, then return it.
-    CachedResponse result = fetchBuffered(ctx.tenantId(), forwarded);
-    TokenUsage usage = usageExtractor.extract(result.body());
+    // Non-streaming: fetch, redact the response, price it, record it, then return it.
+    CachedResponse upstream = fetchBuffered(ctx.tenantId(), forwarded);
+    ResponseRedaction redactedResponse =
+        redaction.enabled() ? responseRedactor.redact(upstream.body()) : null;
+
+    List<Match> allFound = found;
+    String responseRedacted = null;
+    if (redactedResponse != null) {
+      allFound = new ArrayList<>(found);
+      allFound.addAll(redactedResponse.matches());
+      responseRedacted = redactedResponse.redactedText();
+    }
+    Verdict verdict = allFound.isEmpty() ? Verdict.ALLOWED : Verdict.REDACTED;
+    TokenUsage usage = usageExtractor.extract(upstream.body());
     auditSink.record(
         auditEntry(
             ctx,
             providerModel,
             verdict,
             body,
+            responseRedacted,
             usage == null ? null : usage.promptTokens(),
             usage == null ? null : usage.completionTokens(),
             costCalculator.cost(providerModel, usage),
-            redactionCounts));
-    writeResponse(response, result);
+            countByType(allFound)));
+
+    // With enforcement on, strip the response's PII from what the caller receives too.
+    CachedResponse toClient =
+        redactedResponse != null && redaction.enforce()
+            ? new CachedResponse(
+                upstream.status(), upstream.contentType(), redactedResponse.maskedBody())
+            : upstream;
+    writeResponse(response, toClient);
   }
 
   // Get the response for a non-streaming request: from cache if present, else fetch (with
@@ -188,6 +219,7 @@ public class ChatCompletionsController {
       String model,
       Verdict verdict,
       JsonNode body,
+      String responseRedacted,
       Integer promptTokens,
       Integer completionTokens,
       BigDecimal cost,
@@ -199,7 +231,7 @@ public class ChatCompletionsController {
         model,
         verdict,
         redactedPrompt(body),
-        null,
+        responseRedacted,
         Instant.now(),
         promptTokens,
         completionTokens,
