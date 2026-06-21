@@ -1,5 +1,6 @@
 package com.auvex.gateway.audit;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -34,6 +35,16 @@ public interface AuditLogRepository extends JpaRepository<AuditLog, Long> {
 
     long getCount();
   }
+
+  /** Total USD cost recorded for a tenant (0 when nothing has cost data). */
+  @Query("SELECT COALESCE(SUM(a.costUsd), 0) FROM AuditLog a WHERE a.tenantId = :tenantId")
+  BigDecimal sumCostByTenantId(@Param("tenantId") UUID tenantId);
+
+  /** Total tokens (prompt + completion) recorded for a tenant. */
+  @Query(
+      "SELECT COALESCE(SUM(a.promptTokens), 0) + COALESCE(SUM(a.completionTokens), 0)"
+          + " FROM AuditLog a WHERE a.tenantId = :tenantId")
+  long sumTokensByTenantId(@Param("tenantId") UUID tenantId);
 
   /** The current head of a tenant's chain (its most recent entry), if any. */
   Optional<AuditLog> findTopByTenantIdOrderByIdDesc(UUID tenantId);

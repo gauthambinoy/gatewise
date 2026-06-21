@@ -104,3 +104,16 @@ auvex:
   audit:
     async: ${AUVEX_AUDIT_ASYNC:false}
     topic: ${AUVEX_AUDIT_TOPIC:auvex.audit}
+
+  # Per-model pricing (USD per 1,000,000 tokens) for cost accounting; fallback covers the rest.
+  pricing:
+    fallback:
+      input-per-million: 1.0
+      output-per-million: 3.0
+    models:
+      "openai/gpt-4o":
+        input-per-million: 2.5
+        output-per-million: 10.0
+      "openai/gpt-4o-mini":
+        input-per-million: 0.15
+        output-per-million: 0.6

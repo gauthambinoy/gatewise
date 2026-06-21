@@ -30,6 +30,8 @@ public class UsageService {
         audit.countByTenantIdAndVerdict(tenantId, "blocked"),
         audit.countByTenantIdAndVerdict(tenantId, "redacted"),
         audit.countByTenantIdAndVerdict(tenantId, "error"),
-        byModel);
+        byModel,
+        audit.sumCostByTenantId(tenantId),
+        audit.sumTokensByTenantId(tenantId));
   }
 }

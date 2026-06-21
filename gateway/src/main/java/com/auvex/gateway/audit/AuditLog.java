@@ -6,6 +6,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
@@ -47,6 +48,15 @@ public class AuditLog {
   @Column(name = "created_at", nullable = false)
   private OffsetDateTime createdAt;
 
+  @Column(name = "prompt_tokens")
+  private Integer promptTokens;
+
+  @Column(name = "completion_tokens")
+  private Integer completionTokens;
+
+  @Column(name = "cost_usd")
+  private BigDecimal costUsd;
+
   /** JPA requires a no-arg constructor; not for application use. */
   protected AuditLog() {}
 
@@ -61,7 +71,10 @@ public class AuditLog {
       String responseRedacted,
       String prevHash,
       String entryHash,
-      OffsetDateTime createdAt) {
+      OffsetDateTime createdAt,
+      Integer promptTokens,
+      Integer completionTokens,
+      BigDecimal costUsd) {
     this.tenantId = tenantId;
     this.requestId = requestId;
     this.actor = actor;
@@ -72,6 +85,9 @@ public class AuditLog {
     this.prevHash = prevHash;
     this.entryHash = entryHash;
     this.createdAt = createdAt;
+    this.promptTokens = promptTokens;
+    this.completionTokens = completionTokens;
+    this.costUsd = costUsd;
   }
 
   public Long getId() {
@@ -116,5 +132,17 @@ public class AuditLog {
 
   public OffsetDateTime getCreatedAt() {
     return createdAt;
+  }
+
+  public Integer getPromptTokens() {
+    return promptTokens;
+  }
+
+  public Integer getCompletionTokens() {
+    return completionTokens;
+  }
+
+  public BigDecimal getCostUsd() {
+    return costUsd;
   }
 }
