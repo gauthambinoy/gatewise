@@ -33,16 +33,24 @@ public class AuditController {
     this.audit = audit;
   }
 
-  /** A page of the tenant's audit entries, newest first, optionally filtered by verdict. */
+  /**
+   * A page of the tenant's audit entries, newest first. Optionally filtered by {@code verdict}, and
+   * narrowed by a free-text {@code q} over the redacted prompt, model and actor.
+   */
   @GetMapping
   public AuditPage query(
       @RequestParam(required = false) String verdict,
+      @RequestParam(required = false) String q,
       @PageableDefault(size = 20, sort = "id", direction = Sort.Direction.DESC) Pageable pageable) {
     UUID tenantId = TenantContext.require().tenantId();
-    Page<AuditLog> page =
-        verdict == null
-            ? entries.findByTenantId(tenantId, pageable)
-            : entries.findByTenantIdAndVerdict(tenantId, verdict, pageable);
+    Page<AuditLog> page;
+    if (q != null && !q.isBlank()) {
+      page = entries.search(tenantId, verdict, q, pageable);
+    } else if (verdict != null) {
+      page = entries.findByTenantIdAndVerdict(tenantId, verdict, pageable);
+    } else {
+      page = entries.findByTenantId(tenantId, pageable);
+    }
     List<AuditView> views = page.getContent().stream().map(AuditView::of).toList();
     return new AuditPage(views, page.getNumber(), page.getSize(), page.getTotalElements());
   }

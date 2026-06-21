@@ -74,4 +74,20 @@ public interface AuditLogRepository extends JpaRepository<AuditLog, Long> {
 
   /** A page of a tenant's entries with a given verdict. */
   Page<AuditLog> findByTenantIdAndVerdict(UUID tenantId, String verdict, Pageable pageable);
+
+  /**
+   * Free-text search over the redacted prompt, model and actor (case-insensitive), with an optional
+   * verdict filter. Tenant-scoped; the verdict is applied only when non-null.
+   */
+  @Query(
+      "SELECT a FROM AuditLog a WHERE a.tenantId = :tenantId"
+          + " AND (:verdict IS NULL OR a.verdict = :verdict)"
+          + " AND (LOWER(a.promptRedacted) LIKE LOWER(CONCAT('%', :q, '%'))"
+          + " OR LOWER(a.model) LIKE LOWER(CONCAT('%', :q, '%'))"
+          + " OR LOWER(a.actor) LIKE LOWER(CONCAT('%', :q, '%')))")
+  Page<AuditLog> search(
+      @Param("tenantId") UUID tenantId,
+      @Param("verdict") String verdict,
+      @Param("q") String q,
+      Pageable pageable);
 }

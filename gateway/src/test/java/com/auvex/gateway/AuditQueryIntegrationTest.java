@@ -39,9 +39,13 @@ class AuditQueryIntegrationTest extends AbstractPostgresIntegrationTest {
   }
 
   private void appendEntry(UUID tenantId, Verdict verdict) {
+    appendEntry(tenantId, verdict, "prompt", "model-x");
+  }
+
+  private void appendEntry(UUID tenantId, Verdict verdict, String prompt, String model) {
     audit.append(
         new AuditEntry(
-            tenantId, UUID.randomUUID(), "svc", "model-x", verdict, "prompt", null, Instant.now()));
+            tenantId, UUID.randomUUID(), "svc", model, verdict, prompt, null, Instant.now()));
   }
 
   @Test
@@ -71,6 +75,23 @@ class AuditQueryIntegrationTest extends AbstractPostgresIntegrationTest {
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.total").value(1))
         .andExpect(jsonPath("$.entries[0].verdict").value("blocked"));
+  }
+
+  @Test
+  void searchesByFreeText() throws Exception {
+    TenantAuth a = newTenant();
+    appendEntry(a.tenantId(), Verdict.ALLOWED, "summarize the invoice", "gpt-4o");
+    appendEntry(a.tenantId(), Verdict.ALLOWED, "draft an offer letter", "claude-3");
+
+    mvc.perform(get("/v1/audit").param("q", "INVOICE").header("Authorization", "Bearer " + a.key()))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.total").value(1))
+        .andExpect(jsonPath("$.entries[0].promptRedacted").value("summarize the invoice"));
+
+    mvc.perform(get("/v1/audit").param("q", "claude").header("Authorization", "Bearer " + a.key()))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.total").value(1))
+        .andExpect(jsonPath("$.entries[0].model").value("claude-3"));
   }
 
   @Test
