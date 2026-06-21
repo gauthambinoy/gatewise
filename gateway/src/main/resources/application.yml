@@ -117,3 +117,17 @@ auvex:
       "openai/gpt-4o-mini":
         input-per-million: 0.15
         output-per-million: 0.6
+
+  # Console auth. dev-login is off by default (a real OIDC sign-in replaces it); the SSO providers
+  # are inert until their client id (and the OAuth wiring) is supplied.
+  auth:
+    session-secret: ${AUVEX_SESSION_SECRET:dev-insecure-session-secret-change-me-please-0123456789}
+    session-ttl: ${AUVEX_SESSION_TTL:8h}
+    dev-login-enabled: ${AUVEX_DEV_LOGIN_ENABLED:false}
+    sso:
+      google:
+        issuer: https://accounts.google.com
+        client-id: ${GOOGLE_CLIENT_ID:}
+      okta:
+        issuer: ${OKTA_ISSUER:}
+        client-id: ${OKTA_CLIENT_ID:}
