@@ -37,15 +37,18 @@ A screenshot/GIF of the core flow will be added here from a real production run 
 
 ```bash
 docker compose up --build --wait
-# gateway on :8080, with Postgres + Redis, all health-gated
+# gateway :8080 + React console :3000, with Postgres + Redis, all health-gated
 curl http://localhost:8080/actuator/health   # {"status":"UP"}
+# then open the console:  http://localhost:3000   (sign in with an API key)
 ```
 
-**Local dev (the gateway):**
+**Local dev:**
 
 ```bash
-./gradlew :gateway:bootRun        # needs Java 21; or run the built jar:
-./gradlew :gateway:bootJar && java -jar gateway/build/libs/gateway.jar
+# gateway (needs Java 21):
+./gradlew :gateway:bootRun        # or: ./gradlew :gateway:bootJar && java -jar gateway/build/libs/gateway.jar
+# console (hot reload; proxies the API to :8080):
+cd console && npm install && npm run dev   # http://localhost:5173
 ```
 
 **Tests & quality gates (all free, all must pass):**

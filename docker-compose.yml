@@ -68,5 +68,22 @@ services:
       retries: 12
       start_period: 45s
 
+  # The React admin console: an nginx image serving the built SPA and proxying the
+  # API to the gateway, so the browser sees a single origin (no CORS).
+  console:
+    build:
+      context: ./console
+    ports:
+      - "${CONSOLE_PORT:-3000}:80"
+    depends_on:
+      gateway:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:80/"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+
 volumes:
   pgdata:
