@@ -79,7 +79,18 @@ auvex:
     models:
       fast: openai/gpt-4o-mini
       smart: openai/gpt-4o
+      claude: anthropic/claude-3-5-sonnet-20241022
       default: openai/gpt-oss-120b:free
+
+  # Native Anthropic: when enabled, anthropic/* models go directly to Anthropic's /v1/messages
+  # (translated to/from the OpenAI shape). Off by default — anthropic/* still works via the
+  # OpenAI-compatible primary (e.g. OpenRouter) until you switch this on with a direct key.
+  anthropic:
+    enabled: ${AUVEX_ANTHROPIC_ENABLED:false}
+    base-url: ${ANTHROPIC_BASE_URL:https://api.anthropic.com}
+    api-key: ${ANTHROPIC_API_KEY:}
+    version: ${ANTHROPIC_VERSION:2023-06-01}
+    max-tokens: ${ANTHROPIC_MAX_TOKENS:1024}
 
   # Response cache: a repeat non-streaming request returns the stored response and
   # skips the upstream call. Disable to send every call upstream.
