@@ -80,7 +80,8 @@ services:
         condition: service_healthy
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:80/"]
+      # 127.0.0.1 (not localhost) so busybox wget uses IPv4, where nginx listens.
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1/"]
       interval: 10s
       timeout: 5s
       retries: 6
