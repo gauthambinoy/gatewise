@@ -67,12 +67,28 @@ public class ApiKey {
     return tenantId;
   }
 
+  public String getName() {
+    return name;
+  }
+
   public String getKeyHash() {
     return keyHash;
   }
 
+  public String getPrefix() {
+    return prefix;
+  }
+
   public String getStatus() {
     return status;
+  }
+
+  public OffsetDateTime getLastUsedAt() {
+    return lastUsedAt;
+  }
+
+  public OffsetDateTime getCreatedAt() {
+    return createdAt;
   }
 
   public OffsetDateTime getExpiresAt() {
