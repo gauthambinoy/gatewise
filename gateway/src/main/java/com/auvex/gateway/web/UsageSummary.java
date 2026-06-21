@@ -12,4 +12,5 @@ public record UsageSummary(
     long errored,
     Map<String, Long> byModel,
     BigDecimal totalCostUsd,
-    long totalTokens) {}
+    long totalTokens,
+    Map<String, Long> redactionByType) {}

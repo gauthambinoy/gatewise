@@ -24,6 +24,11 @@ public class UsageService {
                 Collectors.toMap(
                     count -> count.getModel() == null ? "unknown" : count.getModel(),
                     AuditLogRepository.ModelCount::getCount));
+    Map<String, Long> redactionByType =
+        audit.sumRedactionByType(tenantId).stream()
+            .collect(
+                Collectors.toMap(
+                    AuditLogRepository.TypeCount::getType, AuditLogRepository.TypeCount::getTotal));
     return new UsageSummary(
         audit.countByTenantId(tenantId),
         audit.countByTenantIdAndVerdict(tenantId, "allowed"),
@@ -32,6 +37,7 @@ public class UsageService {
         audit.countByTenantIdAndVerdict(tenantId, "error"),
         byModel,
         audit.sumCostByTenantId(tenantId),
-        audit.sumTokensByTenantId(tenantId));
+        audit.sumTokensByTenantId(tenantId),
+        redactionByType);
   }
 }
