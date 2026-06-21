@@ -4,10 +4,12 @@ import com.auvex.gateway.audit.AuditEntry;
 import com.auvex.gateway.audit.AuditService;
 import com.auvex.gateway.audit.Verdict;
 import com.auvex.gateway.auth.TenantContext;
+import com.auvex.gateway.cache.ResponseCache;
 import com.auvex.gateway.policy.Decision;
 import com.auvex.gateway.policy.EvaluationContext;
 import com.auvex.gateway.policy.PolicyDeniedException;
 import com.auvex.gateway.policy.PolicyEnforcement;
+import com.auvex.gateway.proxy.CachedResponse;
 import com.auvex.gateway.proxy.UpstreamProxy;
 import com.auvex.gateway.redaction.Match;
 import com.auvex.gateway.redaction.PromptRedactor;
@@ -17,6 +19,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.List;
 import java.util.Locale;
@@ -45,6 +48,7 @@ public class ChatCompletionsController {
   private final PromptRedactor redactor;
   private final PolicyEnforcement policy;
   private final AuditService audit;
+  private final ResponseCache cache;
   private final ObjectMapper objectMapper;
 
   public ChatCompletionsController(
@@ -53,12 +57,14 @@ public class ChatCompletionsController {
       PromptRedactor redactor,
       PolicyEnforcement policy,
       AuditService audit,
+      ResponseCache cache,
       ObjectMapper objectMapper) {
     this.proxy = proxy;
     this.router = router;
     this.redactor = redactor;
     this.policy = policy;
     this.audit = audit;
+    this.cache = cache;
     this.objectMapper = objectMapper;
   }
 
@@ -98,7 +104,32 @@ public class ChatCompletionsController {
     if (!decision.allowed()) {
       throw new PolicyDeniedException(decision.reason());
     }
-    proxy.relay(objectMapper.writeValueAsBytes(body), response);
+
+    byte[] forwarded = objectMapper.writeValueAsBytes(body);
+    boolean streaming = body.path("stream").asBoolean(false);
+    if (cache.enabled() && !streaming) {
+      serveFromCacheOrUpstream(ctx.tenantId(), forwarded, response);
+    } else {
+      proxy.relay(forwarded, response);
+    }
+  }
+
+  // Non-streaming path: serve a cached response if present, else fetch, cache a success, and
+  // return.
+  private void serveFromCacheOrUpstream(
+      UUID tenantId, byte[] forwarded, HttpServletResponse response) throws IOException {
+    String key = cache.keyFor(tenantId, forwarded);
+    CachedResponse cached = cache.get(key);
+    if (cached == null) {
+      cached = proxy.fetch(forwarded);
+      if (cached.isSuccessful()) {
+        cache.put(key, cached);
+      }
+    }
+    response.setStatus(cached.status());
+    response.setCharacterEncoding(StandardCharsets.UTF_8.name());
+    response.setContentType(cached.contentType());
+    response.getOutputStream().write(cached.body().getBytes(StandardCharsets.UTF_8));
   }
 
   // Build the policy evaluation context from the tenant, model, caller and detected data types.

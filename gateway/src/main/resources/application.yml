@@ -24,6 +24,12 @@ spring:
     enabled: true
     locations: classpath:db/migration
 
+  # Redis backs the response cache.
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+
 # Port is env-overridable so the same image runs unchanged in any environment.
 server:
   port: ${SERVER_PORT:8080}
@@ -31,6 +37,10 @@ server:
 # Actuator exposes a health probe for container and load-balancer checks. Kept
 # to health + info only, with no details over HTTP, so nothing sensitive leaks.
 management:
+  # The cache fails open, so Redis being unavailable must not mark the gateway unhealthy.
+  health:
+    redis:
+      enabled: false
   endpoints:
     web:
       exposure:
@@ -58,3 +68,9 @@ auvex:
       fast: openai/gpt-4o-mini
       smart: openai/gpt-4o
       default: openai/gpt-oss-120b:free
+
+  # Response cache: a repeat non-streaming request returns the stored response and
+  # skips the upstream call. Disable to send every call upstream.
+  cache:
+    enabled: ${AUVEX_CACHE_ENABLED:true}
+    ttl: ${AUVEX_CACHE_TTL:5m}

@@ -2,6 +2,7 @@ package com.auvex.gateway.proxy;
 
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.ResourceAccessException;
@@ -50,6 +51,32 @@ public class UpstreamProxy {
               });
     } catch (ResourceAccessException e) {
       // Connection refused / timed out before we got a response — a clean 504 case.
+      throw new UpstreamUnavailableException(
+          "The upstream model provider is unavailable or timed out.", e);
+    }
+  }
+
+  /**
+   * Forwards the request and returns the fully-buffered response, for the cacheable (non-streaming)
+   * path. The status is passed through as-is so the caller can decide whether to cache it.
+   */
+  public CachedResponse fetch(byte[] requestBody) {
+    try {
+      return openRouter
+          .post()
+          .uri("/chat/completions")
+          .contentType(MediaType.APPLICATION_JSON)
+          .body(requestBody)
+          .exchange(
+              (request, response) -> {
+                MediaType contentType = response.getHeaders().getContentType();
+                byte[] body = response.getBody().readAllBytes();
+                return new CachedResponse(
+                    response.getStatusCode().value(),
+                    contentType != null ? contentType.toString() : MediaType.APPLICATION_JSON_VALUE,
+                    new String(body, StandardCharsets.UTF_8));
+              });
+    } catch (ResourceAccessException e) {
       throw new UpstreamUnavailableException(
           "The upstream model provider is unavailable or timed out.", e);
     }
