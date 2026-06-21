@@ -16,4 +16,7 @@ public interface MemberRepository extends JpaRepository<Member, UUID> {
 
   /** Whether the tenant already has a member with this email (uniqueness check). */
   boolean existsByTenantIdAndEmail(UUID tenantId, String email);
+
+  /** A tenant's member by email, for console sign-in. */
+  Optional<Member> findByTenantIdAndEmail(UUID tenantId, String email);
 }
