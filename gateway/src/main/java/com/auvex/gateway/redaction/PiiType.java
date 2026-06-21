@@ -9,5 +9,16 @@ public enum PiiType {
   AWS_SECRET_KEY,
   API_KEY,
   JWT,
-  PEM_PRIVATE_KEY
+  PEM_PRIVATE_KEY,
+  // Personal identifiers
+  US_SSN,
+  PHONE,
+  IP_ADDRESS,
+  MAC_ADDRESS,
+  // Provider secrets / tokens
+  GITHUB_TOKEN,
+  SLACK_TOKEN,
+  GOOGLE_API_KEY,
+  STRIPE_KEY,
+  OPENAI_KEY
 }

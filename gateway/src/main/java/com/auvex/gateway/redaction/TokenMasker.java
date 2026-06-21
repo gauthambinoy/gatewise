@@ -23,6 +23,15 @@ public class TokenMasker implements Masker {
       case API_KEY -> "‹API_KEY_REDACTED›";
       case JWT -> "‹JWT_REDACTED›";
       case PEM_PRIVATE_KEY -> "‹PRIVATE_KEY_REDACTED›";
+      case US_SSN -> "‹SSN_REDACTED›";
+      case PHONE -> "‹PHONE_REDACTED›";
+      case IP_ADDRESS -> "‹IP_REDACTED›";
+      case MAC_ADDRESS -> "‹MAC_REDACTED›";
+      case GITHUB_TOKEN -> "‹GITHUB_TOKEN_REDACTED›";
+      case SLACK_TOKEN -> "‹SLACK_TOKEN_REDACTED›";
+      case GOOGLE_API_KEY -> "‹GOOGLE_API_KEY_REDACTED›";
+      case STRIPE_KEY -> "‹STRIPE_KEY_REDACTED›";
+      case OPENAI_KEY -> "‹OPENAI_KEY_REDACTED›";
     };
   }
 }
