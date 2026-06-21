@@ -20,5 +20,12 @@ public enum PiiType {
   SLACK_TOKEN,
   GOOGLE_API_KEY,
   STRIPE_KEY,
-  OPENAI_KEY
+  OPENAI_KEY,
+  // National / government identifiers (global compliance)
+  UK_NINO,
+  INDIA_PAN,
+  INDIA_AADHAAR,
+  CANADA_SIN,
+  US_ITIN,
+  AU_TFN
 }

@@ -32,6 +32,12 @@ public class TokenMasker implements Masker {
       case GOOGLE_API_KEY -> "‹GOOGLE_API_KEY_REDACTED›";
       case STRIPE_KEY -> "‹STRIPE_KEY_REDACTED›";
       case OPENAI_KEY -> "‹OPENAI_KEY_REDACTED›";
+      case UK_NINO -> "‹UK_NINO_REDACTED›";
+      case INDIA_PAN -> "‹PAN_REDACTED›";
+      case INDIA_AADHAAR -> "‹AADHAAR_REDACTED›";
+      case CANADA_SIN -> "‹SIN_REDACTED›";
+      case US_ITIN -> "‹ITIN_REDACTED›";
+      case AU_TFN -> "‹TFN_REDACTED›";
     };
   }
 }
