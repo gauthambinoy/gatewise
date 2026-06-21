@@ -1,6 +1,7 @@
 package com.auvex.gateway.web;
 
 import com.auvex.gateway.audit.AuditLogRepository;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -39,5 +40,15 @@ public class UsageService {
         audit.sumCostByTenantId(tenantId),
         audit.sumTokensByTenantId(tenantId),
         redactionByType);
+  }
+
+  /** Per-user usage for the tenant, aggregated from the audit actor. */
+  public List<UserUsageView> byUser(UUID tenantId) {
+    return audit.usageByActor(tenantId).stream()
+        .map(
+            u ->
+                new UserUsageView(
+                    u.getActor(), u.getRequests(), u.getRedacted(), u.getBlocked(), u.getCost()))
+        .toList();
   }
 }

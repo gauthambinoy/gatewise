@@ -1,6 +1,7 @@
 package com.auvex.gateway.web;
 
 import com.auvex.gateway.auth.TenantContext;
+import java.util.List;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -20,5 +21,11 @@ public class UsageController {
   @GetMapping
   public UsageSummary summary() {
     return usage.summarize(TenantContext.require().tenantId());
+  }
+
+  /** The tenant's usage broken down per user (actor). */
+  @GetMapping("/users")
+  public List<UserUsageView> byUser() {
+    return usage.byUser(TenantContext.require().tenantId());
   }
 }
