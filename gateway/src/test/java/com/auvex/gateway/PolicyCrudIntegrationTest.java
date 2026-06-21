@@ -67,6 +67,20 @@ class PolicyCrudIntegrationTest extends AbstractPostgresIntegrationTest {
   }
 
   @Test
+  void persistsARedactPolicy() throws Exception {
+    String key = authKey();
+    String id =
+        createPolicy(
+            key,
+            "{\"name\":\"redact-email\",\"effect\":\"redact\",\"resourceType\":\"data_type\","
+                + "\"resourceValue\":\"email\"}");
+
+    mvc.perform(get("/v1/policies/" + id).header("Authorization", "Bearer " + key))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.effect").value("redact"));
+  }
+
+  @Test
   void validationRejectsAnUnknownEffect() throws Exception {
     String key = authKey();
     String bad =
