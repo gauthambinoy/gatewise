@@ -197,3 +197,9 @@ auvex:
   webhook:
     enabled: ${AUVEX_WEBHOOK_ENABLED:false}
     url: ${AUVEX_WEBHOOK_URL:}
+
+  # Cost-anomaly alerting: warn and notify the webhook (auvex.webhook.url) when a tenant's cumulative
+  # spend first crosses the threshold. Off by default; async and fail-open.
+  cost-alert:
+    enabled: ${AUVEX_COST_ALERT_ENABLED:false}
+    threshold-usd: ${AUVEX_COST_ALERT_THRESHOLD:100}
