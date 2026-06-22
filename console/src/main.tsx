@@ -6,6 +6,7 @@ import '@fontsource/inter/500.css'
 import '@fontsource/inter/600.css'
 import '@tabler/icons-webfont/dist/tabler-icons.min.css'
 import './styles/tokens.css'
+import './styles/animations.css'
 import { App } from './App'
 import { AuthProvider } from './auth/AuthContext'
 

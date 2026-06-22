@@ -1,6 +1,44 @@
+import { useEffect, useRef, useState } from 'react'
 import type { CSSProperties, ReactNode } from 'react'
 
 export type Tone = 'info' | 'danger' | 'success' | 'warning'
+
+/** Animates a number from 0 to {@link end} on mount (eased), optionally formatted. Honours
+ * prefers-reduced-motion by snapping straight to the final value. */
+export function CountUp({
+  end,
+  format,
+  duration = 950,
+}: {
+  end: number
+  format?: (n: number) => string
+  duration?: number
+}) {
+  const reduce =
+    typeof window !== 'undefined' &&
+    window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+  const [n, setN] = useState(reduce ? end : 0)
+  const raf = useRef<number>()
+
+  useEffect(() => {
+    if (reduce) {
+      setN(end)
+      return
+    }
+    const start = performance.now()
+    const tick = (t: number) => {
+      const p = Math.min(1, (t - start) / duration)
+      setN(end * (1 - Math.pow(1 - p, 3))) // easeOutCubic
+      if (p < 1) raf.current = requestAnimationFrame(tick)
+    }
+    raf.current = requestAnimationFrame(tick)
+    return () => {
+      if (raf.current) cancelAnimationFrame(raf.current)
+    }
+  }, [end, duration, reduce])
+
+  return <>{format ? format(n) : Math.round(n).toLocaleString()}</>
+}
 
 /** A page title + optional subtitle and right-aligned actions. */
 export function PageHeader({

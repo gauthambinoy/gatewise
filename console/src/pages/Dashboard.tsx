@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 import { api } from '../lib/api'
 import { useApi } from '../lib/useApi'
-import { Badge, ErrorState, Loading, Stat, clock, money, verdictTone } from '../components/ui'
+import { Badge, CountUp, ErrorState, Loading, Stat, clock, money, verdictTone } from '../components/ui'
 
 export function Dashboard() {
   const usage = useApi(() => api.usage())
@@ -43,6 +43,7 @@ export function Dashboard() {
           }}
         >
           <span
+            className="pulse-dot"
             style={{
               width: 8,
               height: 8,
@@ -55,10 +56,10 @@ export function Dashboard() {
       </div>
 
       <div className="stat-grid" style={{ marginBottom: 16 }}>
-        <Stat label="Total requests" value={d.totalCalls.toLocaleString()} />
-        <Stat label="PII redacted" value={d.redacted.toLocaleString()} tone="info" />
-        <Stat label="Blocked" value={d.blocked.toLocaleString()} tone="danger" />
-        <Stat label="Total cost" value={money(d.totalCostUsd)} />
+        <Stat label="Total requests" value={<CountUp end={d.totalCalls} />} />
+        <Stat label="PII redacted" value={<CountUp end={d.redacted} />} tone="info" />
+        <Stat label="Blocked" value={<CountUp end={d.blocked} />} tone="danger" />
+        <Stat label="Total cost" value={<CountUp end={d.totalCostUsd} format={money} />} />
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: 16 }}>
@@ -123,10 +124,11 @@ export function Dashboard() {
                     style={{ height: 6, background: 'var(--color-background-tertiary)', borderRadius: 4 }}
                   >
                     <div
+                      className="growx"
                       style={{
                         width: `${(n / maxLeak) * 100}%`,
                         height: 6,
-                        background: 'var(--color-text-info)',
+                        background: 'linear-gradient(90deg, var(--color-text-info), #7c5ce8)',
                         borderRadius: 4,
                       }}
                     />
