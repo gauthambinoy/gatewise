@@ -122,6 +122,12 @@ auvex:
     max-calls: ${AUVEX_BUDGET_MAX_CALLS:100000}
     window: ${AUVEX_BUDGET_WINDOW:1d}
 
+  # Per-tenant rate limit: a per-minute burst cap (429 when exceeded), shared across instances via
+  # Redis and fail-open. Distinct from the longer-window call budget above. Off by default.
+  ratelimit:
+    enabled: ${AUVEX_RATELIMIT_ENABLED:false}
+    requests-per-minute: ${AUVEX_RATELIMIT_RPM:600}
+
   # Fallback provider, tried (non-streaming) when the primary can't be reached or 5xxs.
   failover:
     enabled: ${AUVEX_FAILOVER_ENABLED:false}
