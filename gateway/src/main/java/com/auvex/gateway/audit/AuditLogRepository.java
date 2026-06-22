@@ -91,6 +91,9 @@ public interface AuditLogRepository extends JpaRepository<AuditLog, Long> {
   /** A tenant's chain oldest-first, for verification. */
   List<AuditLog> findByTenantIdOrderByIdAsc(UUID tenantId);
 
+  /** Every entry recorded for one actor (data subject), for a GDPR access request. */
+  List<AuditLog> findByTenantIdAndActorOrderByIdAsc(UUID tenantId, String actor);
+
   /** One entry, only if it belongs to the tenant (for the request-detail view). */
   Optional<AuditLog> findByIdAndTenantId(Long id, UUID tenantId);
 

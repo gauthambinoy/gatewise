@@ -76,8 +76,26 @@ public class AuditController {
         .orElseGet(() -> new VerifyResult(true, null));
   }
 
+  /**
+   * GDPR subject-access export: every audit entry recorded for one data subject ({@code subject},
+   * matched on the actor), oldest first and scoped to the tenant — the artifact for answering a
+   * right-of-access (DSAR) request.
+   */
+  @GetMapping("/dsar")
+  public DsarExport dsar(@RequestParam String subject) {
+    UUID tenantId = TenantContext.require().tenantId();
+    List<AuditView> views =
+        entries.findByTenantIdAndActorOrderByIdAsc(tenantId, subject).stream()
+            .map(AuditView::of)
+            .toList();
+    return new DsarExport(subject, views.size(), views);
+  }
+
   /** A page of audit entries plus its paging metadata. */
   public record AuditPage(List<AuditView> entries, int page, int size, long total) {}
+
+  /** A GDPR subject-access export for one data subject. */
+  public record DsarExport(String subject, int entryCount, List<AuditView> entries) {}
 
   /** The result of a chain verification: intact, or the id of the first broken link. */
   public record VerifyResult(boolean intact, Long firstBrokenId) {}
