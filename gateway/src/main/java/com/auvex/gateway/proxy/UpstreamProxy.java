@@ -1,7 +1,9 @@
 package com.auvex.gateway.proxy;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.servlet.ServletOutputStream;
 import jakarta.servlet.http.HttpServletResponse;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
@@ -21,6 +23,10 @@ import org.springframework.web.client.RestClient;
 @Component
 public class UpstreamProxy {
 
+  // Cap how much of a streamed response we copy for auditing, so a huge stream can't exhaust
+  // memory.
+  private static final int CAPTURE_LIMIT = 512 * 1024;
+
   private final List<ProviderAdapter> adapters;
   private final RestClient openRouter;
   private final ObjectMapper objectMapper;
@@ -33,9 +39,12 @@ public class UpstreamProxy {
   }
 
   /**
-   * Sends {@code requestBody} to the provider and copies the response into {@code clientResponse}.
+   * Sends {@code requestBody} to the provider, streams the response straight to {@code
+   * clientResponse}, and returns a capped copy of the bytes streamed — so the streamed response can
+   * still be captured and audited after the fact, without holding up the stream.
    */
-  public void relay(byte[] requestBody, HttpServletResponse clientResponse) {
+  public byte[] relay(byte[] requestBody, HttpServletResponse clientResponse) {
+    ByteArrayOutputStream capture = new ByteArrayOutputStream();
     try {
       openRouter
           .post()
@@ -51,7 +60,16 @@ public class UpstreamProxy {
                   clientResponse.setContentType(contentType.toString());
                 }
                 try (InputStream upstream = response.getBody()) {
-                  upstream.transferTo(clientResponse.getOutputStream());
+                  ServletOutputStream out = clientResponse.getOutputStream();
+                  byte[] buffer = new byte[8192];
+                  int read;
+                  while ((read = upstream.read(buffer)) != -1) {
+                    out.write(buffer, 0, read); // tee to the caller, uninterrupted
+                    int room = CAPTURE_LIMIT - capture.size();
+                    if (room > 0) {
+                      capture.write(buffer, 0, Math.min(read, room)); // and to the audit copy
+                    }
+                  }
                 }
                 clientResponse.flushBuffer();
                 return null;
@@ -61,6 +79,7 @@ public class UpstreamProxy {
       throw new UpstreamUnavailableException(
           "The upstream model provider is unavailable or timed out.", e);
     }
+    return capture.toByteArray();
   }
 
   /** Forwards the request and returns the fully-buffered response, via the matching adapter. */
