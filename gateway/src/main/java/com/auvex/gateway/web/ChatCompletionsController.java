@@ -8,6 +8,7 @@ import com.auvex.gateway.budget.BudgetService;
 import com.auvex.gateway.cache.ResponseCache;
 import com.auvex.gateway.config.InjectionProperties;
 import com.auvex.gateway.config.RedactionProperties;
+import com.auvex.gateway.config.TokenizationProperties;
 import com.auvex.gateway.injection.InjectionFinding;
 import com.auvex.gateway.injection.InjectionScanner;
 import com.auvex.gateway.policy.Decision;
@@ -23,6 +24,7 @@ import com.auvex.gateway.redaction.Match;
 import com.auvex.gateway.redaction.PromptRedactor;
 import com.auvex.gateway.redaction.ResponseRedaction;
 import com.auvex.gateway.redaction.ResponseRedactor;
+import com.auvex.gateway.redaction.ReversibleRedaction;
 import com.auvex.gateway.routing.ModelRouter;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -71,6 +73,7 @@ public class ChatCompletionsController {
   private final RedactionProperties redaction;
   private final InjectionScanner injectionScanner;
   private final InjectionProperties injectionProperties;
+  private final TokenizationProperties tokenization;
   private final ObjectMapper objectMapper;
 
   public ChatCompletionsController(
@@ -87,6 +90,7 @@ public class ChatCompletionsController {
       RedactionProperties redaction,
       InjectionScanner injectionScanner,
       InjectionProperties injectionProperties,
+      TokenizationProperties tokenization,
       ObjectMapper objectMapper) {
     this.proxy = proxy;
     this.router = router;
@@ -101,6 +105,7 @@ public class ChatCompletionsController {
     this.redaction = redaction;
     this.injectionScanner = injectionScanner;
     this.injectionProperties = injectionProperties;
+    this.tokenization = tokenization;
     this.objectMapper = objectMapper;
   }
 
@@ -114,8 +119,20 @@ public class ChatCompletionsController {
     String providerModel = router.resolve(body.get("model").asText());
     ((ObjectNode) body).put("model", providerModel);
 
-    // Mask sensitive data out of the prompt, and learn which data types it contained.
-    List<Match> found = redactor.redactInPlace(body);
+    // Mask sensitive data out of the prompt, and learn which data types it contained. With
+    // reversible tokenization on, the provider sees per-value tokens and the (non-streaming)
+    // response is restored for the caller via the vault; otherwise it's a plain, non-reversible
+    // mask and the vault is empty.
+    Map<String, String> vault;
+    List<Match> found;
+    if (tokenization.enabled()) {
+      ReversibleRedaction reversible = redactor.redactReversiblyInPlace(body);
+      found = reversible.matches();
+      vault = reversible.vault();
+    } else {
+      found = redactor.redactInPlace(body);
+      vault = Map.of();
+    }
     Map<String, Integer> redactionCounts = countByType(found);
 
     EvaluationContext ctx = contextFor(body, providerModel, found);
@@ -198,7 +215,22 @@ public class ChatCompletionsController {
             ? new CachedResponse(
                 upstream.status(), upstream.contentType(), redactedResponse.maskedBody())
             : upstream;
+    if (!vault.isEmpty()) {
+      // Restore the caller's own values into the response — the provider only ever saw the tokens.
+      toClient =
+          new CachedResponse(
+              toClient.status(), toClient.contentType(), restoreTokens(toClient.body(), vault));
+    }
     writeResponse(response, toClient);
+  }
+
+  // Replace each reversible token in the response with its original value, for the caller only.
+  private static String restoreTokens(String body, Map<String, String> vault) {
+    String restored = body;
+    for (Map.Entry<String, String> entry : vault.entrySet()) {
+      restored = restored.replace(entry.getKey(), entry.getValue());
+    }
+    return restored;
   }
 
   // Get the response for a non-streaming request: from cache if present, else fetch (with

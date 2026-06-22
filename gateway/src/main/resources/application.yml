@@ -174,6 +174,12 @@ auvex:
       enabled: ${AUVEX_REDACT_RESPONSE:true}
       enforce: ${AUVEX_REDACT_RESPONSE_ENFORCE:false}
 
+  # Reversible tokenization: when on, the prompt's sensitive values are replaced with per-value
+  # tokens (the provider never sees them) and restored in the non-streaming response for the caller.
+  # Off by default — redaction is plain and one-way unless this is enabled.
+  tokenization:
+    enabled: ${AUVEX_TOKENIZATION_ENABLED:false}
+
   # Prompt-injection / jailbreak screening. enabled scans every prompt; block rejects a matching
   # request with 403 (default: detect-and-allow, so it's observed before it's enforced).
   injection:
