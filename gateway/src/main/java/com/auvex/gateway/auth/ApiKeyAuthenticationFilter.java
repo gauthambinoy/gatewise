@@ -1,5 +1,6 @@
 package com.auvex.gateway.auth;
 
+import com.auvex.gateway.ratelimit.RateLimiter;
 import com.auvex.gateway.tenant.ApiKey;
 import com.auvex.gateway.tenant.ApiKeyRepository;
 import com.auvex.gateway.tenant.Tenant;
@@ -12,6 +13,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Map;
 import java.util.Optional;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -31,12 +33,17 @@ public class ApiKeyAuthenticationFilter extends OncePerRequestFilter {
   private final ApiKeyRepository apiKeys;
   private final TenantRepository tenants;
   private final ObjectMapper json;
+  private final RateLimiter rateLimiter;
 
   public ApiKeyAuthenticationFilter(
-      ApiKeyRepository apiKeys, TenantRepository tenants, ObjectMapper json) {
+      ApiKeyRepository apiKeys,
+      TenantRepository tenants,
+      ObjectMapper json,
+      RateLimiter rateLimiter) {
     this.apiKeys = apiKeys;
     this.tenants = tenants;
     this.json = json;
+    this.rateLimiter = rateLimiter;
   }
 
   // Guard only the gateway API surface; health checks and other paths stay public.
@@ -84,6 +91,11 @@ public class ApiKeyAuthenticationFilter extends OncePerRequestFilter {
       return;
     }
 
+    if (!rateLimiter.allow(key.getTenantId())) {
+      tooManyRequests(response, "Rate limit exceeded; too many requests this minute.");
+      return;
+    }
+
     TenantContext.set(new AuthenticatedTenant(key.getTenantId(), key.getId()));
     try {
       chain.doFilter(request, response);
@@ -102,5 +114,14 @@ public class ApiKeyAuthenticationFilter extends OncePerRequestFilter {
             "error",
             Map.of(
                 "message", message, "type", "invalid_request_error", "code", "invalid_api_key")));
+  }
+
+  // Same OpenAI-style envelope, for a 429 when the tenant exceeds its rate limit.
+  private void tooManyRequests(HttpServletResponse response, String message) throws IOException {
+    response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
+    response.setContentType("application/json");
+    json.writeValue(
+        response.getWriter(),
+        Map.of("error", Map.of("message", message, "type", "rate_limit_exceeded")));
   }
 }
