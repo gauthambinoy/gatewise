@@ -6,6 +6,7 @@ import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.Optional;
 import java.util.UUID;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,10 +23,15 @@ public class AuditService {
 
   private final AuditLogRepository repository;
   private final EntityManager entityManager;
+  private final ApplicationEventPublisher events;
 
-  public AuditService(AuditLogRepository repository, EntityManager entityManager) {
+  public AuditService(
+      AuditLogRepository repository,
+      EntityManager entityManager,
+      ApplicationEventPublisher events) {
     this.repository = repository;
     this.entityManager = entityManager;
+    this.events = events;
   }
 
   /** Appends an entry to its tenant's chain, computing and storing the link hashes. */
@@ -56,7 +62,9 @@ public class AuditService {
             entry.completionTokens(),
             entry.costUsd(),
             entry.redactionCounts());
-    return repository.save(row);
+    AuditLog saved = repository.save(row);
+    events.publishEvent(new AuditRecordedEvent(saved));
+    return saved;
   }
 
   /**

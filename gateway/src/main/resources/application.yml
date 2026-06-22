@@ -179,3 +179,9 @@ auvex:
   injection:
     enabled: ${AUVEX_INJECTION_ENABLED:true}
     block: ${AUVEX_INJECTION_BLOCK:false}
+
+  # Stream every audit event to a webhook / SIEM (Splunk, Datadog, …). Off by default; delivery is
+  # asynchronous and fail-open, so it never blocks or breaks a gateway call.
+  webhook:
+    enabled: ${AUVEX_WEBHOOK_ENABLED:false}
+    url: ${AUVEX_WEBHOOK_URL:}
