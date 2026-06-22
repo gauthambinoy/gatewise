@@ -4,6 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
@@ -32,6 +34,32 @@ class PromptRedactorTest {
     assertThat(body.get("messages").get(1).get("content").asText())
         .doesNotContain("a@b.io")
         .contains("EMAIL_REDACTED");
+  }
+
+  @Test
+  void reachesArrayContentTextAndToolCallArguments() {
+    ObjectNode body = mapper.createObjectNode();
+    ArrayNode messages = body.putArray("messages");
+
+    // Multimodal-style array content with a text part.
+    ObjectNode user = messages.addObject();
+    user.put("role", "user");
+    ObjectNode part = user.putArray("content").addObject();
+    part.put("type", "text");
+    part.put("text", "my email is bob@secret.com");
+
+    // A function call whose arguments JSON carries a card number.
+    ObjectNode assistant = messages.addObject();
+    assistant.put("role", "assistant");
+    ObjectNode function = assistant.putArray("tool_calls").addObject().putObject("function");
+    function.put("name", "lookup");
+    function.put("arguments", "{\"card\":\"4012888888881881\"}");
+
+    List<Match> found = redactor.redactInPlace(body);
+
+    assertThat(found).hasSize(2);
+    String result = body.toString();
+    assertThat(result).doesNotContain("bob@secret.com").doesNotContain("4012888888881881");
   }
 
   @Test
