@@ -1,5 +1,9 @@
 package com.auvex.gateway.demo;
 
+import com.auvex.gateway.audit.AuditEntry;
+import com.auvex.gateway.audit.AuditLogRepository;
+import com.auvex.gateway.audit.AuditService;
+import com.auvex.gateway.audit.Verdict;
 import com.auvex.gateway.auth.ApiKeyHasher;
 import com.auvex.gateway.config.DemoProperties;
 import com.auvex.gateway.member.Member;
@@ -10,6 +14,12 @@ import com.auvex.gateway.tenant.ApiKey;
 import com.auvex.gateway.tenant.ApiKeyRepository;
 import com.auvex.gateway.tenant.Tenant;
 import com.auvex.gateway.tenant.TenantRepository;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,9 +30,10 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Seeds a sandbox demo tenant (key + sample policies and members) on startup, so the console's "Try
- * the live demo" button works against a populated org. Only active when {@code auvex.demo.enabled}
- * is true; idempotent — it does nothing once the demo key already exists.
+ * Seeds a sandbox demo tenant — key, sample policies and members, and a week of realistic governed
+ * activity — on startup, so the console's "Try the live demo" button opens onto a populated org.
+ * Only active when {@code auvex.demo.enabled} is true; idempotent (the org is created once, and the
+ * sample audit trail only when the tenant has none).
  */
 @Component
 @ConditionalOnProperty(name = "auvex.demo.enabled", havingValue = "true")
@@ -34,6 +45,8 @@ public class DemoSeeder implements ApplicationRunner {
   private final ApiKeyRepository apiKeys;
   private final PolicyRepository policies;
   private final MemberRepository members;
+  private final AuditService audit;
+  private final AuditLogRepository auditEntries;
   private final DemoProperties properties;
 
   public DemoSeeder(
@@ -41,20 +54,34 @@ public class DemoSeeder implements ApplicationRunner {
       ApiKeyRepository apiKeys,
       PolicyRepository policies,
       MemberRepository members,
+      AuditService audit,
+      AuditLogRepository auditEntries,
       DemoProperties properties) {
     this.tenants = tenants;
     this.apiKeys = apiKeys;
     this.policies = policies;
     this.members = members;
+    this.audit = audit;
+    this.auditEntries = auditEntries;
     this.properties = properties;
   }
 
   @Override
   @Transactional
   public void run(ApplicationArguments args) {
+    UUID tenantId = ensureOrg();
+    if (auditEntries.countByTenantId(tenantId) == 0) {
+      seedActivity(tenantId);
+      LOG.info("Seeded demo activity for tenant '{}'.", properties.tenantName());
+    }
+  }
+
+  // Create the tenant, key, policies and members once; return the (existing or new) tenant id.
+  private UUID ensureOrg() {
     String hash = ApiKeyHasher.hash(properties.key());
-    if (apiKeys.findByKeyHash(hash).isPresent()) {
-      return; // already seeded
+    Optional<ApiKey> existing = apiKeys.findByKeyHash(hash);
+    if (existing.isPresent()) {
+      return existing.get().getTenantId();
     }
 
     Tenant tenant = tenants.save(new Tenant(properties.tenantName(), "demo"));
@@ -71,5 +98,65 @@ public class DemoSeeder implements ApplicationRunner {
     members.save(new Member(id, "aisha@demo.auvex.io", "Aisha Patel", "auditor", "active"));
 
     LOG.info("Seeded demo tenant '{}' with sample policies and members.", properties.tenantName());
+    return id;
+  }
+
+  // Append a week of varied, hash-chained audit entries so every console view has real data.
+  private void seedActivity(UUID tenantId) {
+    String[] actors = {
+      "maya@demo.auvex.io", "james@demo.auvex.io", "aisha@demo.auvex.io", "api-service"
+    };
+    String[] models = {
+      "openai/gpt-4o",
+      "openai/gpt-4o-mini",
+      "anthropic/claude-3-5-sonnet-20241022",
+      "google/gemini-1.5-pro"
+    };
+    String[] redactTypes = {"email", "credit_card", "us_ssn", "phone", "api_key"};
+
+    for (int i = 0; i < 24; i++) {
+      String actor = actors[i % actors.length];
+      String model = models[i % models.length];
+
+      Verdict verdict;
+      Map<String, Integer> redactions;
+      String prompt;
+      if (i % 7 == 3) {
+        verdict = Verdict.BLOCKED;
+        redactions = Map.of("credit_card", 1);
+        prompt = "Charge card ‹CREDIT_CARD_REDACTED› for the overdue invoice";
+      } else if (i % 2 == 0) {
+        verdict = Verdict.REDACTED;
+        String type = redactTypes[i % redactTypes.length];
+        redactions = Map.of(type, 1 + (i % 3));
+        prompt = "Send the summary to ‹" + type.toUpperCase(java.util.Locale.ROOT) + "_REDACTED›";
+      } else {
+        verdict = Verdict.ALLOWED;
+        redactions = Map.of();
+        prompt = "Summarize the quarterly earnings call transcript";
+      }
+
+      int promptTokens = 180 + (i * 37) % 900;
+      int completionTokens = 90 + (i * 53) % 700;
+      BigDecimal cost =
+          BigDecimal.valueOf((promptTokens * 2.5 + completionTokens * 10.0) / 1_000_000.0)
+              .setScale(6, RoundingMode.HALF_UP);
+      Instant when = Instant.now().minus(i * 7L, ChronoUnit.HOURS);
+
+      audit.append(
+          new AuditEntry(
+              tenantId,
+              UUID.randomUUID(),
+              actor,
+              model,
+              verdict,
+              prompt,
+              null,
+              when,
+              promptTokens,
+              completionTokens,
+              cost,
+              redactions));
+    }
   }
 }

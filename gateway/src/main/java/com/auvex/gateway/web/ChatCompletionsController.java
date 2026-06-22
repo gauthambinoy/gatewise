@@ -19,6 +19,7 @@ import com.auvex.gateway.pricing.CostCalculator;
 import com.auvex.gateway.pricing.TokenUsage;
 import com.auvex.gateway.pricing.UsageExtractor;
 import com.auvex.gateway.proxy.CachedResponse;
+import com.auvex.gateway.proxy.StreamContentExtractor;
 import com.auvex.gateway.proxy.UpstreamProxy;
 import com.auvex.gateway.redaction.Match;
 import com.auvex.gateway.redaction.PromptRedactor;
@@ -28,6 +29,7 @@ import com.auvex.gateway.redaction.ReversibleRedaction;
 import com.auvex.gateway.routing.ModelRouter;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -74,6 +76,7 @@ public class ChatCompletionsController {
   private final InjectionScanner injectionScanner;
   private final InjectionProperties injectionProperties;
   private final TokenizationProperties tokenization;
+  private final StreamContentExtractor streamExtractor;
   private final ObjectMapper objectMapper;
 
   public ChatCompletionsController(
@@ -91,6 +94,7 @@ public class ChatCompletionsController {
       InjectionScanner injectionScanner,
       InjectionProperties injectionProperties,
       TokenizationProperties tokenization,
+      StreamContentExtractor streamExtractor,
       ObjectMapper objectMapper) {
     this.proxy = proxy;
     this.router = router;
@@ -106,6 +110,7 @@ public class ChatCompletionsController {
     this.injectionScanner = injectionScanner;
     this.injectionProperties = injectionProperties;
     this.tokenization = tokenization;
+    this.streamExtractor = streamExtractor;
     this.objectMapper = objectMapper;
   }
 
@@ -174,12 +179,35 @@ public class ChatCompletionsController {
     byte[] forwarded = objectMapper.writeValueAsBytes(body);
 
     if (body.path("stream").asBoolean(false)) {
-      // Streaming: no buffered response or token usage, so record the request-side decision and
-      // stream straight through. (Capturing a streamed response is a later step.)
-      Verdict verdict = found.isEmpty() ? Verdict.ALLOWED : Verdict.REDACTED;
+      // Streaming: tee the response through to the caller, then capture and screen it. It's already
+      // been sent, so response redaction is audit-only here — we can't unsend a leak, but we record
+      // it (verdict + counts) so the streamed response is governed too, not a blind spot.
+      byte[] streamed = proxy.relay(forwarded, response);
+      String streamedContent =
+          streamExtractor.extract(new String(streamed, StandardCharsets.UTF_8));
+      ResponseRedaction redactedResponse =
+          redaction.enabled() && !streamedContent.isEmpty()
+              ? responseRedactor.redact(choicesEnvelope(streamedContent))
+              : null;
+      List<Match> streamFound = found;
+      String responseRedacted = null;
+      if (redactedResponse != null) {
+        streamFound = new ArrayList<>(found);
+        streamFound.addAll(redactedResponse.matches());
+        responseRedacted = redactedResponse.redactedText();
+      }
+      Verdict verdict = streamFound.isEmpty() ? Verdict.ALLOWED : Verdict.REDACTED;
       auditSink.record(
-          auditEntry(ctx, providerModel, verdict, body, null, null, null, null, redactionCounts));
-      proxy.relay(forwarded, response);
+          auditEntry(
+              ctx,
+              providerModel,
+              verdict,
+              body,
+              responseRedacted,
+              null,
+              null,
+              null,
+              countByType(streamFound)));
       return;
     }
 
@@ -222,6 +250,15 @@ public class ChatCompletionsController {
               toClient.status(), toClient.contentType(), restoreTokens(toClient.body(), vault));
     }
     writeResponse(response, toClient);
+  }
+
+  // Wrap streamed assistant text in a minimal chat-completion envelope so the response redactor —
+  // which reads choices[].message.content — can screen it.
+  private String choicesEnvelope(String content) throws IOException {
+    ObjectNode root = objectMapper.createObjectNode();
+    ArrayNode choices = root.putArray("choices");
+    choices.addObject().putObject("message").put("content", content);
+    return objectMapper.writeValueAsString(root);
   }
 
   // Replace each reversible token in the response with its original value, for the caller only.

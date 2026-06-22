@@ -1,0 +1,14 @@
+import { chromium } from 'playwright';
+const BASE = 'http://127.0.0.1:3000';
+const b = await chromium.launch();
+const ctx = await b.newContext({ viewport: { width: 1440, height: 900 }, deviceScaleFactor: 2 });
+const p = await ctx.newPage();
+await p.goto(BASE + '/', { waitUntil: 'networkidle' });
+await p.getByRole('button', { name: /try the live demo/i }).click();
+await p.waitForLoadState('networkidle'); await p.waitForTimeout(2500);
+await p.goto(BASE + '/audit', { waitUntil: 'networkidle' }); await p.waitForTimeout(1800);
+await p.locator('.row').first().click();
+await p.waitForLoadState('networkidle'); await p.waitForTimeout(2200);
+await p.screenshot({ path: 'screenshots/11-request-detail.png', fullPage: true });
+console.log('captured 11-request-detail');
+await b.close();
