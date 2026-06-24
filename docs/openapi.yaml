@@ -183,6 +183,18 @@ paths:
         "200": { description: A breakdown by provider plus the list of shadow models. }
         "401": { $ref: "#/components/responses/Unauthorized" }
 
+  /v1/compliance/report:
+    get:
+      tags: [Governance]
+      summary: Compliance report — enforced controls mapped to frameworks, with live evidence
+      description: >
+        A point-in-time report derived from the audit log: activity by verdict, PII masked by type,
+        audit-chain integrity, retention window, and the controls (GDPR / EU AI Act / DORA) the
+        gateway enforces with live evidence.
+      responses:
+        "200": { description: The compliance report. }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
   /v1/audit:
     get:
       tags: [Audit & compliance]
