@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Auvex shield — a clean monochrome glyph used as the source for the app and tray
+  icons. It is drawn on a 32x32 grid with a single fill so it reads at small sizes and
+  works as a macOS template icon (iconAsTemplate). Generate the raster PNG/ICO/ICNS
+  variants from this with `tauri icon icons/shield.svg` (see README), which produces
+  32x32.png, 128x128.png, 128x128@2x.png, icon.png, icon.ico and icon.icns.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"
+     fill="none">
+  <!-- Shield outline -->
+  <path d="M16 2 L27 6 V15 C27 22.5 22.2 27.6 16 30 C9.8 27.6 5 22.5 5 15 V6 Z"
+        fill="#0a0a0a"/>
+  <!-- Inner check mark, knocked out, signalling 'governed / verified' -->
+  <path d="M11 16.2 L14.4 19.6 L21.2 11.6"
+        stroke="#ffffff" stroke-width="2.4" stroke-linecap="round"
+        stroke-linejoin="round" fill="none"/>
+</svg>

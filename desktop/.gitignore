@@ -1,0 +1,18 @@
+# Node
+node_modules/
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Rust / Tauri build artifacts
+src-tauri/target/
+src-tauri/gen/
+
+# Generated raster icons (produced from icons/shield.svg via `npm run icon`)
+src-tauri/icons/*.png
+src-tauri/icons/*.ico
+src-tauri/icons/*.icns
+
+# Local config / OS cruft
+.DS_Store
+Thumbs.db
