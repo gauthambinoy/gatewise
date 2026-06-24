@@ -1,0 +1,355 @@
+# ---------------------------------------------------------------------------
+# Auvex Helm chart — default values.
+#
+# Everything below is a sane production-leaning default. The two things you MUST
+# review before a real install are:
+#   1. ingress.hosts[].host          — your real DNS name
+#   2. secrets.*                      — supplied via --set or an external secret,
+#                                       NEVER committed to this file.
+# ---------------------------------------------------------------------------
+
+# Override the generated resource name. Leave empty to use the release name.
+nameOverride: ""
+fullnameOverride: ""
+
+# Extra labels applied to every object the chart renders.
+commonLabels: {}
+# Extra annotations applied to every object the chart renders.
+commonAnnotations: {}
+
+# Image pull secrets for private registries (ghcr.io packages may be private).
+# e.g. imagePullSecrets: [{ name: ghcr-creds }]
+imagePullSecrets: []
+
+# ---------------------------------------------------------------------------
+# Gateway — the Spring Boot service. Container listens on 8080.
+# ---------------------------------------------------------------------------
+gateway:
+  image:
+    repository: ghcr.io/gauthambinoy/auvex-gateway
+    # Pin to a real release tag in production; "latest" is convenient but not
+    # reproducible. appVersion in Chart.yaml is the intended default.
+    tag: ""            # falls back to .Chart.AppVersion when empty
+    pullPolicy: IfNotPresent
+
+  replicaCount: 2
+
+  # Container port the Spring Boot app binds to (server.port). Kept configurable
+  # because the same image honours SERVER_PORT.
+  containerPort: 8080
+
+  service:
+    type: ClusterIP
+    port: 8080
+
+  # The gateway is the JVM workload — give it real memory headroom. Requests are
+  # what the scheduler reserves; limits cap a misbehaving pod.
+  resources:
+    requests:
+      cpu: 250m
+      memory: 768Mi
+    limits:
+      cpu: "1"
+      memory: 1536Mi
+
+  # Spring Boot Actuator exposes dedicated liveness/readiness groups (probes are
+  # enabled in application.yml). Liveness must NOT depend on downstream DBs, so
+  # the liveness group is used for the liveness probe and readiness for traffic.
+  livenessProbe:
+    httpGet:
+      path: /actuator/health/liveness
+      port: http
+    initialDelaySeconds: 40
+    periodSeconds: 15
+    timeoutSeconds: 5
+    failureThreshold: 6
+  readinessProbe:
+    httpGet:
+      path: /actuator/health/readiness
+      port: http
+    initialDelaySeconds: 20
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 6
+  # Startup probe gives the JVM + Flyway migrations time to finish before the
+  # liveness probe starts counting (mirrors compose's start_period: 45s).
+  startupProbe:
+    httpGet:
+      path: /actuator/health
+      port: http
+    periodSeconds: 5
+    failureThreshold: 30   # up to ~150s to come up
+
+  # Pod- and container-level hardening. The gateway can run read-only: it writes
+  # only to /tmp (mounted as an emptyDir below) — Spring Boot's default temp dir.
+  podSecurityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+    runAsGroup: 1000
+    fsGroup: 1000
+    seccompProfile:
+      type: RuntimeDefault
+  securityContext:
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: true
+    capabilities:
+      drop:
+        - ALL
+
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+  podAnnotations: {}
+  podLabels: {}
+
+  # Extra raw env vars (list of {name,value} / {name,valueFrom}) merged into the
+  # gateway container — handy for toggling the optional auvex.* feature flags.
+  extraEnv: []
+
+  # Horizontal Pod Autoscaler for the gateway.
+  autoscaling:
+    enabled: false
+    minReplicas: 2
+    maxReplicas: 6
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 80
+
+# ---------------------------------------------------------------------------
+# Console — nginx serving the React SPA and proxying /v1 and /auth to the
+# gateway. The container listens on port 80.
+# ---------------------------------------------------------------------------
+console:
+  image:
+    repository: ghcr.io/gauthambinoy/auvex-console
+    tag: ""            # falls back to .Chart.AppVersion when empty
+    pullPolicy: IfNotPresent
+
+  replicaCount: 2
+
+  # nginx in the image listens on 80 (console/Dockerfile EXPOSE 80).
+  containerPort: 80
+
+  service:
+    type: ClusterIP
+    port: 80
+
+  # The baked-in nginx.conf proxies to a host literally named "gateway". To keep
+  # the console working regardless of release name, the chart renders its own
+  # nginx config (see templates/configmap.yaml) that points at the real gateway
+  # Service DNS name and mounts it over the image default. Leave this true unless
+  # you have rebuilt the image with a matching upstream.
+  overrideNginxConf: true
+
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 250m
+      memory: 128Mi
+
+  # nginx serves a static bundle — a simple TCP/HTTP check on / is enough.
+  livenessProbe:
+    httpGet:
+      path: /
+      port: http
+    initialDelaySeconds: 10
+    periodSeconds: 15
+    timeoutSeconds: 3
+    failureThreshold: 3
+  readinessProbe:
+    httpGet:
+      path: /
+      port: http
+    initialDelaySeconds: 5
+    periodSeconds: 10
+    timeoutSeconds: 3
+    failureThreshold: 3
+
+  podSecurityContext:
+    runAsNonRoot: true
+    runAsUser: 101        # the "nginx" user in the nginx:alpine image
+    runAsGroup: 101
+    fsGroup: 101
+    seccompProfile:
+      type: RuntimeDefault
+  # NOTE: stock nginx writes pid + cache to disk, so readOnlyRootFilesystem is
+  # left false here. The cache/run/pid dirs are mounted as writable emptyDirs in
+  # the deployment so the rest of the FS stays effectively immutable.
+  securityContext:
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: false
+    capabilities:
+      drop:
+        - ALL
+
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+  podAnnotations: {}
+  podLabels: {}
+
+  autoscaling:
+    enabled: false
+    minReplicas: 2
+    maxReplicas: 4
+    targetCPUUtilizationPercentage: 75
+    targetMemoryUtilizationPercentage: 80
+
+# ---------------------------------------------------------------------------
+# ServiceAccount used by both workloads.
+# ---------------------------------------------------------------------------
+serviceAccount:
+  create: true
+  name: ""             # generated from the fullname when empty
+  annotations: {}
+  # The pods make no Kubernetes API calls, so the token is not mounted.
+  automountServiceAccountToken: false
+
+# ---------------------------------------------------------------------------
+# Ingress — terminates TLS (cert-manager) and routes the public host to the
+# console; /v1 and /auth are proxied to the gateway BY nginx inside the console,
+# so a single backend (console) is enough. Set gateway.exposeDirectly-style
+# extra paths only if you want to bypass the console proxy.
+# ---------------------------------------------------------------------------
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    # cert-manager issues/renews the TLS cert for the host below. Change the
+    # issuer name to whatever ClusterIssuer/Issuer you have configured.
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    # Reasonable body size for proxied chat payloads.
+    nginx.ingress.kubernetes.io/proxy-body-size: "8m"
+  hosts:
+    - host: auvex.example.com   # <-- REPLACE with your DNS name
+      paths:
+        - path: /
+          pathType: Prefix
+          # Which service serves this path: "console" (default) or "gateway".
+          service: console
+  tls:
+    - secretName: auvex-tls
+      hosts:
+        - auvex.example.com      # <-- must match the host above
+
+# ---------------------------------------------------------------------------
+# NetworkPolicy — default-deny posture for the workloads.
+#   * ingress controller  -> console + gateway   (allowed)
+#   * console             -> gateway              (allowed)
+#   * gateway             -> postgres + redis     (allowed, egress)
+#   * everything else (incl. external exposure of DB/redis) is denied.
+# Requires a CNI that enforces NetworkPolicy (Calico, Cilium, etc.).
+# ---------------------------------------------------------------------------
+networkPolicy:
+  enabled: true
+  # Namespace label selector that identifies your ingress-controller namespace.
+  # Adjust to match your cluster (e.g. ingress-nginx installs this label).
+  ingressControllerNamespaceSelector:
+    matchLabels:
+      kubernetes.io/metadata.name: ingress-nginx
+  # Allow DNS egress (kube-dns) — required for service discovery.
+  allowDNS: true
+
+# ---------------------------------------------------------------------------
+# Non-secret runtime configuration → rendered into a ConfigMap and injected as
+# env vars on the gateway. These mirror the env var names the app actually reads
+# (see gateway/src/main/resources/application.yml and docker-compose.yml).
+# ---------------------------------------------------------------------------
+config:
+  # Upstream LLM provider (OpenAI-compatible).
+  openrouterBaseUrl: "https://openrouter.ai/api/v1"
+  openrouterModel: "openai/gpt-oss-120b:free"
+  # Redaction / injection screening sensible production defaults.
+  redactResponse: "true"
+  injectionEnabled: "true"
+  injectionBlock: "false"
+  cacheEnabled: "true"
+  # The demo seed must NEVER be on in production.
+  demoEnabled: "false"
+  devLoginEnabled: "false"
+
+# ---------------------------------------------------------------------------
+# Bundled Postgres (Bitnami subchart). Disable and use externalDatabase for a
+# managed RDS/Cloud SQL instance in production.
+# ---------------------------------------------------------------------------
+postgresql:
+  enabled: true
+  auth:
+    username: auvex
+    database: auvex
+    # The password is taken from the chart Secret so it lives in exactly one
+    # place. Supply secrets.postgresPassword; it is wired through below.
+    existingSecret: ""        # set automatically by the chart when empty
+    secretKeys:
+      adminPasswordKey: postgres-password
+      userPasswordKey: postgres-password
+  primary:
+    persistence:
+      enabled: true
+      size: 8Gi
+
+# Bundled Redis (Bitnami subchart). The gateway treats Redis as a fail-open
+# cache, so auth is left off for simplicity; enable it for production.
+redis:
+  enabled: true
+  architecture: standalone
+  auth:
+    enabled: false
+  master:
+    persistence:
+      enabled: false        # cache only — no need to persist
+
+# ---------------------------------------------------------------------------
+# External database / cache — used when postgresql.enabled / redis.enabled are
+# false. Point these at your managed services.
+# ---------------------------------------------------------------------------
+externalDatabase:
+  # Full JDBC URL OR host/port/database (host/port build the JDBC URL if jdbcUrl
+  # is empty). Username goes here; the password comes from secrets.postgresPassword.
+  jdbcUrl: ""               # e.g. jdbc:postgresql://my-rds.example.com:5432/auvex
+  host: ""                  # used only when jdbcUrl is empty
+  port: 5432
+  database: auvex
+  username: auvex
+
+externalRedis:
+  host: ""                  # e.g. my-elasticache.example.com
+  port: 6379
+
+# ---------------------------------------------------------------------------
+# Secrets.
+#
+# These are placeholders and are EMPTY on purpose. NEVER commit real values
+# here. Provide them at install time, e.g.:
+#
+#   helm install auvex deploy/helm/auvex \
+#     --set secrets.openrouterApiKey=sk-or-... \
+#     --set secrets.sessionSecret="$(openssl rand -hex 32)" \
+#     --set secrets.postgresPassword="$(openssl rand -hex 16)"
+#
+# ...or, preferred for production, reference an externally-managed Secret
+# (Sealed Secrets, External Secrets Operator, Vault, cloud secret manager) by
+# setting secrets.existingSecret to its name. When existingSecret is set the
+# chart does NOT render its own Secret and reads the keys below from yours.
+# ---------------------------------------------------------------------------
+secrets:
+  # Name of a pre-existing Secret to use instead of the chart-managed one.
+  # Leave empty to have the chart create the Secret from the values below.
+  existingSecret: ""
+  # Keys expected inside the Secret (chart-managed OR existing). Override only if
+  # your external secret uses different key names.
+  keys:
+    openrouterApiKey: openrouter-api-key
+    sessionSecret: session-secret
+    postgresPassword: postgres-password
+
+  # ---- Placeholder values (leave empty; set via --set / CI) ----
+  # OpenRouter / upstream provider API key  -> OPENROUTER_API_KEY
+  openrouterApiKey: ""
+  # Console session signing secret          -> AUVEX_SESSION_SECRET
+  # Generate with: openssl rand -hex 32
+  sessionSecret: ""
+  # Database password (used by the gateway AND, when bundled, the Postgres
+  # subchart) -> SPRING_DATASOURCE_PASSWORD
+  postgresPassword: ""

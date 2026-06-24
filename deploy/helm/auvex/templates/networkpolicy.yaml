@@ -1,0 +1,175 @@
+{{- if .Values.networkPolicy.enabled -}}
+{{/*
+NetworkPolicy set, default-deny posture (requires a CNI that enforces policy):
+
+  console  : ingress only from the ingress controller; egress only to gateway + DNS
+  gateway  : ingress from the ingress controller and the console; egress to
+             postgres + redis + DNS (and the public internet for the LLM upstream)
+  postgres : ingress ONLY from the gateway  -> never exposed externally
+  redis    : ingress ONLY from the gateway  -> never exposed externally
+
+The gateway needs general egress to reach the OpenRouter/LLM provider over the
+public internet, so its egress is not locked to the cluster. Postgres and Redis,
+by contrast, accept connections solely from the gateway.
+*/}}
+# --- console: who may reach the SPA, and where it may talk ---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "auvex.console.fullname" . }}
+  labels:
+    {{- include "auvex.componentLabels" (dict "ctx" . "component" "console") | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "auvex.componentSelectorLabels" (dict "ctx" . "component" "console") | nindent 6 }}
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - namespaceSelector:
+            {{- toYaml .Values.networkPolicy.ingressControllerNamespaceSelector | nindent 12 }}
+      ports:
+        - protocol: TCP
+          port: {{ .Values.console.containerPort }}
+  egress:
+    # console proxies /v1 and /auth to the gateway
+    - to:
+        - podSelector:
+            matchLabels:
+              {{- include "auvex.componentSelectorLabels" (dict "ctx" . "component" "gateway") | nindent 14 }}
+      ports:
+        - protocol: TCP
+          port: {{ .Values.gateway.containerPort }}
+    {{- if .Values.networkPolicy.allowDNS }}
+    - to:
+        - namespaceSelector: {}
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    {{- end }}
+---
+# --- gateway: reachable by ingress + console; talks to DB, redis, DNS, internet ---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "auvex.gateway.fullname" . }}
+  labels:
+    {{- include "auvex.componentLabels" (dict "ctx" . "component" "gateway") | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "auvex.componentSelectorLabels" (dict "ctx" . "component" "gateway") | nindent 6 }}
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        # allow direct ingress-controller access (e.g. an ingress path -> gateway)
+        - namespaceSelector:
+            {{- toYaml .Values.networkPolicy.ingressControllerNamespaceSelector | nindent 12 }}
+        # and the console pods
+        - podSelector:
+            matchLabels:
+              {{- include "auvex.componentSelectorLabels" (dict "ctx" . "component" "console") | nindent 14 }}
+      ports:
+        - protocol: TCP
+          port: {{ .Values.gateway.containerPort }}
+  egress:
+    {{- if .Values.networkPolicy.allowDNS }}
+    - to:
+        - namespaceSelector: {}
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    {{- end }}
+    {{- if .Values.postgresql.enabled }}
+    # bundled Postgres (Bitnami labels the pods app.kubernetes.io/name: postgresql)
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: postgresql
+      ports:
+        - protocol: TCP
+          port: 5432
+    {{- end }}
+    {{- if .Values.redis.enabled }}
+    # bundled Redis (Bitnami labels the pods app.kubernetes.io/name: redis)
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: redis
+      ports:
+        - protocol: TCP
+          port: 6379
+    {{- end }}
+    # The gateway must reach the upstream LLM provider on the public internet, so
+    # general TCP egress is allowed. Narrow this to specific CIDRs if your
+    # provider's egress IPs are known/stable.
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+            except:
+              # keep cluster-internal ranges off the "internet" egress rule
+              - 10.0.0.0/8
+              - 172.16.0.0/12
+              - 192.168.0.0/16
+      ports:
+        - protocol: TCP
+          port: 443
+        - protocol: TCP
+          port: 80
+{{- if .Values.postgresql.enabled }}
+---
+# --- postgres: accept connections ONLY from the gateway; never external ---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "auvex.fullname" . }}-postgresql
+  labels:
+    {{- include "auvex.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: postgresql
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              {{- include "auvex.componentSelectorLabels" (dict "ctx" . "component" "gateway") | nindent 14 }}
+      ports:
+        - protocol: TCP
+          port: 5432
+{{- end }}
+{{- if .Values.redis.enabled }}
+---
+# --- redis: accept connections ONLY from the gateway; never external ---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "auvex.fullname" . }}-redis
+  labels:
+    {{- include "auvex.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: redis
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              {{- include "auvex.componentSelectorLabels" (dict "ctx" . "component" "gateway") | nindent 14 }}
+      ports:
+        - protocol: TCP
+          port: 6379
+{{- end }}
+{{- end }}

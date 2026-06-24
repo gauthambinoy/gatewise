@@ -1,0 +1,69 @@
+{{/*
+HorizontalPodAutoscalers for the gateway and console. Each is rendered only when
+its autoscaling block is enabled. autoscaling/v2 is required (>=1.23).
+*/}}
+{{- if .Values.gateway.autoscaling.enabled }}
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ include "auvex.gateway.fullname" . }}
+  labels:
+    {{- include "auvex.componentLabels" (dict "ctx" . "component" "gateway") | nindent 4 }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ include "auvex.gateway.fullname" . }}
+  minReplicas: {{ .Values.gateway.autoscaling.minReplicas }}
+  maxReplicas: {{ .Values.gateway.autoscaling.maxReplicas }}
+  metrics:
+    {{- if .Values.gateway.autoscaling.targetCPUUtilizationPercentage }}
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: {{ .Values.gateway.autoscaling.targetCPUUtilizationPercentage }}
+    {{- end }}
+    {{- if .Values.gateway.autoscaling.targetMemoryUtilizationPercentage }}
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: {{ .Values.gateway.autoscaling.targetMemoryUtilizationPercentage }}
+    {{- end }}
+{{- end }}
+{{- if .Values.console.autoscaling.enabled }}
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ include "auvex.console.fullname" . }}
+  labels:
+    {{- include "auvex.componentLabels" (dict "ctx" . "component" "console") | nindent 4 }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ include "auvex.console.fullname" . }}
+  minReplicas: {{ .Values.console.autoscaling.minReplicas }}
+  maxReplicas: {{ .Values.console.autoscaling.maxReplicas }}
+  metrics:
+    {{- if .Values.console.autoscaling.targetCPUUtilizationPercentage }}
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: {{ .Values.console.autoscaling.targetCPUUtilizationPercentage }}
+    {{- end }}
+    {{- if .Values.console.autoscaling.targetMemoryUtilizationPercentage }}
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: {{ .Values.console.autoscaling.targetMemoryUtilizationPercentage }}
+    {{- end }}
+{{- end }}

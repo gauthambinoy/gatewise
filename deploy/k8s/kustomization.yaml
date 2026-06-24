@@ -1,0 +1,21 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# All resources land in the auvex namespace (also created by 00-namespace.yaml).
+namespace: auvex
+
+# Labels added to every resource for easy selection / cleanup.
+commonLabels:
+  app.kubernetes.io/part-of: auvex
+
+resources:
+  - 00-namespace.yaml
+  - 10-configmap.yaml
+  - 20-secret.yaml          # TEMPLATE — replace placeholders or manage the Secret externally
+  - 30-gateway.yaml
+  - 40-console.yaml
+  - 50-ingress.yaml
+  # Optional non-prod databases. Comment these out (and repoint the gateway
+  # config at managed services) for production.
+  - 60-postgres.yaml
+  - 61-redis.yaml

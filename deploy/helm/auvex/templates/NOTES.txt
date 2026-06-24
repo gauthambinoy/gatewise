@@ -1,0 +1,50 @@
+Auvex has been deployed as release "{{ .Release.Name }}" in namespace "{{ .Release.Namespace }}".
+
+Components:
+  - gateway : {{ include "auvex.gateway.fullname" . }}  (Spring Boot, port {{ .Values.gateway.containerPort }})
+  - console : {{ include "auvex.console.fullname" . }}  (nginx SPA, port {{ .Values.console.containerPort }})
+
+{{- if .Values.ingress.enabled }}
+
+1. Reach the console:
+{{- range .Values.ingress.hosts }}
+   {{ if $.Values.ingress.tls }}https{{ else }}http{{ end }}://{{ .host }}/
+{{- end }}
+   (DNS must point at your ingress controller; cert-manager issues the TLS cert.)
+{{- else }}
+
+1. Ingress is disabled. Reach the console by port-forwarding:
+   kubectl --namespace {{ .Release.Namespace }} port-forward svc/{{ include "auvex.console.fullname" . }} 8080:{{ .Values.console.service.port }}
+   then open http://127.0.0.1:8080/
+{{- end }}
+
+2. Check the gateway health:
+   kubectl --namespace {{ .Release.Namespace }} port-forward svc/{{ include "auvex.gateway.fullname" . }} 8081:{{ .Values.gateway.service.port }}
+   curl http://127.0.0.1:8081/actuator/health
+
+{{- if not .Values.secrets.existingSecret }}
+
+3. Secrets: this release uses a chart-managed Secret ({{ include "auvex.fullname" . }}).
+   Make sure you supplied real values at install/upgrade time, e.g.:
+     helm upgrade {{ .Release.Name }} . \
+       --set secrets.openrouterApiKey=sk-or-... \
+       --set secrets.sessionSecret="$(openssl rand -hex 32)" \
+       --set secrets.postgresPassword="$(openssl rand -hex 16)"
+   For production, prefer secrets.existingSecret pointing at a Sealed Secret /
+   External Secret / Vault-managed Secret so credentials never pass through Helm.
+{{- else }}
+
+3. Secrets: this release reads credentials from your existing Secret
+   "{{ .Values.secrets.existingSecret }}". Confirm it contains keys:
+     {{ .Values.secrets.keys.openrouterApiKey }}, {{ .Values.secrets.keys.sessionSecret }}, {{ .Values.secrets.keys.postgresPassword }}
+{{- end }}
+
+{{- if .Values.postgresql.enabled }}
+
+4. A bundled PostgreSQL was deployed. For production, set postgresql.enabled=false
+   and fill in externalDatabase.* to use a managed database.
+{{- end }}
+{{- if .Values.redis.enabled }}
+5. A bundled Redis was deployed (cache; fail-open). Set redis.enabled=false and
+   externalRedis.* to use a managed cache.
+{{- end }}

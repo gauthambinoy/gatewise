@@ -1,0 +1,33 @@
+# Public entry point. Routes the host to the console, which serves the SPA and
+# reverse-proxies the API to the gateway (single origin, no CORS). cert-manager
+# issues the TLS cert via the cluster-issuer annotation.
+#
+# REPLACE auvex.example.com with your real DNS name (in both the rule and the
+# tls block) and set the issuer to your configured ClusterIssuer.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: auvex
+  namespace: auvex
+  labels:
+    app.kubernetes.io/part-of: auvex
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/proxy-body-size: "8m"
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - auvex.example.com
+      secretName: auvex-tls
+  rules:
+    - host: auvex.example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: auvex-console
+                port:
+                  number: 80

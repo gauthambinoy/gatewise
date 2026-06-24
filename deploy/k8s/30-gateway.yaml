@@ -1,0 +1,116 @@
+# Gateway: Spring Boot service. Listens on 8080; health at /actuator/health
+# (Spring Boot exposes /actuator/health/liveness and /readiness sub-probes).
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auvex-gateway
+  namespace: auvex
+  labels:
+    app.kubernetes.io/part-of: auvex
+    app.kubernetes.io/component: gateway
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app.kubernetes.io/part-of: auvex
+      app.kubernetes.io/component: gateway
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/part-of: auvex
+        app.kubernetes.io/component: gateway
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: gateway
+          # Pin to a real release tag in production instead of latest.
+          image: ghcr.io/gauthambinoy/auvex-gateway:latest
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          ports:
+            - name: http
+              containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: auvex-gateway-config
+          env:
+            - name: OPENROUTER_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: auvex-secrets
+                  key: openrouter-api-key
+            - name: AUVEX_SESSION_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: auvex-secrets
+                  key: session-secret
+            - name: SPRING_DATASOURCE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: auvex-secrets
+                  key: postgres-password
+          startupProbe:
+            httpGet:
+              path: /actuator/health
+              port: http
+            periodSeconds: 5
+            failureThreshold: 30   # up to ~150s for JVM + Flyway migrations
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: http
+            initialDelaySeconds: 40
+            periodSeconds: 15
+            timeoutSeconds: 5
+            failureThreshold: 6
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: http
+            initialDelaySeconds: 20
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 6
+          resources:
+            requests:
+              cpu: 250m
+              memory: 768Mi
+            limits:
+              cpu: "1"
+              memory: 1536Mi
+          volumeMounts:
+            # readOnlyRootFilesystem is on -> give the JVM a writable temp dir.
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: auvex-gateway
+  namespace: auvex
+  labels:
+    app.kubernetes.io/part-of: auvex
+    app.kubernetes.io/component: gateway
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/part-of: auvex
+    app.kubernetes.io/component: gateway
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http

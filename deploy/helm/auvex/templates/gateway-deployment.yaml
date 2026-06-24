@@ -1,0 +1,103 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "auvex.gateway.fullname" . }}
+  labels:
+    {{- include "auvex.componentLabels" (dict "ctx" . "component" "gateway") | nindent 4 }}
+  {{- with .Values.commonAnnotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- if not .Values.gateway.autoscaling.enabled }}
+  replicas: {{ .Values.gateway.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "auvex.componentSelectorLabels" (dict "ctx" . "component" "gateway") | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "auvex.componentLabels" (dict "ctx" . "component" "gateway") | nindent 8 }}
+        {{- with .Values.gateway.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      annotations:
+        # Roll the pods automatically when the non-secret config or the secret
+        # changes, so a `helm upgrade` actually re-reads new values.
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+        checksum/secret: {{ include (print $.Template.BasePath "/secret.yaml") . | sha256sum }}
+        {{- with .Values.gateway.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      serviceAccountName: {{ include "auvex.serviceAccountName" . }}
+      automountServiceAccountToken: {{ .Values.serviceAccount.automountServiceAccountToken }}
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        {{- toYaml .Values.gateway.podSecurityContext | nindent 8 }}
+      containers:
+        - name: gateway
+          image: {{ include "auvex.gateway.image" . | quote }}
+          imagePullPolicy: {{ .Values.gateway.image.pullPolicy }}
+          securityContext:
+            {{- toYaml .Values.gateway.securityContext | nindent 12 }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.gateway.containerPort }}
+              protocol: TCP
+          envFrom:
+            # Non-secret config (datasource URL/username, redis host, feature flags).
+            - configMapRef:
+                name: {{ include "auvex.fullname" . }}-config
+          env:
+            # Secrets are referenced individually so the app's exact env var names
+            # map onto whatever key names the (possibly external) Secret uses.
+            - name: OPENROUTER_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "auvex.secretName" . }}
+                  key: {{ .Values.secrets.keys.openrouterApiKey }}
+            - name: AUVEX_SESSION_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "auvex.secretName" . }}
+                  key: {{ .Values.secrets.keys.sessionSecret }}
+            - name: SPRING_DATASOURCE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "auvex.secretName" . }}
+                  key: {{ .Values.secrets.keys.postgresPassword }}
+            {{- with .Values.gateway.extraEnv }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          startupProbe:
+            {{- toYaml .Values.gateway.startupProbe | nindent 12 }}
+          livenessProbe:
+            {{- toYaml .Values.gateway.livenessProbe | nindent 12 }}
+          readinessProbe:
+            {{- toYaml .Values.gateway.readinessProbe | nindent 12 }}
+          resources:
+            {{- toYaml .Values.gateway.resources | nindent 12 }}
+          volumeMounts:
+            # readOnlyRootFilesystem is on, so give the JVM a writable temp dir.
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
+      {{- with .Values.gateway.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.gateway.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.gateway.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

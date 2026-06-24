@@ -1,0 +1,49 @@
+apiVersion: v2
+name: auvex
+description: >-
+  Auvex AI governance gateway — a Spring Boot policy/observability gateway in
+  front of OpenAI-compatible LLM providers, plus its React admin console served
+  by nginx. Ships with optional bundled Postgres and Redis, or point the gateway
+  at your own managed databases.
+type: application
+
+# Chart version follows the chart's own lifecycle (bump on any template change).
+version: 0.1.0
+
+# appVersion tracks the Auvex application release the default image tags target.
+# Keep this in step with image.tag in values.yaml.
+appVersion: "1.0.0"
+
+home: https://github.com/gauthambinoy/auvex
+sources:
+  - https://github.com/gauthambinoy/auvex
+
+kubeVersion: ">=1.23.0-0"
+
+maintainers:
+  - name: Auvex maintainers
+
+keywords:
+  - ai
+  - gateway
+  - llm
+  - governance
+  - observability
+  - spring-boot
+
+# Postgres and Redis are OPTIONAL bundled dependencies. They are pulled from the
+# Bitnami repository only when their condition flag is true (the defaults in
+# values.yaml). Set postgresql.enabled / redis.enabled to false and fill in the
+# externalDatabase / externalRedis blocks to use managed services instead.
+#
+# Before `helm install`, fetch these once with:
+#   helm dependency update deploy/helm/auvex
+dependencies:
+  - name: postgresql
+    version: "~15.5.0"
+    repository: https://charts.bitnami.com/bitnami
+    condition: postgresql.enabled
+  - name: redis
+    version: "~19.6.0"
+    repository: https://charts.bitnami.com/bitnami
+    condition: redis.enabled

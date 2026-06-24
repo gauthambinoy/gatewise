@@ -1,0 +1,66 @@
+{{/*
+Non-secret runtime configuration for the gateway, plus (optionally) the rendered
+nginx config for the console that points its /v1 and /auth proxy at the real
+gateway Service. Secrets are kept out of here — see templates/secret.yaml.
+*/}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "auvex.fullname" . }}-config
+  labels:
+    {{- include "auvex.labels" . | nindent 4 }}
+  {{- with .Values.commonAnnotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+data:
+  # ---- Gateway non-secret env (mirrors application.yml env var names) ----
+  OPENROUTER_BASE_URL: {{ .Values.config.openrouterBaseUrl | quote }}
+  OPENROUTER_MODEL: {{ .Values.config.openrouterModel | quote }}
+  SPRING_DATASOURCE_URL: {{ include "auvex.datasourceUrl" . | quote }}
+  SPRING_DATASOURCE_USERNAME: {{ include "auvex.datasourceUsername" . | quote }}
+  REDIS_HOST: {{ include "auvex.redisHost" . | quote }}
+  REDIS_PORT: {{ include "auvex.redisPort" . | quote }}
+  SERVER_PORT: {{ .Values.gateway.containerPort | quote }}
+  AUVEX_REDACT_RESPONSE: {{ .Values.config.redactResponse | quote }}
+  AUVEX_INJECTION_ENABLED: {{ .Values.config.injectionEnabled | quote }}
+  AUVEX_INJECTION_BLOCK: {{ .Values.config.injectionBlock | quote }}
+  AUVEX_CACHE_ENABLED: {{ .Values.config.cacheEnabled | quote }}
+  AUVEX_DEMO_ENABLED: {{ .Values.config.demoEnabled | quote }}
+  AUVEX_DEV_LOGIN_ENABLED: {{ .Values.config.devLoginEnabled | quote }}
+{{- if .Values.console.overrideNginxConf }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "auvex.console.fullname" . }}-nginx
+  labels:
+    {{- include "auvex.componentLabels" (dict "ctx" . "component" "console") | nindent 4 }}
+data:
+  # Rendered nginx config: identical to console/nginx.conf in the repo, but the
+  # proxy upstream is the real gateway Service DNS name (the baked-in image uses
+  # the literal host "gateway", which only resolves under docker-compose). This
+  # is mounted over /etc/nginx/conf.d/default.conf in the console deployment.
+  default.conf: |
+    server {
+        listen {{ .Values.console.containerPort }};
+        server_name _;
+        root /usr/share/nginx/html;
+        index index.html;
+
+        location /v1/ {
+            proxy_pass http://{{ include "auvex.gateway.serviceHost" . }}:{{ .Values.gateway.service.port }};
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+        }
+        location /auth/ {
+            proxy_pass http://{{ include "auvex.gateway.serviceHost" . }}:{{ .Values.gateway.service.port }};
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+        }
+
+        location / {
+            try_files $uri $uri/ /index.html;
+        }
+    }
+{{- end }}

@@ -1,0 +1,91 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "auvex.console.fullname" . }}
+  labels:
+    {{- include "auvex.componentLabels" (dict "ctx" . "component" "console") | nindent 4 }}
+  {{- with .Values.commonAnnotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- if not .Values.console.autoscaling.enabled }}
+  replicas: {{ .Values.console.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "auvex.componentSelectorLabels" (dict "ctx" . "component" "console") | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "auvex.componentLabels" (dict "ctx" . "component" "console") | nindent 8 }}
+        {{- with .Values.console.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      annotations:
+        # Roll the console pods when the rendered nginx config changes.
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+        {{- with .Values.console.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      serviceAccountName: {{ include "auvex.serviceAccountName" . }}
+      automountServiceAccountToken: {{ .Values.serviceAccount.automountServiceAccountToken }}
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        {{- toYaml .Values.console.podSecurityContext | nindent 8 }}
+      containers:
+        - name: console
+          image: {{ include "auvex.console.image" . | quote }}
+          imagePullPolicy: {{ .Values.console.image.pullPolicy }}
+          securityContext:
+            {{- toYaml .Values.console.securityContext | nindent 12 }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.console.containerPort }}
+              protocol: TCP
+          livenessProbe:
+            {{- toYaml .Values.console.livenessProbe | nindent 12 }}
+          readinessProbe:
+            {{- toYaml .Values.console.readinessProbe | nindent 12 }}
+          resources:
+            {{- toYaml .Values.console.resources | nindent 12 }}
+          volumeMounts:
+            {{- if .Values.console.overrideNginxConf }}
+            # Mount the chart-rendered nginx config (correct gateway upstream)
+            # over the image default.
+            - name: nginx-conf
+              mountPath: /etc/nginx/conf.d/default.conf
+              subPath: default.conf
+              readOnly: true
+            {{- end }}
+            # nginx needs a few writable dirs even though most of the FS is static.
+            - name: nginx-cache
+              mountPath: /var/cache/nginx
+            - name: nginx-run
+              mountPath: /var/run
+      volumes:
+        {{- if .Values.console.overrideNginxConf }}
+        - name: nginx-conf
+          configMap:
+            name: {{ include "auvex.console.fullname" . }}-nginx
+        {{- end }}
+        - name: nginx-cache
+          emptyDir: {}
+        - name: nginx-run
+          emptyDir: {}
+      {{- with .Values.console.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.console.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.console.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
