@@ -1,0 +1,43 @@
+[build-system]
+requires = ["hatchling>=1.21"]
+build-backend = "hatchling.build"
+
+[project]
+name = "auvex"
+version = "0.1.0"
+description = "Official Python client for the Auvex AI governance gateway (OpenAI-compatible)."
+readme = "README.md"
+requires-python = ">=3.8"
+license = { file = "LICENSE" }
+authors = [{ name = "Auvex" }]
+keywords = ["auvex", "llm", "gateway", "openai", "governance", "ai", "compliance"]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "Typing :: Typed",
+  "License :: OSI Approved :: MIT License",
+  "Intended Audience :: Developers",
+  "Topic :: Software Development :: Libraries :: Python Modules",
+]
+dependencies = [
+  "httpx>=0.23,<1",
+]
+
+[project.optional-dependencies]
+# Everything needed to run the test suite. No network access is used.
+test = [
+  "pytest>=7",
+  "respx>=0.20",
+]
+
+[project.urls]
+Homepage = "https://github.com/gauthambinoy/auvex"
+Source = "https://github.com/gauthambinoy/auvex"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/auvex"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
+filterwarnings = ["error"]
