@@ -119,7 +119,12 @@ public final class Aws4Signer {
 
     String scope = dateStamp + "/" + region + "/" + service + "/aws4_request";
     String stringToSign =
-        String.join("\n", ALGORITHM, amzDate, scope, hex(sha256(canonicalRequest.getBytes(StandardCharsets.UTF_8))));
+        String.join(
+            "\n",
+            ALGORITHM,
+            amzDate,
+            scope,
+            hex(sha256(canonicalRequest.getBytes(StandardCharsets.UTF_8))));
 
     byte[] signingKey = signingKey(secretKey, dateStamp, region, service);
     String signature = hex(hmac(signingKey, stringToSign));
@@ -143,7 +148,9 @@ public final class Aws4Signer {
     return (path == null || path.isEmpty()) ? "/" : path;
   }
 
-  /** AWS UriEncode: A-Z a-z 0-9 - _ . ~ pass through; everything else becomes %XX (uppercase hex). */
+  /**
+   * AWS UriEncode: A-Z a-z 0-9 - _ . ~ pass through; everything else becomes %XX (uppercase hex).
+   */
   public static String uriEncode(String segment) {
     StringBuilder out = new StringBuilder();
     for (byte b : segment.getBytes(StandardCharsets.UTF_8)) {
@@ -163,7 +170,8 @@ public final class Aws4Signer {
     return out.toString();
   }
 
-  private static byte[] signingKey(String secretKey, String dateStamp, String region, String service) {
+  private static byte[] signingKey(
+      String secretKey, String dateStamp, String region, String service) {
     byte[] kSecret = ("AWS4" + secretKey).getBytes(StandardCharsets.UTF_8);
     byte[] kDate = hmac(kSecret, dateStamp);
     byte[] kRegion = hmac(kDate, region);

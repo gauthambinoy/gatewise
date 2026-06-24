@@ -20,9 +20,9 @@ import org.springframework.web.bind.annotation.RestController;
  * Exposes Auvex's governance engines as a Model Context Protocol (MCP) server over JSON-RPC 2.0, so
  * MCP-aware agents and tools can redact and screen text through the gateway. It speaks the core MCP
  * methods — {@code initialize}, {@code tools/list}, {@code tools/call} — and offers three tools:
- * {@code redact}, {@code moderate} and {@code scan_injection}, each reusing the very same engines as
- * the {@code /v1} endpoints. It lives under {@code /v1} so every call is authenticated to a tenant
- * by the standard API-key filter.
+ * {@code redact}, {@code moderate} and {@code scan_injection}, each reusing the very same engines
+ * as the {@code /v1} endpoints. It lives under {@code /v1} so every call is authenticated to a
+ * tenant by the standard API-key filter.
  */
 @RestController
 @RequestMapping("/v1")

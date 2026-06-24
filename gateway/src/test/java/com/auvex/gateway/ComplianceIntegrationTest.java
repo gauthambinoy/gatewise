@@ -39,12 +39,28 @@ class ComplianceIntegrationTest extends AbstractPostgresIntegrationTest {
 
     auditSink.record(
         new AuditEntry(
-            tenant.getId(), UUID.randomUUID(), "a", "default", Verdict.ALLOWED, "hi", null,
+            tenant.getId(),
+            UUID.randomUUID(),
+            "a",
+            "default",
+            Verdict.ALLOWED,
+            "hi",
+            null,
             Instant.now()));
     auditSink.record(
         new AuditEntry(
-            tenant.getId(), UUID.randomUUID(), "a", "default", Verdict.REDACTED, "masked", null,
-            Instant.now(), 1, 1, null, Map.of("email", 2)));
+            tenant.getId(),
+            UUID.randomUUID(),
+            "a",
+            "default",
+            Verdict.REDACTED,
+            "masked",
+            null,
+            Instant.now(),
+            1,
+            1,
+            null,
+            Map.of("email", 2)));
 
     mvc.perform(get("/v1/compliance/report").header("Authorization", "Bearer " + raw))
         .andExpect(status().isOk())

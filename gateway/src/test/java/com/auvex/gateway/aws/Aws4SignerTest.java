@@ -62,7 +62,8 @@ class Aws4SignerTest {
     assertThat(headers).containsKeys("Authorization", "X-Amz-Date", "X-Amz-Content-Sha256");
     assertThat(headers).doesNotContainKey("X-Amz-Security-Token");
     assertThat(headers.get("Authorization"))
-        .startsWith("AWS4-HMAC-SHA256 Credential=AKIDEXAMPLE/20260624/eu-west-1/bedrock/aws4_request")
+        .startsWith(
+            "AWS4-HMAC-SHA256 Credential=AKIDEXAMPLE/20260624/eu-west-1/bedrock/aws4_request")
         .contains("SignedHeaders=host;x-amz-content-sha256;x-amz-date");
     assertThat(headers.get("X-Amz-Date")).isEqualTo("20260624T100000Z");
   }

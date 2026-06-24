@@ -107,7 +107,9 @@ class ResponsesIntegrationTest extends AbstractPostgresIntegrationTest {
     UUID[] tenantId = new UUID[1];
     String key = authKey(tenantId);
     UPSTREAM.enqueue(
-        new MockResponse().setHeader("Content-Type", "application/json").setBody("{\"output\":[]}"));
+        new MockResponse()
+            .setHeader("Content-Type", "application/json")
+            .setBody("{\"output\":[]}"));
 
     String body =
         "{\"model\":\"gpt-4o\",\"input\":[{\"role\":\"user\",\"content\":"

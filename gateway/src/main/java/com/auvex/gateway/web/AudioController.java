@@ -10,7 +10,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.UUID;
 import org.springframework.core.io.ByteArrayResource;
@@ -100,7 +99,8 @@ public class AudioController {
                 byte[] audio = response.getBody().readAllBytes();
                 MediaType contentType = response.getHeaders().getContentType();
                 return ResponseEntity.status(response.getStatusCode().value())
-                    .contentType(contentType == null ? MediaType.valueOf("audio/mpeg") : contentType)
+                    .contentType(
+                        contentType == null ? MediaType.valueOf("audio/mpeg") : contentType)
                     .body(audio);
               });
     } catch (ResourceAccessException e) {
@@ -165,9 +165,7 @@ public class AudioController {
             screened.changed() ? screened.masked() : null,
             Instant.now()));
 
-    return ResponseEntity.status(status)
-        .contentType(MediaType.APPLICATION_JSON)
-        .body(responseBody);
+    return ResponseEntity.status(status).contentType(MediaType.APPLICATION_JSON).body(responseBody);
   }
 
   private String transcriptText(String responseBody) {

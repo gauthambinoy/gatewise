@@ -4,7 +4,9 @@ import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-/** Base for moderation rules that fire when any of a category's (case-insensitive) regexes match. */
+/**
+ * Base for moderation rules that fire when any of a category's (case-insensitive) regexes match.
+ */
 public abstract class RegexModerationRule implements ModerationRule {
 
   private final ModerationCategory category;

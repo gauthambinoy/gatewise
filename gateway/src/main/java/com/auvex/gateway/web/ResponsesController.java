@@ -30,9 +30,9 @@ import org.springframework.web.client.RestClient;
 /**
  * OpenAI's newer Responses API ({@code POST /v1/responses}), governed like the chat path.
  *
- * <p>The Responses API carries the prompt in an {@code input} field that is either a plain string or
- * an array of items whose {@code content} is a string or an array of {@code {type, text}} parts —
- * unlike chat completions, which uses {@code messages}. We redact every text location in {@code
+ * <p>The Responses API carries the prompt in an {@code input} field that is either a plain string
+ * or an array of items whose {@code content} is a string or an array of {@code {type, text}} parts
+ * — unlike chat completions, which uses {@code messages}. We redact every text location in {@code
  * input} before it leaves, record the call, forward it to the provider's {@code /responses}
  * endpoint, then screen the returned text for PII so the audit log captures both sides.
  */

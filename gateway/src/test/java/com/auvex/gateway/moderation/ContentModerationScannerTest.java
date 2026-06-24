@@ -34,7 +34,8 @@ class ContentModerationScannerTest {
 
   @Test
   void flagsDehumanisingHate() {
-    assertThat(scanner.categories("those people are vermin and should be removed")).contains("hate");
+    assertThat(scanner.categories("those people are vermin and should be removed"))
+        .contains("hate");
   }
 
   @Test
@@ -50,8 +51,7 @@ class ContentModerationScannerTest {
   @Test
   void doesNotFlagNeutralMentionOfDifficultTopics() {
     // A factual, non-intent sentence should not trip the intent-focused heuristics.
-    assertThat(scanner.categories("The museum's exhibit covers the history of the war."))
-        .isEmpty();
+    assertThat(scanner.categories("The museum's exhibit covers the history of the war.")).isEmpty();
   }
 
   @Test

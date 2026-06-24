@@ -55,9 +55,7 @@ public class DiscoveryController {
       boolean isSanctioned = sanctioned.contains(model);
       ModelUsage usage = new ModelUsage(model, provider, row.getCount(), isSanctioned);
 
-      byProvider
-          .computeIfAbsent(provider, ProviderAccumulator::new)
-          .add(usage);
+      byProvider.computeIfAbsent(provider, ProviderAccumulator::new).add(usage);
       if (!isSanctioned) {
         shadow.add(usage);
       }

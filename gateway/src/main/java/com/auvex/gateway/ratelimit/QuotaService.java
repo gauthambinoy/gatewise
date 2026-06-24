@@ -19,7 +19,8 @@ import org.springframework.stereotype.Component;
 public class QuotaService {
 
   private static final Logger LOG = LoggerFactory.getLogger(QuotaService.class);
-  private static final Duration KEEP = Duration.ofHours(25); // a little over a day, so keys self-clean
+  private static final Duration KEEP =
+      Duration.ofHours(25); // a little over a day, so keys self-clean
 
   private final StringRedisTemplate redis;
   private final QuotaProperties properties;

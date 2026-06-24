@@ -91,6 +91,8 @@ public class OidcStateService {
     }
   }
 
-  /** The signed state payload: which provider, the login nonce, and an absolute expiry (epoch s). */
+  /**
+   * The signed state payload: which provider, the login nonce, and an absolute expiry (epoch s).
+   */
   public record State(String provider, String nonce, long exp) {}
 }
