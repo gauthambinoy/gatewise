@@ -21,6 +21,7 @@ import com.auvex.gateway.pricing.UsageExtractor;
 import com.auvex.gateway.proxy.CachedResponse;
 import com.auvex.gateway.proxy.StreamContentExtractor;
 import com.auvex.gateway.proxy.UpstreamProxy;
+import com.auvex.gateway.ratelimit.QuotaService;
 import com.auvex.gateway.redaction.Match;
 import com.auvex.gateway.redaction.PromptRedactor;
 import com.auvex.gateway.redaction.ResponseRedaction;
@@ -77,6 +78,7 @@ public class ChatCompletionsController {
   private final InjectionProperties injectionProperties;
   private final TokenizationProperties tokenization;
   private final StreamContentExtractor streamExtractor;
+  private final QuotaService quotas;
   private final ObjectMapper objectMapper;
 
   public ChatCompletionsController(
@@ -95,6 +97,7 @@ public class ChatCompletionsController {
       InjectionProperties injectionProperties,
       TokenizationProperties tokenization,
       StreamContentExtractor streamExtractor,
+      QuotaService quotas,
       ObjectMapper objectMapper) {
     this.proxy = proxy;
     this.router = router;
@@ -111,6 +114,7 @@ public class ChatCompletionsController {
     this.injectionProperties = injectionProperties;
     this.tokenization = tokenization;
     this.streamExtractor = streamExtractor;
+    this.quotas = quotas;
     this.objectMapper = objectMapper;
   }
 
@@ -175,6 +179,9 @@ public class ChatCompletionsController {
     if (!budget.allows(ctx.tenantId())) {
       throw new BudgetExceededException("Call budget exceeded for this tenant.");
     }
+
+    // Enforce per-caller and per-model daily quotas (off unless configured).
+    quotas.check(ctx.tenantId(), ctx.actor(), providerModel);
 
     byte[] forwarded = objectMapper.writeValueAsBytes(body);
 

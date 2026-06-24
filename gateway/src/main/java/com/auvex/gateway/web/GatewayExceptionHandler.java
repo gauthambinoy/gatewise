@@ -3,6 +3,7 @@ package com.auvex.gateway.web;
 import com.auvex.gateway.oidc.OidcException;
 import com.auvex.gateway.policy.PolicyDeniedException;
 import com.auvex.gateway.proxy.UpstreamUnavailableException;
+import com.auvex.gateway.ratelimit.QuotaExceededException;
 import com.auvex.gateway.routing.ModelNotAllowedException;
 import java.util.Map;
 import org.springframework.http.HttpStatus;
@@ -56,6 +57,12 @@ public class GatewayExceptionHandler {
   @ExceptionHandler(BudgetExceededException.class)
   public ResponseEntity<Map<String, Object>> handleBudget(BudgetExceededException e) {
     return error(HttpStatus.TOO_MANY_REQUESTS, e.getMessage(), "rate_limit_exceeded");
+  }
+
+  /** A caller or model that has hit its daily quota → 429. */
+  @ExceptionHandler(QuotaExceededException.class)
+  public ResponseEntity<Map<String, Object>> handleQuota(QuotaExceededException e) {
+    return error(HttpStatus.TOO_MANY_REQUESTS, e.getMessage(), "quota_exceeded");
   }
 
   /** Upstream provider unreachable or too slow → 504. */

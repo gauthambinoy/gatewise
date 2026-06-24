@@ -140,6 +140,13 @@ auvex:
     enabled: ${AUVEX_RATELIMIT_ENABLED:false}
     requests-per-minute: ${AUVEX_RATELIMIT_RPM:600}
 
+  # Per-caller and per-model daily quotas (a longer window than the per-minute rate limit).
+  # Off by default; set a positive number to cap. 0 = unlimited for that dimension.
+  quota:
+    enabled: ${AUVEX_QUOTA_ENABLED:false}
+    per-user-per-day: ${AUVEX_QUOTA_PER_USER_PER_DAY:0}
+    per-model-per-day: ${AUVEX_QUOTA_PER_MODEL_PER_DAY:0}
+
   # Fallback provider, tried (non-streaming) when the primary can't be reached or 5xxs.
   failover:
     enabled: ${AUVEX_FAILOVER_ENABLED:false}
