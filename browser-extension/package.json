@@ -1,0 +1,10 @@
+{
+  "name": "auvex-guard",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Browser extension that screens prompts on web-based AI tools through an Auvex gateway.",
+  "type": "module",
+  "scripts": {
+    "test": "node --test"
+  }
+}
