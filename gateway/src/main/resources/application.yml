@@ -110,6 +110,18 @@ auvex:
     api-key: ${AZURE_OPENAI_API_KEY:}
     api-version: ${AZURE_OPENAI_API_VERSION:2024-06-01}
 
+  # Amazon Bedrock: when enabled, bedrock/* models are signed with AWS SigV4 and sent to the Bedrock
+  # Runtime InvokeModel API. The model id after the prefix is the Bedrock model id, e.g.
+  # bedrock/anthropic.claude-3-5-sonnet-20240620-v1:0. Off by default — supply AWS credentials.
+  bedrock:
+    enabled: ${AUVEX_BEDROCK_ENABLED:false}
+    region: ${AWS_REGION:us-east-1}
+    access-key-id: ${AWS_ACCESS_KEY_ID:}
+    secret-access-key: ${AWS_SECRET_ACCESS_KEY:}
+    session-token: ${AWS_SESSION_TOKEN:}
+    anthropic-version: ${BEDROCK_ANTHROPIC_VERSION:bedrock-2023-05-31}
+    max-tokens: ${BEDROCK_MAX_TOKENS:1024}
+
   # Response cache: a repeat non-streaming request returns the stored response and
   # skips the upstream call. Disable to send every call upstream.
   cache:
