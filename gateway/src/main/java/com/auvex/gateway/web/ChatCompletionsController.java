@@ -6,6 +6,7 @@ import com.auvex.gateway.audit.Verdict;
 import com.auvex.gateway.auth.TenantContext;
 import com.auvex.gateway.budget.BudgetService;
 import com.auvex.gateway.cache.ResponseCache;
+import com.auvex.gateway.cache.SemanticCache;
 import com.auvex.gateway.config.InjectionProperties;
 import com.auvex.gateway.config.RedactionProperties;
 import com.auvex.gateway.config.TokenizationProperties;
@@ -70,6 +71,7 @@ public class ChatCompletionsController {
   private final AuditSink auditSink;
   private final BudgetService budget;
   private final ResponseCache cache;
+  private final SemanticCache semanticCache;
   private final UsageExtractor usageExtractor;
   private final CostCalculator costCalculator;
   private final ResponseRedactor responseRedactor;
@@ -89,6 +91,7 @@ public class ChatCompletionsController {
       AuditSink auditSink,
       BudgetService budget,
       ResponseCache cache,
+      SemanticCache semanticCache,
       UsageExtractor usageExtractor,
       CostCalculator costCalculator,
       ResponseRedactor responseRedactor,
@@ -106,6 +109,7 @@ public class ChatCompletionsController {
     this.auditSink = auditSink;
     this.budget = budget;
     this.cache = cache;
+    this.semanticCache = semanticCache;
     this.usageExtractor = usageExtractor;
     this.costCalculator = costCalculator;
     this.responseRedactor = responseRedactor;
@@ -219,7 +223,7 @@ public class ChatCompletionsController {
     }
 
     // Non-streaming: fetch, redact the response, price it, record it, then return it.
-    CachedResponse upstream = fetchBuffered(ctx.tenantId(), forwarded);
+    CachedResponse upstream = fetchBuffered(ctx.tenantId(), forwarded, redactedPrompt(body));
     ResponseRedaction redactedResponse =
         redaction.enabled() ? responseRedactor.redact(upstream.body()) : null;
 
@@ -277,20 +281,26 @@ public class ChatCompletionsController {
     return restored;
   }
 
-  // Get the response for a non-streaming request: from cache if present, else fetch (with
-  // failover).
-  private CachedResponse fetchBuffered(UUID tenantId, byte[] forwarded) {
-    if (!cache.enabled()) {
-      return proxy.fetch(forwarded);
+  // Get the response for a non-streaming request: exact-match cache, then semantic (near-duplicate)
+  // cache, else fetch (with failover) and populate both caches.
+  private CachedResponse fetchBuffered(UUID tenantId, byte[] forwarded, String promptText) {
+    String key = cache.enabled() ? cache.keyFor(tenantId, forwarded) : null;
+    if (key != null) {
+      CachedResponse cached = cache.get(key);
+      if (cached != null) {
+        return cached;
+      }
     }
-    String key = cache.keyFor(tenantId, forwarded);
-    CachedResponse cached = cache.get(key);
-    if (cached != null) {
-      return cached;
+    CachedResponse semantic = semanticCache.lookup(tenantId, promptText);
+    if (semantic != null) {
+      return semantic;
     }
     CachedResponse fresh = proxy.fetch(forwarded);
     if (fresh.isSuccessful()) {
-      cache.put(key, fresh);
+      if (key != null) {
+        cache.put(key, fresh);
+      }
+      semanticCache.store(tenantId, promptText, fresh);
     }
     return fresh;
   }

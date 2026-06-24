@@ -127,6 +127,12 @@ auvex:
   cache:
     enabled: ${AUVEX_CACHE_ENABLED:true}
     ttl: ${AUVEX_CACHE_TTL:5m}
+    # Semantic (near-duplicate) cache: serves a stored response when a new prompt is similar enough
+    # to a recent one. Off by default; lexical similarity unless a model embedder is plugged in.
+    semantic:
+      enabled: ${AUVEX_SEMANTIC_CACHE_ENABLED:false}
+      threshold: ${AUVEX_SEMANTIC_CACHE_THRESHOLD:0.95}
+      max-entries-per-tenant: ${AUVEX_SEMANTIC_CACHE_MAX:200}
 
   # Per-tenant call budget: forwarded calls beyond max-calls in the window get a 429.
   budget:
