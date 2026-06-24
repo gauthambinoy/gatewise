@@ -9,7 +9,9 @@ const NAV = [
     section: 'nav.console',
     items: [
       { to: '/', icon: 'ti-layout-dashboard', label: 'nav.dashboard' },
+      { to: '/monitor', icon: 'ti-radar-2', label: 'nav.monitor' },
       { to: '/audit', icon: 'ti-list-search', label: 'nav.audit' },
+      { to: '/connect', icon: 'ti-plug-connected', label: 'nav.connect' },
       { to: '/users', icon: 'ti-users', label: 'nav.users' },
     ],
   },
@@ -31,6 +33,8 @@ const NAV = [
 
 const TITLE_KEYS: Record<string, string> = {
   '/': 'nav.dashboard',
+  '/monitor': 'nav.monitor',
+  '/connect': 'nav.connect',
   '/audit': 'nav.audit',
   '/users': 'nav.users',
   '/policies': 'nav.policies',

@@ -1,0 +1,24 @@
+import { chromium } from 'playwright';
+const BASE = 'https://auvex.54.170.218.176.nip.io';
+const b = await chromium.launch();
+const ctx = await b.newContext({ viewport: { width: 1440, height: 900 }, deviceScaleFactor: 2, ignoreHTTPSErrors: true, recordVideo: { dir: 'video-v3', size: { width: 1440, height: 900 } } });
+const p = await ctx.newPage(); const wait = (m) => p.waitForTimeout(m);
+await p.goto(BASE + '/', { waitUntil: 'networkidle' }); await wait(1800);
+await p.screenshot({ path: 'shots-v3/01-login.png', fullPage: true });
+await p.getByRole('button', { name: /try the live demo/i }).click();
+await p.waitForLoadState('networkidle'); await wait(3400);
+await p.screenshot({ path: 'shots-v3/02-dashboard.png', fullPage: true });
+await p.goto(BASE + '/audit', { waitUntil: 'networkidle' }); await wait(2400);
+await p.screenshot({ path: 'shots-v3/03-audit.png', fullPage: true });
+await p.goto(BASE + '/usage', { waitUntil: 'networkidle' }); await wait(2400);
+await p.screenshot({ path: 'shots-v3/04-usage.png', fullPage: true });
+await p.goto(BASE + '/policies', { waitUntil: 'networkidle' }); await wait(2200);
+await p.screenshot({ path: 'shots-v3/05-policies.png', fullPage: true });
+// light mode toggle
+await p.goto(BASE + '/', { waitUntil: 'networkidle' }); await wait(1500);
+await p.getByRole('button', { name: /light/i }).click(); await wait(2600);
+await p.screenshot({ path: 'shots-v3/06-dashboard-light.png', fullPage: true });
+await wait(800); await ctx.close(); await b.close();
+const fs = await import('node:fs');
+const v = fs.readdirSync('video-v3').filter(f=>f.endsWith('.webm')); if(v.length) fs.renameSync('video-v3/'+v[0],'video-v3/auvex-redesign.webm');
+console.log('done');

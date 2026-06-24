@@ -12,6 +12,7 @@ import type {
   PolicyInput,
   Route,
   SsoProvider,
+  ModerationResult,
   Tenant,
   UsageSummary,
   UserUsage,
@@ -100,6 +101,10 @@ export const api = {
   deleteMember: (id: string) => request<void>('DELETE', `/v1/members/${id}`),
 
   models: () => request<Route[]>('GET', '/v1/models'),
+
+  // Native moderation — used by the Connect page's live "Test connection" (no LLM key needed).
+  moderate: (input: string) =>
+    request<ModerationResult>('POST', '/v1/moderations', { input }),
 
   keys: () => request<ApiKey[]>('GET', '/v1/keys'),
   createKey: (name?: string) => request<CreatedKey>('POST', '/v1/keys', { name }),

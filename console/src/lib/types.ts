@@ -111,3 +111,9 @@ export interface SsoProvider {
   name: string
   configured: boolean
 }
+
+export interface ModerationResult {
+  flagged: boolean
+  sensitiveData: Record<string, number>
+  injection: string[]
+}

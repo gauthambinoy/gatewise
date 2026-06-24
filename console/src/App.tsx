@@ -4,6 +4,8 @@ import { AppShell } from './components/AppShell'
 import { Spinner } from './components/ui'
 import { Login } from './pages/Login'
 import { Dashboard } from './pages/Dashboard'
+import { Connect } from './pages/Connect'
+import { Monitor } from './pages/Monitor'
 import { AuditLog } from './pages/AuditLog'
 import { RequestDetail } from './pages/RequestDetail'
 import { Policies } from './pages/Policies'
@@ -46,6 +48,8 @@ export function App() {
     <Routes>
       <Route element={<AppShell />}>
         <Route path="/" element={<Dashboard />} />
+        <Route path="/connect" element={<Connect />} />
+        <Route path="/monitor" element={<Monitor />} />
         <Route path="/audit" element={<AuditLog />} />
         <Route path="/audit/:id" element={<RequestDetail />} />
         <Route path="/policies" element={<Policies />} />
