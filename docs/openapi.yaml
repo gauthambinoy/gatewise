@@ -146,6 +146,7 @@ paths:
                 flagged: true
                 sensitiveData: { credit_card: 1, us_ssn: 1 }
                 injection: [instruction_override]
+                moderation: []
         "401": { $ref: "#/components/responses/Unauthorized" }
 
   /v1/audit:
@@ -344,6 +345,10 @@ components:
         injection:
           type: array
           items: { type: string }
+        moderation:
+          type: array
+          items: { type: string }
+          description: Content-safety categories detected (e.g. self-harm, violence, hate).
     AuditEntry:
       type: object
       properties:

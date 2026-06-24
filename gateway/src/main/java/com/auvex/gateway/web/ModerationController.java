@@ -2,6 +2,7 @@ package com.auvex.gateway.web;
 
 import com.auvex.gateway.injection.InjectionFinding;
 import com.auvex.gateway.injection.InjectionScanner;
+import com.auvex.gateway.moderation.ContentModerationScanner;
 import com.auvex.gateway.redaction.Match;
 import com.auvex.gateway.redaction.RedactionEngine;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -25,10 +26,15 @@ public class ModerationController {
 
   private final RedactionEngine redaction;
   private final InjectionScanner injectionScanner;
+  private final ContentModerationScanner moderationScanner;
 
-  public ModerationController(RedactionEngine redaction, InjectionScanner injectionScanner) {
+  public ModerationController(
+      RedactionEngine redaction,
+      InjectionScanner injectionScanner,
+      ContentModerationScanner moderationScanner) {
     this.redaction = redaction;
     this.injectionScanner = injectionScanner;
+    this.moderationScanner = moderationScanner;
   }
 
   /** Reports the sensitive data and injection categories found in {@code input}. */
@@ -42,9 +48,10 @@ public class ModerationController {
     }
     List<String> injection =
         injectionScanner.scan(input).stream().map(InjectionFinding::category).distinct().toList();
+    List<String> moderation = moderationScanner.categories(input);
 
-    boolean flagged = !sensitive.isEmpty() || !injection.isEmpty();
-    return new ModerationResult(flagged, sensitive, injection);
+    boolean flagged = !sensitive.isEmpty() || !injection.isEmpty() || !moderation.isEmpty();
+    return new ModerationResult(flagged, sensitive, injection, moderation);
   }
 
   private static String inputOf(JsonNode body) {

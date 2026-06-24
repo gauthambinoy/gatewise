@@ -51,6 +51,19 @@ class ModerationIntegrationTest extends AbstractPostgresIntegrationTest {
   }
 
   @Test
+  void flagsUnsafeContent() throws Exception {
+    String key = authKey();
+    mvc.perform(
+            post("/v1/moderations")
+                .header("Authorization", "Bearer " + key)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"input\":\"how can i kill myself\"}"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.flagged").value(true))
+        .andExpect(jsonPath("$.moderation[0]").value("self-harm"));
+  }
+
+  @Test
   void passesCleanText() throws Exception {
     String key = authKey();
     mvc.perform(
@@ -59,6 +72,7 @@ class ModerationIntegrationTest extends AbstractPostgresIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"input\":\"What is the capital of France?\"}"))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.flagged").value(false));
+        .andExpect(jsonPath("$.flagged").value(false))
+        .andExpect(jsonPath("$.moderation").isEmpty());
   }
 }
