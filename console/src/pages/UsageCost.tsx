@@ -1,6 +1,17 @@
 import { api } from '../lib/api'
 import { useApi } from '../lib/useApi'
-import { EmptyState, ErrorState, Loading, PageHeader, Stat, money } from '../components/ui'
+import {
+  Card,
+  CardHeader,
+  Chip,
+  EmptyState,
+  ErrorState,
+  Loading,
+  PageHeader,
+  ProgressBar,
+  StatCard,
+  money,
+} from '../components/ui'
 import type { Tone } from '../components/ui'
 
 /** A labeled horizontal bar — label on the left, value on the right, fill below. */
@@ -9,11 +20,13 @@ function Bar({
   value,
   max,
   capitalize = false,
+  tone,
 }: {
   label: string
   value: number
   max: number
   capitalize?: boolean
+  tone?: Tone
 }) {
   return (
     <div style={{ marginBottom: 10 }}>
@@ -27,22 +40,16 @@ function Bar({
       >
         <span
           className="sub"
-          style={capitalize ? { textTransform: 'capitalize' } : undefined}
+          style={{
+            ...(capitalize ? { textTransform: 'capitalize' } : null),
+            ...(tone ? { color: `var(--color-text-${tone})` } : null),
+          }}
         >
           {capitalize ? label.replace(/_/g, ' ') : label}
         </span>
         <span>{value.toLocaleString()}</span>
       </div>
-      <div style={{ height: 6, background: 'var(--color-background-tertiary)', borderRadius: 4 }}>
-        <div
-          style={{
-            width: `${(value / max) * 100}%`,
-            height: 6,
-            background: 'var(--color-text-info)',
-            borderRadius: 4,
-          }}
-        />
-      </div>
+      <ProgressBar value={(value / max) * 100} height={6} tone={tone ?? 'info'} />
     </div>
   )
 }
@@ -87,14 +94,19 @@ export function UsageCost() {
       <PageHeader title="Usage & cost" subtitle="Cost and traffic across the gateway" />
 
       <div className="stat-grid" style={{ marginBottom: 16 }}>
-        <Stat label="Total cost" value={money(d.totalCostUsd)} />
-        <Stat label="Requests" value={d.totalCalls.toLocaleString()} />
-        <Stat label="Total tokens" value={d.totalTokens.toLocaleString()} />
-        <Stat label="Redacted" value={d.redacted.toLocaleString()} tone="info" />
+        <StatCard label="Total cost" value={money(d.totalCostUsd)} icon="ti-coin" />
+        <StatCard label="Requests" value={d.totalCalls.toLocaleString()} icon="ti-activity" />
+        <StatCard label="Total tokens" value={d.totalTokens.toLocaleString()} icon="ti-hash" />
+        <StatCard
+          label="Redacted"
+          value={d.redacted.toLocaleString()}
+          icon="ti-eye-off"
+          tone="info"
+        />
       </div>
 
-      <div className="card" style={{ marginBottom: 16 }}>
-        <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 12 }}>Requests by model</div>
+      <Card style={{ marginBottom: 16 }}>
+        <CardHeader title="Requests by model" icon="ti-cpu" />
         {models.length > 0 ? (
           models.map(([model, n]) => <Bar key={model} label={model} value={n} max={maxModel} />)
         ) : (
@@ -102,43 +114,29 @@ export function UsageCost() {
             No model traffic yet.
           </div>
         )}
-      </div>
+      </Card>
 
-      <div className="card" style={{ marginBottom: 16 }}>
-        <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 12 }}>Verdict mix</div>
+      <Card style={{ marginBottom: 16 }}>
+        <CardHeader
+          title="Verdict mix"
+          icon="ti-gavel"
+          actions={
+            <div style={{ display: 'flex', gap: 'var(--sp-2)' }}>
+              {verdicts.map((v) => (
+                <Chip key={v.label} tone={v.tone} size="sm">
+                  {v.value.toLocaleString()}
+                </Chip>
+              ))}
+            </div>
+          }
+        />
         {verdicts.map((v) => (
-          <div key={v.label} style={{ marginBottom: 10 }}>
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                fontSize: 12,
-                marginBottom: 4,
-              }}
-            >
-              <span className="sub" style={{ color: `var(--color-text-${v.tone})` }}>
-                {v.label}
-              </span>
-              <span>{v.value.toLocaleString()}</span>
-            </div>
-            <div
-              style={{ height: 6, background: 'var(--color-background-tertiary)', borderRadius: 4 }}
-            >
-              <div
-                style={{
-                  width: `${(v.value / maxVerdict) * 100}%`,
-                  height: 6,
-                  background: `var(--color-text-${v.tone})`,
-                  borderRadius: 4,
-                }}
-              />
-            </div>
-          </div>
+          <Bar key={v.label} label={v.label} value={v.value} max={maxVerdict} tone={v.tone} />
         ))}
-      </div>
+      </Card>
 
-      <div className="card">
-        <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 12 }}>Redactions by type</div>
+      <Card>
+        <CardHeader title="Redactions by type" icon="ti-shield-lock" />
         {redactions.length > 0 ? (
           redactions.map(([type, n]) => (
             <Bar key={type} label={type} value={n} max={maxRedaction} capitalize />
@@ -148,7 +146,7 @@ export function UsageCost() {
             Nothing sensitive masked yet.
           </div>
         )}
-      </div>
+      </Card>
     </>
   )
 }

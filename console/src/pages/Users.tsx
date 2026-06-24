@@ -1,16 +1,19 @@
 import { api } from '../lib/api'
 import { useApi } from '../lib/useApi'
-import { EmptyState, ErrorState, Loading, Stat, money } from '../components/ui'
-
-const GRID = '1.7fr 90px 90px 80px 70px'
-
-/** Two initials from an actor string (email, username, or "First Last"). */
-function initials(actor: string): string {
-  const parts = actor.replace(/[@.]/g, ' ').trim().split(/\s+/).filter(Boolean)
-  if (parts.length === 0) return '?'
-  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase()
-  return (parts[0][0] + parts[1][0]).toUpperCase()
-}
+import type { UserUsage } from '../lib/types'
+import type { Column } from '../components/ui'
+import {
+  Avatar,
+  Card,
+  CardHeader,
+  Chip,
+  DataTable,
+  EmptyState,
+  ErrorState,
+  Loading,
+  Stat,
+  money,
+} from '../components/ui'
 
 export function Users() {
   const users = useApi(() => api.usageByUser(), [])
@@ -24,13 +27,82 @@ export function Users() {
   const flagged = data.filter((u) => u.blocked > 0).length
   const totalCost = data.reduce((s, u) => s + u.costUsd, 0)
 
+  const columns: Column<UserUsage>[] = [
+    {
+      key: 'person',
+      header: 'Person',
+      render: (u) => {
+        const flaggedRow = u.blocked > 0
+        return (
+          <span style={{ display: 'flex', alignItems: 'center', gap: 9, minWidth: 0 }}>
+            <Avatar name={u.actor} size={28} />
+            <span
+              style={{
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+                color: flaggedRow ? 'var(--color-text-danger)' : undefined,
+              }}
+            >
+              {u.actor}
+            </span>
+            {flaggedRow && (
+              <i
+                className="ti ti-flag"
+                aria-hidden
+                style={{ fontSize: 13, color: 'var(--color-text-danger)', flexShrink: 0 }}
+              />
+            )}
+          </span>
+        )
+      },
+    },
+    {
+      key: 'requests',
+      header: 'Requests',
+      width: '90px',
+      align: 'right',
+      render: (u) => u.requests.toLocaleString(),
+    },
+    {
+      key: 'redacted',
+      header: 'Redacted',
+      width: '90px',
+      align: 'right',
+      render: (u) => (
+        <span style={{ color: 'var(--color-text-info)' }}>{u.redacted.toLocaleString()}</span>
+      ),
+    },
+    {
+      key: 'blocked',
+      header: 'Blocked',
+      width: '90px',
+      align: 'right',
+      render: (u) =>
+        u.blocked > 0 ? (
+          <Chip tone="danger" size="sm">
+            {u.blocked.toLocaleString()}
+          </Chip>
+        ) : (
+          <span style={{ color: 'var(--color-text-tertiary)' }}>0</span>
+        ),
+    },
+    {
+      key: 'cost',
+      header: 'Cost',
+      width: '90px',
+      align: 'right',
+      render: (u) => <span className="sub">{money(u.costUsd)}</span>,
+    },
+  ]
+
   return (
-    <div className="card">
-      <div style={{ fontSize: 18, fontWeight: 600, marginBottom: 2 }}>Users</div>
-      <div className="muted" style={{ fontSize: 12, marginBottom: 16 }}>
-        Everyone calling the gateway, by the user attached to each request. Spot risky usage at a
-        glance.
-      </div>
+    <Card>
+      <CardHeader
+        icon="ti-users"
+        title="Users"
+        subtitle="Everyone calling the gateway, by the user attached to each request. Spot risky usage at a glance."
+      />
 
       {data.length === 0 ? (
         <EmptyState
@@ -47,71 +119,9 @@ export function Users() {
             <Stat label="Total cost" value={money(totalCost)} />
           </div>
 
-          <div className="thead" style={{ display: 'grid', gridTemplateColumns: GRID, gap: 8 }}>
-            <span>Person</span>
-            <span>Requests</span>
-            <span>Redacted</span>
-            <span>Blocked</span>
-            <span>Cost</span>
-          </div>
-          {data.map((u) => {
-            const flaggedRow = u.blocked > 0
-            return (
-              <div
-                key={u.actor}
-                className="row"
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: GRID,
-                  gap: 8,
-                  padding: '10px 8px',
-                  background: flaggedRow ? 'var(--color-background-danger)' : undefined,
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: 9, minWidth: 0 }}>
-                  <div
-                    className="avatar"
-                    style={
-                      flaggedRow
-                        ? {
-                            width: 28,
-                            height: 28,
-                            fontSize: 11,
-                            background: 'var(--color-background-danger)',
-                            color: 'var(--color-text-danger)',
-                          }
-                        : { width: 28, height: 28, fontSize: 11 }
-                    }
-                  >
-                    {initials(u.actor)}
-                  </div>
-                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {u.actor}
-                    {flaggedRow && (
-                      <i
-                        className="ti ti-flag"
-                        style={{ fontSize: 13, color: 'var(--color-text-danger)', marginLeft: 6 }}
-                      />
-                    )}
-                  </span>
-                </div>
-                <span>{u.requests.toLocaleString()}</span>
-                <span style={{ color: 'var(--color-text-info)' }}>
-                  {u.redacted.toLocaleString()}
-                </span>
-                <span
-                  style={{
-                    color: u.blocked > 0 ? 'var(--color-text-danger)' : 'var(--color-text-tertiary)',
-                  }}
-                >
-                  {u.blocked.toLocaleString()}
-                </span>
-                <span className="sub">{money(u.costUsd)}</span>
-              </div>
-            )
-          })}
+          <DataTable columns={columns} rows={data} rowKey={(u) => u.actor} />
         </>
       )}
-    </div>
+    </Card>
   )
 }

@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent } from 'react'
 import { useAuth } from '../auth/AuthContext'
 import { ApiError, api } from '../lib/api'
 import type { SsoProvider } from '../lib/types'
+import { Alert, Button, Card, Divider, TextField } from '../components/ui'
 
 const PROVIDER_ICON: Record<string, string> = { google: 'ti-brand-google', okta: 'ti-key' }
 const DEMO_KEY = 'auvex_demo_key'
@@ -59,7 +60,7 @@ export function Login() {
         padding: 20,
       }}
     >
-      <div className="card anim" style={{ width: 360, padding: '28px 26px' }}>
+      <Card className="anim" style={{ width: 380, padding: '30px 28px' }}>
         <div
           style={{
             display: 'flex',
@@ -69,109 +70,85 @@ export function Login() {
             marginBottom: 6,
           }}
         >
-          <div className="logo" style={{ width: 30, height: 30, borderRadius: 8 }}>
-            <i className="ti ti-shield-lock" style={{ color: '#fff', fontSize: 18 }} />
+          <div className="logo" style={{ width: 32, height: 32, borderRadius: 9 }}>
+            <i className="ti ti-shield-lock" style={{ color: '#fff', fontSize: 19 }} />
           </div>
-          <span style={{ fontSize: 20, fontWeight: 600 }}>Auvex</span>
+          <span style={{ fontSize: 21, fontWeight: 600 }}>Auvex</span>
         </div>
-        <div className="sub" style={{ textAlign: 'center', fontSize: 13, marginBottom: 20 }}>
+        <div className="sub" style={{ textAlign: 'center', fontSize: 13, marginBottom: 22 }}>
           Sign in to your console
         </div>
 
         {/* One-click sandbox — no key needed. */}
-        <button
-          className="btn-primary"
+        <Button
+          variant="primary"
+          fullWidth
+          icon="ti-sparkles"
+          loading={demoBusy}
           onClick={tryDemo}
-          disabled={demoBusy}
-          style={{
-            width: '100%',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: 8,
-            padding: 11,
-            fontSize: 13,
-            fontWeight: 500,
-          }}
         >
-          <i className="ti ti-sparkles" />
           {demoBusy ? 'Loading demo…' : 'Try the live demo'}
-        </button>
-        <div className="muted" style={{ textAlign: 'center', fontSize: 11, margin: '6px 0 4px' }}>
+        </Button>
+        <div className="muted" style={{ textAlign: 'center', fontSize: 11, margin: '8px 0 2px' }}>
           A sandbox org with sample data — no sign-up.
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '14px 0' }}>
-          <div style={{ flex: 1, height: 1, background: 'var(--color-border-tertiary)' }} />
-          <span className="muted" style={{ fontSize: 11 }}>
-            or sign in
-          </span>
-          <div style={{ flex: 1, height: 1, background: 'var(--color-border-tertiary)' }} />
-        </div>
+        {providers.length > 0 && (
+          <>
+            <Divider label="or sign in" />
+            {providers.map((p) => (
+              <div key={p.name} style={{ marginBottom: 8 }}>
+                <Button
+                  variant="secondary"
+                  fullWidth
+                  disabled
+                  icon={PROVIDER_ICON[p.name] ?? 'ti-key'}
+                  iconRight="ti-arrow-right"
+                  style={{ textTransform: 'capitalize' }}
+                >
+                  Continue with {p.name}
+                  <span className="badge" style={{ fontSize: 9, padding: '1px 6px', marginLeft: 4 }}>
+                    soon
+                  </span>
+                </Button>
+              </div>
+            ))}
+          </>
+        )}
 
-        {providers.map((p) => (
-          <button
-            key={p.name}
-            disabled
-            title="SSO needs an OAuth client to be configured for this provider"
-            style={{
-              width: '100%',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 8,
-              padding: 10,
-              fontSize: 13,
-              marginBottom: 8,
-              textTransform: 'capitalize',
-            }}
-          >
-            <i className={`ti ${PROVIDER_ICON[p.name] ?? 'ti-key'}`} />
-            Continue with {p.name}
-            <span className="badge" style={{ fontSize: 9, padding: '1px 6px' }}>
-              soon
-            </span>
-          </button>
-        ))}
-
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '12px 0' }}>
-          <div style={{ flex: 1, height: 1, background: 'var(--color-border-tertiary)' }} />
-          <span className="muted" style={{ fontSize: 11 }}>
-            or use an API key
-          </span>
-          <div style={{ flex: 1, height: 1, background: 'var(--color-border-tertiary)' }} />
-        </div>
+        <Divider label="or use an API key" />
 
         <form onSubmit={submit}>
-          <label htmlFor="apikey">API key</label>
-          <input
-            id="apikey"
+          <TextField
+            label="API key"
             type="password"
+            icon="ti-key"
             placeholder="auvex_sk_…"
             value={key}
-            onChange={(e) => setKey(e.target.value)}
-            style={{ width: '100%', marginBottom: 12, fontFamily: 'var(--font-mono)' }}
+            onChange={setKey}
+            fullWidth
           />
           {error && (
-            <div
-              className="badge badge-danger"
-              style={{ display: 'block', textAlign: 'left', marginBottom: 12, padding: '8px 10px' }}
-            >
-              {error}
+            <div style={{ margin: '12px 0' }}>
+              <Alert tone="danger">{error}</Alert>
             </div>
           )}
-          <button
-            type="submit"
-            disabled={busy || !key.trim()}
-            style={{ width: '100%', padding: 11, fontSize: 13 }}
-          >
-            {busy ? 'Signing in…' : 'Sign in'}
-          </button>
+          <div style={{ marginTop: error ? 0 : 12 }}>
+            <Button
+              type="submit"
+              variant="primary"
+              fullWidth
+              loading={busy}
+              disabled={!key.trim()}
+            >
+              {busy ? 'Signing in…' : 'Use API key'}
+            </Button>
+          </div>
         </form>
-        <div className="muted" style={{ textAlign: 'center', fontSize: 11, marginTop: 14 }}>
+        <div className="muted" style={{ textAlign: 'center', fontSize: 11, marginTop: 16 }}>
           Your key is stored only in this browser.
         </div>
-      </div>
+      </Card>
     </div>
   )
 }

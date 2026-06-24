@@ -1,11 +1,30 @@
 import { useState, type FormEvent } from 'react'
 import { ApiError, api } from '../lib/api'
 import { useApi } from '../lib/useApi'
+import { useT } from '../lib/i18n'
 import type { Member } from '../lib/types'
-import { Badge, EmptyState, ErrorState, Loading } from '../components/ui'
+import type { Column } from '../components/ui'
+import {
+  Alert,
+  Avatar,
+  Button,
+  Card,
+  CardHeader,
+  Chip,
+  DataTable,
+  Dialog,
+  EmptyState,
+  ErrorState,
+  IconButton,
+  Loading,
+  Select,
+  TextField,
+  ToastProvider,
+  useToast,
+} from '../components/ui'
 
-const GRID = '1.6fr 1fr 90px 50px'
 const ROLES = ['owner', 'security_admin', 'auditor'] as const
+const ROLE_OPTIONS = ROLES.map((r) => ({ value: r, label: roleLabel(r) }))
 
 function roleLabel(role: string): string {
   if (role === 'owner') return 'Owner'
@@ -14,16 +33,18 @@ function roleLabel(role: string): string {
   return role
 }
 
-/** Two initials from a name or email. */
-function initials(text: string): string {
-  const parts = text.replace(/[@.]/g, ' ').trim().split(/\s+/).filter(Boolean)
-  if (parts.length === 0) return '?'
-  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase()
-  return (parts[0][0] + parts[1][0]).toUpperCase()
+function roleTone(role: string): 'info' | 'warning' | 'success' {
+  if (role === 'owner') return 'warning'
+  if (role === 'security_admin') return 'info'
+  return 'success'
 }
 
-export function TeamRoles() {
+function TeamRolesInner() {
+  const { t } = useT()
+  const tr = t as (k: string) => string
+  const { toast } = useToast()
   const members = useApi(() => api.members(), [])
+
   const [showForm, setShowForm] = useState(false)
   const [email, setEmail] = useState('')
   const [name, setName] = useState('')
@@ -32,12 +53,15 @@ export function TeamRoles() {
   const [saving, setSaving] = useState(false)
 
   function openForm() {
+    setEmail('')
+    setName('')
+    setRole('auditor')
     setFormError(undefined)
     setShowForm(true)
   }
 
-  async function invite(e: FormEvent) {
-    e.preventDefault()
+  async function invite(e?: FormEvent) {
+    e?.preventDefault()
     setFormError(undefined)
     setSaving(true)
     try {
@@ -47,6 +71,7 @@ export function TeamRoles() {
       setRole('auditor')
       setShowForm(false)
       await members.reload()
+      toast('Invitation sent', 'success')
     } catch (err) {
       setFormError(err instanceof ApiError ? err.message : 'Could not invite member')
     } finally {
@@ -62,17 +87,19 @@ export function TeamRoles() {
       status: m.status,
     })
     await members.reload()
+    toast('Role updated', 'success')
   }
 
   async function remove(m: Member) {
     await api.deleteMember(m.id)
     await members.reload()
+    toast('Member removed', 'success')
   }
 
   const inviteBtn = (
-    <button className="btn-primary" onClick={openForm} style={{ padding: '8px 14px', fontSize: 13 }}>
-      <i className="ti ti-user-plus" /> Invite
-    </button>
+    <Button variant="primary" icon="ti-user-plus" onClick={openForm}>
+      Invite
+    </Button>
   )
 
   if (members.loading) return <Loading />
@@ -81,78 +108,87 @@ export function TeamRoles() {
 
   const data = members.data
 
-  return (
-    <div className="card">
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          marginBottom: 2,
-        }}
-      >
-        <div style={{ fontSize: 18, fontWeight: 500 }}>Team &amp; roles</div>
-        {inviteBtn}
-      </div>
-      <div className="muted" style={{ fontSize: 12, marginBottom: 18 }}>
-        Control who can view logs, edit policy, or manage keys.
-      </div>
+  const columns: Column<Member>[] = [
+    {
+      key: 'member',
+      header: 'Member',
+      width: '1.6fr',
+      render: (m) => (
+        <span style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+          <Avatar name={m.name || m.email} size={30} />
+          <span style={{ minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {m.name || m.email}
+            </span>
+            <span
+              className="muted"
+              style={{
+                fontSize: 11,
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              {m.email}
+            </span>
+          </span>
+        </span>
+      ),
+    },
+    {
+      key: 'role',
+      header: 'Role',
+      width: '1fr',
+      render: (m) => (
+        <span style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0, width: '100%' }}>
+          <Chip tone={roleTone(m.role)} size="sm">
+            {roleLabel(m.role)}
+          </Chip>
+          <span style={{ flex: 1, minWidth: 90 }}>
+            <Select
+              value={m.role}
+              onChange={(v) => void changeRole(m, v)}
+              options={ROLE_OPTIONS}
+              fullWidth
+            />
+          </span>
+        </span>
+      ),
+    },
+    {
+      key: 'status',
+      header: 'Status',
+      width: '90px',
+      render: (m) => (
+        <Chip tone={m.status === 'active' ? 'success' : 'warning'} size="sm">
+          {m.status}
+        </Chip>
+      ),
+    },
+    {
+      key: 'actions',
+      header: '',
+      width: '50px',
+      align: 'right',
+      render: (m) => (
+        <IconButton
+          icon="ti-trash"
+          label={tr('common.delete')}
+          size="sm"
+          onClick={() => void remove(m)}
+        />
+      ),
+    },
+  ]
 
-      {showForm && (
-        <form
-          onSubmit={invite}
-          style={{
-            display: 'flex',
-            gap: 8,
-            flexWrap: 'wrap',
-            alignItems: 'flex-end',
-            marginBottom: 18,
-            padding: 14,
-            border: '0.5px solid var(--color-border-tertiary)',
-            borderRadius: 'var(--border-radius-md)',
-            background: 'var(--color-background-secondary)',
-          }}
-        >
-          <div style={{ flex: 2, minWidth: 180 }}>
-            <label>Email</label>
-            <input
-              type="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="teammate@company.com"
-              style={{ width: '100%' }}
-            />
-          </div>
-          <div style={{ flex: 1, minWidth: 140 }}>
-            <label>Name</label>
-            <input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Optional"
-              style={{ width: '100%' }}
-            />
-          </div>
-          <div style={{ flex: 1, minWidth: 140 }}>
-            <label>Role</label>
-            <select value={role} onChange={(e) => setRole(e.target.value)} style={{ width: '100%' }}>
-              {ROLES.map((r) => (
-                <option key={r} value={r}>
-                  {roleLabel(r)}
-                </option>
-              ))}
-            </select>
-          </div>
-          <button type="submit" className="btn-primary" disabled={saving} style={{ padding: '8px 16px', fontSize: 13 }}>
-            <i className="ti ti-send" /> Send
-          </button>
-          {formError && (
-            <div className="badge-danger" style={{ flexBasis: '100%', padding: '8px 12px', fontSize: 12 }}>
-              {formError}
-            </div>
-          )}
-        </form>
-      )}
+  return (
+    <Card>
+      <CardHeader
+        icon="ti-users-group"
+        title="Team & roles"
+        subtitle="Control who can view logs, edit policy, or manage keys."
+        actions={data.length > 0 ? inviteBtn : undefined}
+      />
 
       {data.length === 0 ? (
         <EmptyState
@@ -162,55 +198,65 @@ export function TeamRoles() {
           action={inviteBtn}
         />
       ) : (
-        <>
-          <div className="thead" style={{ display: 'grid', gridTemplateColumns: GRID, gap: 10 }}>
-            <span>Member</span>
-            <span>Role</span>
-            <span>Status</span>
-            <span />
-          </div>
-          {data.map((m) => (
-            <div
-              key={m.id}
-              className="row"
-              style={{ display: 'grid', gridTemplateColumns: GRID, gap: 10, padding: '11px 8px' }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
-                <div className="avatar">{initials(m.name || m.email)}</div>
-                <div style={{ minWidth: 0 }}>
-                  <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {m.name || m.email}
-                  </div>
-                  <div className="muted" style={{ fontSize: 11, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {m.email}
-                  </div>
-                </div>
-              </div>
-              <select
-                value={m.role}
-                onChange={(e) => void changeRole(m, e.target.value)}
-                style={{ width: '100%' }}
-              >
-                {ROLES.map((r) => (
-                  <option key={r} value={r}>
-                    {roleLabel(r)}
-                  </option>
-                ))}
-              </select>
-              <span>
-                <Badge tone={m.status === 'active' ? 'success' : 'warning'}>{m.status}</Badge>
-              </span>
-              <button
-                onClick={() => void remove(m)}
-                title="Remove member"
-                style={{ padding: '6px 8px', color: 'var(--color-text-danger)' }}
-              >
-                <i className="ti ti-trash" />
-              </button>
-            </div>
-          ))}
-        </>
+        <DataTable columns={columns} rows={data} rowKey={(m) => m.id} />
       )}
-    </div>
+
+      <Dialog
+        open={showForm}
+        onClose={() => setShowForm(false)}
+        title="Invite a member"
+        actions={
+          <>
+            <Button variant="ghost" onClick={() => setShowForm(false)}>
+              {tr('common.cancel')}
+            </Button>
+            <Button
+              variant="primary"
+              icon="ti-send"
+              loading={saving}
+              disabled={!email.trim()}
+              onClick={() => void invite()}
+            >
+              Send
+            </Button>
+          </>
+        }
+      >
+        <form
+          onSubmit={(e) => void invite(e)}
+          style={{ display: 'flex', flexDirection: 'column', gap: 14 }}
+        >
+          {formError && <Alert tone="danger">{formError}</Alert>}
+          <TextField
+            label="Email"
+            type="email"
+            value={email}
+            onChange={setEmail}
+            placeholder="teammate@company.com"
+            icon="ti-mail"
+            fullWidth
+          />
+          <TextField
+            label="Name"
+            value={name}
+            onChange={setName}
+            placeholder="Optional"
+            icon="ti-user"
+            fullWidth
+          />
+          <Select label="Role" value={role} onChange={setRole} options={ROLE_OPTIONS} fullWidth />
+          {/* Hidden submit so pressing Enter inside a field submits the form. */}
+          <button type="submit" style={{ display: 'none' }} aria-hidden tabIndex={-1} />
+        </form>
+      </Dialog>
+    </Card>
+  )
+}
+
+export function TeamRoles() {
+  return (
+    <ToastProvider>
+      <TeamRolesInner />
+    </ToastProvider>
   )
 }

@@ -2,24 +2,33 @@ import { useEffect, useState, type FormEvent } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { api, ApiError } from '../lib/api'
 import { useApi } from '../lib/useApi'
+import { useT } from '../lib/i18n'
 import { ErrorState, Loading } from '../components/ui'
+import { Card, CardHeader, Alert } from '../components/ui'
+import { Button, TextField, Select, Switch } from '../components/ui'
 import type { Policy, PolicyInput } from '../lib/types'
 
 type Effect = Policy['effect']
 type ResourceType = Policy['resourceType']
 
-const RESOURCE_TYPES: ResourceType[] = ['model', 'data_type', 'user']
+const EFFECT_OPTIONS: { value: Effect; label: string }[] = [
+  { value: 'allow', label: 'Allow' },
+  { value: 'deny', label: 'Deny' },
+  { value: 'redact', label: 'Redact' },
+]
 
-const ACTIONS: { effect: Effect; label: string; icon: string }[] = [
-  { effect: 'redact', label: 'Redact', icon: 'ti-eye-off' },
-  { effect: 'deny', label: 'Block', icon: 'ti-ban' },
-  { effect: 'allow', label: 'Allow', icon: 'ti-check' },
+const RESOURCE_TYPE_OPTIONS: { value: ResourceType; label: string }[] = [
+  { value: 'model', label: 'model' },
+  { value: 'data_type', label: 'data_type' },
+  { value: 'user', label: 'user' },
 ]
 
 export function PolicyEditor() {
   const { id } = useParams()
   const editing = Boolean(id)
   const navigate = useNavigate()
+  const { t } = useT()
+  const tr = t as (k: string) => string
 
   const loaded = useApi(() => (id ? api.policy(id) : Promise.resolve(undefined)), [id])
 
@@ -65,156 +74,84 @@ export function PolicyEditor() {
     return <ErrorState message={loaded.error} onRetry={loaded.reload} />
 
   return (
-    <div className="card">
-      <div style={{ fontSize: 18, fontWeight: 500, marginBottom: 2 }}>
-        {editing ? 'Edit policy' : 'New policy'}
-      </div>
-      <div className="muted" style={{ fontSize: 12, marginBottom: 20 }}>
-        {editing
-          ? 'Update this rule — changes apply to new requests immediately.'
-          : 'Add a rule to govern which models and data types are allowed.'}
-      </div>
+    <Card>
+      <CardHeader
+        icon="ti-shield-plus"
+        title={editing ? 'Edit policy' : 'New policy'}
+        subtitle={
+          editing
+            ? 'Update this rule — changes apply to new requests immediately.'
+            : 'Add a rule to govern which models and data types are allowed.'
+        }
+      />
 
-      <form onSubmit={save}>
-        <label style={{ display: 'block', fontSize: 12, marginBottom: 4 }}>Policy name</label>
-        <input
-          type="text"
+      <form onSubmit={save} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+        <TextField
+          label="Policy name"
           value={name}
-          onChange={(e) => setName(e.target.value)}
+          onChange={setName}
           placeholder="redact-PII-external"
-          style={{ width: '100%', marginBottom: 16 }}
+          icon="ti-shield"
+          fullWidth
         />
 
-        <div style={{ display: 'flex', gap: 12, marginBottom: 16 }}>
+        <div style={{ display: 'flex', gap: 12, alignItems: 'flex-end' }}>
           <div style={{ flex: 1 }}>
-            <label style={{ display: 'block', fontSize: 12, marginBottom: 4 }}>When data type is</label>
-            <select
+            <Select
+              label="When data type is"
               value={resourceType}
-              onChange={(e) => setResourceType(e.target.value as ResourceType)}
-              style={{ width: '100%' }}
-            >
-              {RESOURCE_TYPES.map((t) => (
-                <option key={t} value={t}>
-                  {t}
-                </option>
-              ))}
-            </select>
+              onChange={(v) => setResourceType(v as ResourceType)}
+              options={RESOURCE_TYPE_OPTIONS}
+              fullWidth
+            />
           </div>
           <div style={{ flex: 1 }}>
-            <label style={{ display: 'block', fontSize: 12, marginBottom: 4 }}>And model is</label>
-            <input
-              type="text"
+            <TextField
+              label="And model is"
               value={resourceValue}
-              onChange={(e) => setResourceValue(e.target.value)}
+              onChange={setResourceValue}
               placeholder="e.g. email, gpt-4, alice@corp.com"
-              style={{ width: '100%' }}
+              fullWidth
             />
           </div>
           <div style={{ width: 110 }}>
-            <label style={{ display: 'block', fontSize: 12, marginBottom: 4 }}>Priority</label>
-            <input
+            <TextField
+              label="Priority"
               type="number"
-              value={priority}
-              onChange={(e) => setPriority(Number(e.target.value))}
-              style={{ width: '100%' }}
+              value={String(priority)}
+              onChange={(v) => setPriority(Number(v))}
+              fullWidth
             />
           </div>
         </div>
 
-        <label style={{ display: 'block', fontSize: 12, marginBottom: 8 }}>Then take action</label>
-        <div style={{ display: 'flex', gap: 10, marginBottom: 20 }}>
-          {ACTIONS.map((a) => {
-            const selected = effect === a.effect
-            return (
-              <button
-                key={a.effect}
-                type="button"
-                onClick={() => setEffect(a.effect)}
-                style={{
-                  flex: 1,
-                  border: selected
-                    ? '2px solid var(--color-border-info)'
-                    : '0.5px solid var(--color-border-secondary)',
-                  borderRadius: 'var(--border-radius-md)',
-                  padding: 12,
-                  textAlign: 'center',
-                  background: 'transparent',
-                  minHeight: 0,
-                }}
-              >
-                <i
-                  className={`ti ${a.icon}`}
-                  style={{
-                    fontSize: 20,
-                    color: selected ? 'var(--color-text-info)' : 'var(--color-text-secondary)',
-                  }}
-                />
-                <div
-                  style={{
-                    fontSize: 13,
-                    fontWeight: selected ? 500 : 400,
-                    marginTop: 4,
-                    color: selected ? 'var(--color-text-info)' : 'var(--color-text-secondary)',
-                  }}
-                >
-                  {a.label}
-                </div>
-              </button>
-            )
-          })}
-        </div>
-
-        <label
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 8,
-            fontSize: 13,
-            marginBottom: 20,
-            cursor: 'pointer',
-          }}
-        >
-          <input
-            type="checkbox"
-            checked={enabled}
-            onChange={(e) => setEnabled(e.target.checked)}
-            style={{ width: 'auto', minHeight: 0 }}
+        <div style={{ maxWidth: 220 }}>
+          <Select
+            label="Then take action"
+            value={effect}
+            onChange={(v) => setEffect(v as Effect)}
+            options={EFFECT_OPTIONS}
+            fullWidth
           />
-          Enabled
-        </label>
-
-        <div className="hint" style={{ marginBottom: 20 }}>
-          <i className="ti ti-info-circle" style={{ fontSize: 16 }} />
-          If no rule matches, Auvex defaults to the safest option (deny unknown).
         </div>
 
-        {error && (
-          <div
-            className="badge badge-danger"
-            style={{ display: 'block', textAlign: 'left', marginBottom: 16, padding: '8px 10px' }}
-          >
-            {error}
-          </div>
-        )}
+        <Switch checked={enabled} onChange={setEnabled} label="Enabled" />
+
+        <Alert tone="info" icon="ti-info-circle">
+          If no rule matches, Auvex defaults to the safest option (deny unknown).
+        </Alert>
+
+        {error && <Alert tone="danger">{error}</Alert>}
 
         <div style={{ display: 'flex', gap: 10 }}>
-          <button
-            type="submit"
-            className="btn-primary"
-            disabled={submitting}
-            style={{ padding: '11px 22px', fontSize: 13, fontWeight: 500 }}
-          >
-            {submitting ? 'Saving…' : 'Save policy'}
-          </button>
-          <button
-            type="button"
-            onClick={() => navigate('/policies')}
-            style={{ padding: '11px 22px', fontSize: 13 }}
-          >
-            Cancel
-          </button>
+          <Button type="submit" variant="primary" loading={submitting}>
+            {editing ? tr('common.save') : tr('common.create')}
+          </Button>
+          <Button variant="ghost" onClick={() => navigate('/policies')}>
+            {tr('common.cancel')}
+          </Button>
         </div>
       </form>
-    </div>
+    </Card>
   )
 }

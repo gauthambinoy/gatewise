@@ -1,7 +1,18 @@
 import { Link, useParams } from 'react-router-dom'
 import { api } from '../lib/api'
 import { useApi } from '../lib/useApi'
-import { Badge, ErrorState, Loading, Stat, dt, money, verdictTone } from '../components/ui'
+import {
+  Alert,
+  Badge,
+  Card,
+  CardHeader,
+  ErrorState,
+  Loading,
+  StatCard,
+  dt,
+  money,
+  verdictTone,
+} from '../components/ui'
 
 export function RequestDetail() {
   const { id } = useParams()
@@ -19,7 +30,7 @@ export function RequestDetail() {
   const intact = verify.data?.intact ?? true
 
   return (
-    <div className="card">
+    <Card>
       <Link
         to="/audit"
         className="muted"
@@ -28,15 +39,15 @@ export function RequestDetail() {
         <i className="ti ti-arrow-left" /> Back to audit log
       </Link>
 
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
-        <div className="mono" style={{ fontSize: 16, fontWeight: 500 }}>
-          Request {e.requestId.slice(0, 8)}…
-        </div>
-        <Badge tone={verdictTone(e.verdict)}>{e.verdict}</Badge>
-      </div>
-      <div className="muted" style={{ fontSize: 12, marginBottom: 18 }}>
-        {e.actor} · {e.model} · {dt(e.createdAt)}
-      </div>
+      <CardHeader
+        title={
+          <span className="mono" style={{ fontWeight: 500 }}>
+            Request {e.requestId.slice(0, 8)}…
+          </span>
+        }
+        subtitle={`${e.actor} · ${e.model} · ${dt(e.createdAt)}`}
+        actions={<Badge tone={verdictTone(e.verdict)}>{e.verdict}</Badge>}
+      />
 
       <div style={{ fontSize: 13, fontWeight: 500, marginBottom: 6 }}>Prompt sent to the model</div>
       <div
@@ -55,9 +66,14 @@ export function RequestDetail() {
       </div>
 
       <div className="stat-grid" style={{ marginBottom: 18 }}>
-        <Stat label="Items redacted" value={items} tone={items ? 'info' : undefined} />
-        <Stat label="Tokens" value={tokens ? tokens.toLocaleString() : '—'} />
-        <Stat label="Cost" value={money(e.costUsd)} />
+        <StatCard
+          label="Items redacted"
+          value={items}
+          icon="ti-eraser"
+          tone={items ? 'info' : undefined}
+        />
+        <StatCard label="Tokens" value={tokens ? tokens.toLocaleString() : '—'} icon="ti-coin" />
+        <StatCard label="Cost" value={money(e.costUsd)} icon="ti-currency-dollar" />
       </div>
 
       {items > 0 && (
@@ -70,21 +86,18 @@ export function RequestDetail() {
         </div>
       )}
 
-      <div
-        className="hint"
-        style={{
-          background: intact ? 'var(--color-background-success)' : 'var(--color-background-danger)',
-          color: intact ? 'var(--color-text-success)' : 'var(--color-text-danger)',
-        }}
+      <Alert
+        tone={intact ? 'success' : 'danger'}
+        icon={intact ? 'ti-lock-check' : 'ti-lock-open'}
+        title={intact ? 'Hash-chain verified' : 'Chain verification failed'}
       >
-        <i className={`ti ${intact ? 'ti-lock-check' : 'ti-lock-open'}`} style={{ fontSize: 17 }} />
         {intact
-          ? 'Hash-chain verified — this record has not been altered.'
+          ? 'This record has not been altered.'
           : 'Chain verification failed for this tenant.'}
-      </div>
+      </Alert>
       <div className="muted mono" style={{ fontSize: 11, marginTop: 8, wordBreak: 'break-all' }}>
         entry: {e.entryHash}
       </div>
-    </div>
+    </Card>
   )
 }

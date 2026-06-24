@@ -1,9 +1,27 @@
 import { Link } from 'react-router-dom'
 import { api } from '../lib/api'
 import { useApi } from '../lib/useApi'
-import { Badge, CountUp, ErrorState, Loading, Stat, clock, money, verdictTone } from '../components/ui'
+import { useT } from '../lib/i18n'
+import {
+  Badge,
+  Card,
+  CardHeader,
+  CountUp,
+  Chip,
+  Divider,
+  ErrorState,
+  Loading,
+  ProgressBar,
+  StatCard,
+  clock,
+  money,
+  verdictTone,
+} from '../components/ui'
 
 export function Dashboard() {
+  const { t } = useT()
+  const tr = t as (k: string) => string
+
   const usage = useApi(() => api.usage())
   const recent = useApi(() => api.audit({ size: 6 }))
 
@@ -28,57 +46,54 @@ export function Dashboard() {
         }}
       >
         <div>
-          <div style={{ fontSize: 18, fontWeight: 600 }}>Overview</div>
+          <div style={{ fontSize: 18, fontWeight: 600 }}>{tr('dash.overview')}</div>
           <div className="muted" style={{ fontSize: 12 }}>
-            Live traffic across the gateway
+            {tr('dash.subtitle')}
           </div>
         </div>
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 8,
-            fontSize: 12,
-            color: 'var(--color-text-success)',
-          }}
-        >
-          <span
-            className="pulse-dot"
-            style={{
-              width: 8,
-              height: 8,
-              borderRadius: '50%',
-              background: 'var(--color-text-success)',
-            }}
-          />
-          Gateway healthy
-        </div>
+        <Chip tone="success" icon="ti-point-filled">
+          {tr('dash.healthy')}
+        </Chip>
       </div>
 
       <div className="stat-grid" style={{ marginBottom: 16 }}>
-        <Stat label="Total requests" value={<CountUp end={d.totalCalls} />} />
-        <Stat label="PII redacted" value={<CountUp end={d.redacted} />} tone="info" />
-        <Stat label="Blocked" value={<CountUp end={d.blocked} />} tone="danger" />
-        <Stat label="Total cost" value={<CountUp end={d.totalCostUsd} format={money} />} />
+        <StatCard
+          label={tr('dash.totalRequests')}
+          value={<CountUp end={d.totalCalls} />}
+          icon="ti-activity"
+        />
+        <StatCard
+          label={tr('dash.piiRedacted')}
+          value={<CountUp end={d.redacted} />}
+          icon="ti-eye-off"
+          tone="info"
+        />
+        <StatCard
+          label={tr('dash.blocked')}
+          value={<CountUp end={d.blocked} />}
+          icon="ti-ban"
+          tone="danger"
+        />
+        <StatCard
+          label={tr('dash.totalCost')}
+          value={<CountUp end={d.totalCostUsd} format={money} />}
+          icon="ti-coin"
+        />
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: 16 }}>
-        <div className="card" style={{ padding: '14px 16px' }}>
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              marginBottom: 4,
-            }}
-          >
-            <span style={{ fontSize: 14, fontWeight: 600 }}>Recent requests</span>
-            <Link to="/audit" className="muted" style={{ fontSize: 12 }}>
-              View all →
-            </Link>
-          </div>
+        <Card padding="14px 16px">
+          <CardHeader
+            title={tr('dash.recent')}
+            icon="ti-clock"
+            actions={
+              <Link to="/audit" className="muted" style={{ fontSize: 12 }}>
+                {tr('dash.viewAll')} →
+              </Link>
+            }
+          />
           {recent.data && recent.data.entries.length > 0 ? (
-            recent.data.entries.map((e) => (
+            recent.data.entries.map((e, i) => (
               <Link
                 key={e.id}
                 to={`/audit/${e.id}`}
@@ -87,7 +102,7 @@ export function Dashboard() {
                   alignItems: 'center',
                   gap: 10,
                   padding: '9px 0',
-                  borderTop: '0.5px solid var(--color-border-tertiary)',
+                  borderTop: i === 0 ? undefined : '0.5px solid var(--color-border-tertiary)',
                 }}
               >
                 <div style={{ flex: 1, minWidth: 0 }}>
@@ -104,11 +119,11 @@ export function Dashboard() {
               No requests yet — point an app at the gateway to see traffic here.
             </div>
           )}
-        </div>
+        </Card>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <div className="card" style={{ padding: '14px 16px' }}>
-            <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 12 }}>Leaks prevented</div>
+          <Card padding="14px 16px">
+            <CardHeader title={tr('dash.leaks')} icon="ti-shield-lock" />
             {leaks.length > 0 ? (
               leaks.map(([type, n]) => (
                 <div key={type} style={{ marginBottom: 10 }}>
@@ -120,19 +135,7 @@ export function Dashboard() {
                     </span>
                     <span>{n.toLocaleString()}</span>
                   </div>
-                  <div
-                    style={{ height: 6, background: 'var(--color-background-tertiary)', borderRadius: 4 }}
-                  >
-                    <div
-                      className="growx"
-                      style={{
-                        width: `${(n / maxLeak) * 100}%`,
-                        height: 6,
-                        background: 'linear-gradient(90deg, var(--color-text-info), #7c5ce8)',
-                        borderRadius: 4,
-                      }}
-                    />
-                  </div>
+                  <ProgressBar value={(n / maxLeak) * 100} height={6} gradient />
                 </div>
               ))
             ) : (
@@ -140,20 +143,22 @@ export function Dashboard() {
                 Nothing sensitive masked yet.
               </div>
             )}
-          </div>
+          </Card>
 
-          <div className="card" style={{ padding: '14px 16px' }}>
-            <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 10 }}>Top models</div>
+          <Card padding="14px 16px">
+            <CardHeader title={tr('dash.topModels')} icon="ti-cpu" />
             {models.length > 0 ? (
-              models.slice(0, 5).map(([model, n]) => (
-                <div
-                  key={model}
-                  style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, padding: '5px 0' }}
-                >
-                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {model}
-                  </span>
-                  <span className="sub">{Math.round((n / totalModel) * 100)}%</span>
+              models.slice(0, 5).map(([model, n], i) => (
+                <div key={model}>
+                  {i > 0 && <Divider />}
+                  <div
+                    style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, padding: '5px 0' }}
+                  >
+                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {model}
+                    </span>
+                    <span className="sub">{Math.round((n / totalModel) * 100)}%</span>
+                  </div>
                 </div>
               ))
             ) : (
@@ -161,7 +166,7 @@ export function Dashboard() {
                 No model traffic yet.
               </div>
             )}
-          </div>
+          </Card>
         </div>
       </div>
     </>

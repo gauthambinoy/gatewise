@@ -1,7 +1,17 @@
 import { api } from '../lib/api'
 import { useApi } from '../lib/useApi'
 import { useAuth } from '../auth/AuthContext'
-import { Badge, ErrorState, Loading } from '../components/ui'
+import { useT } from '../lib/i18n'
+import {
+  Button,
+  Card,
+  CardHeader,
+  Chip,
+  Divider,
+  ErrorState,
+  Loading,
+  PageHeader,
+} from '../components/ui'
 
 const DEPLOY_TILES = [
   { icon: 'ti-brand-aws', label: 'AWS' },
@@ -15,37 +25,26 @@ function cap(s: string): string {
 }
 
 export function Settings() {
+  const { t } = useT()
+  const tr = t as (k: string) => string
   const { tenant, logout } = useAuth()
   const providers = useApi(() => api.providers(), [])
 
   return (
     <>
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          marginBottom: 18,
-        }}
-      >
-        <div>
-          <div className="page-title">Settings</div>
-          <div className="muted" style={{ fontSize: 12 }}>
-            Providers, deployment and organization.
-          </div>
-        </div>
-        <button
-          onClick={logout}
-          style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, padding: '8px 14px' }}
-        >
-          <i className="ti ti-logout-2" style={{ fontSize: 16 }} />
-          Sign out
-        </button>
-      </div>
+      <PageHeader
+        title={tr('nav.settings')}
+        subtitle="Providers, deployment and organization."
+        actions={
+          <Button variant="secondary" icon="ti-logout-2" onClick={logout}>
+            {tr('common.signOut')}
+          </Button>
+        }
+      />
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-        <div className="card">
-          <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 12 }}>Organization</div>
+        <Card>
+          <CardHeader icon="ti-building" title="Organization" />
           <Field label="Name">{tenant?.name ?? '—'}</Field>
           <Field label="Slug" mono>
             {tenant?.slug ?? '—'}
@@ -53,60 +52,56 @@ export function Settings() {
           <Field label="Tenant ID" mono muted last>
             {tenant?.id ?? '—'}
           </Field>
-        </div>
+        </Card>
 
-        <div className="card">
-          <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 4 }}>Single sign-on</div>
-          <div className="muted" style={{ fontSize: 12, marginBottom: 14 }}>
-            SSO sign-in requires an OAuth client id/secret and is wired up per provider.
-          </div>
+        <Card>
+          <CardHeader
+            icon="ti-lock"
+            title="Single sign-on"
+            subtitle="SSO sign-in requires an OAuth client id/secret and is wired up per provider."
+          />
           {providers.loading ? (
-            <Loading />
+            <Loading label={tr('common.loading')} />
           ) : providers.error || !providers.data ? (
             <ErrorState message={providers.error ?? 'No data'} onRetry={providers.reload} />
           ) : (
-            providers.data.map((p) => (
-              <div
-                key={p.name}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 12,
-                  padding: '11px 0',
-                  borderTop: '0.5px solid var(--color-border-tertiary)',
-                }}
-              >
-                <span style={{ flex: 1, fontSize: 13 }}>{cap(p.name)}</span>
-                {p.configured ? (
-                  <Badge tone="success">Configured</Badge>
-                ) : (
-                  <span className="badge muted" style={{ background: 'var(--color-background-secondary)' }}>
-                    Not configured
-                  </span>
-                )}
+            providers.data.map((p, i) => (
+              <div key={p.name}>
+                {i > 0 && <Divider />}
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 12,
+                    padding: '11px 0',
+                  }}
+                >
+                  <span style={{ flex: 1, fontSize: 13 }}>{cap(p.name)}</span>
+                  {p.configured ? (
+                    <Chip tone="success" icon="ti-circle-check">
+                      Configured
+                    </Chip>
+                  ) : (
+                    <Chip icon="ti-minus">Not configured</Chip>
+                  )}
+                </div>
               </div>
             ))
           )}
-        </div>
+        </Card>
 
-        <div className="card">
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              marginBottom: 4,
-            }}
-          >
-            <div style={{ fontSize: 14, fontWeight: 600 }}>Deployment &amp; data</div>
-            <span className="muted" style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11 }}>
-              <i className="ti ti-info-circle" style={{ fontSize: 14 }} />
-              Configuration guidance
-            </span>
-          </div>
-          <div className="muted" style={{ fontSize: 12, marginBottom: 14 }}>
-            Self-host on AWS, Azure, GCP or on-prem. Audit logs never leave your region.
-          </div>
+        <Card>
+          <CardHeader
+            icon="ti-cloud-cog"
+            title="Deployment & data"
+            subtitle="Self-host on AWS, Azure, GCP or on-prem. Audit logs never leave your region."
+            actions={
+              <span className="muted" style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11 }}>
+                <i className="ti ti-info-circle" style={{ fontSize: 14 }} />
+                Configuration guidance
+              </span>
+            }
+          />
           <div style={{ display: 'flex', gap: 10 }}>
             {DEPLOY_TILES.map((t) => (
               <div
@@ -126,7 +121,7 @@ export function Settings() {
               </div>
             ))}
           </div>
-        </div>
+        </Card>
       </div>
     </>
   )
