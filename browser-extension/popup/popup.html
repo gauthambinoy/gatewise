@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Auvex Guard</title>
+    <style>
+      :root {
+        --bg: #ffffff;
+        --fg: #0f172a;
+        --muted: #64748b;
+        --border: #e2e8f0;
+        --accent: #2563eb;
+        --ok: #16a34a;
+        --warn: #b45309;
+        --bad: #b91c1c;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        margin: 0;
+        width: 320px;
+        background: var(--bg);
+        color: var(--fg);
+        font-size: 13px;
+      }
+      header {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 12px 14px;
+        border-bottom: 1px solid var(--border);
+      }
+      header svg {
+        width: 20px;
+        height: 20px;
+        color: var(--accent);
+      }
+      header h1 {
+        font-size: 14px;
+        margin: 0;
+        font-weight: 600;
+      }
+      .section {
+        padding: 12px 14px;
+        border-bottom: 1px solid var(--border);
+      }
+      .status-line {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .dot {
+        width: 9px;
+        height: 9px;
+        border-radius: 50%;
+        background: var(--muted);
+        flex: 0 0 auto;
+      }
+      .dot.ok {
+        background: var(--ok);
+      }
+      .dot.bad {
+        background: var(--bad);
+      }
+      .dot.warn {
+        background: var(--warn);
+      }
+      .status-text {
+        font-weight: 600;
+      }
+      .detail {
+        color: var(--muted);
+        margin-top: 4px;
+        line-height: 1.4;
+        word-break: break-word;
+      }
+      .meta {
+        display: flex;
+        justify-content: space-between;
+        color: var(--muted);
+        margin-top: 6px;
+      }
+      .count {
+        font-size: 22px;
+        font-weight: 700;
+        color: var(--fg);
+      }
+      .count-label {
+        color: var(--muted);
+      }
+      ul.findings {
+        list-style: none;
+        margin: 8px 0 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        max-height: 180px;
+        overflow: auto;
+      }
+      ul.findings li {
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        padding: 6px 8px;
+      }
+      .finding-top {
+        display: flex;
+        justify-content: space-between;
+        gap: 8px;
+      }
+      .badge {
+        font-size: 11px;
+        font-weight: 600;
+        padding: 1px 6px;
+        border-radius: 999px;
+      }
+      .badge.warn {
+        background: #fffbeb;
+        color: var(--warn);
+        border: 1px solid #fde68a;
+      }
+      .badge.block {
+        background: #fef2f2;
+        color: var(--bad);
+        border: 1px solid #fecaca;
+      }
+      .badge.err {
+        background: #f1f5f9;
+        color: var(--muted);
+        border: 1px solid var(--border);
+      }
+      .finding-items {
+        color: var(--muted);
+        margin-top: 3px;
+      }
+      .empty {
+        color: var(--muted);
+      }
+      footer {
+        padding: 10px 14px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      button {
+        font: inherit;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        border-radius: 7px;
+        padding: 6px 10px;
+        border: 1px solid var(--border);
+        background: #f8fafc;
+        color: var(--fg);
+      }
+      button:hover {
+        background: #eef2f7;
+      }
+      a.options {
+        color: var(--accent);
+        font-weight: 600;
+        text-decoration: none;
+        cursor: pointer;
+      }
+      a.options:hover {
+        text-decoration: underline;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+        <path d="M12 2 4 5v6c0 5 3.4 8.5 8 11 4.6-2.5 8-6 8-11V5l-8-3Z" />
+      </svg>
+      <h1>Auvex Guard</h1>
+    </header>
+
+    <div class="section">
+      <div class="status-line">
+        <span id="conn-dot" class="dot"></span>
+        <span id="conn-text" class="status-text">Checking gateway…</span>
+      </div>
+      <div id="conn-detail" class="detail"></div>
+      <div class="meta">
+        <span id="policy"></span>
+        <span id="gateway-url"></span>
+      </div>
+    </div>
+
+    <div class="section">
+      <div>
+        <span id="count" class="count">0</span>
+        <span class="count-label">findings logged (last 50)</span>
+      </div>
+      <ul id="findings" class="findings"></ul>
+    </div>
+
+    <footer>
+      <a id="open-options" class="options">Options</a>
+      <button id="clear-log">Clear log</button>
+    </footer>
+
+    <script src="popup.js"></script>
+  </body>
+</html>
