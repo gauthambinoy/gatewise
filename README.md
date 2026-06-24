@@ -107,6 +107,11 @@ Every push and PR runs the same canonical pipeline (GitHub Actions, least-privil
 - **Allow / deny policy** — per-tenant rules by model, data-type, or user; deny-wins precedence; managed over REST.
 - **Immutable audit log** — append-only, per-tenant SHA-256 hash chain; tamper-evident, queryable, verifiable.
 - **Usage metrics**, **Redis response cache**, **per-tenant budgets** (429 over limit), **provider failover**, and an opt-in **Kafka async audit** pipeline.
+- **Full endpoint coverage** — chat, **Responses API** (`/v1/responses`), embeddings, image generation, and a **native moderation** endpoint that screens text locally (PII, secrets, prompt-injection, and content-safety categories) with no provider call.
+- **Provider adapters** — OpenAI-compatible, **Anthropic**, **Google Gemini**, **Azure OpenAI**, and **AWS Bedrock** (native SigV4 signing); each translates to/from the OpenAI shape, so governance is provider-agnostic.
+- **Content safety & prompt-injection** — intent-focused detection across self-harm, violence, harassment, hate and sexual categories, plus injection/jailbreak rules (detect-and-allow, or block on a flag).
+- **Real OIDC SSO** — Authorization Code flow (Google/Okta/any OIDC) with full id_token verification (RS256 via JWKS, issuer/audience/expiry/nonce), CSRF-safe signed state, and member auto-provisioning.
+- **Reach every user** — drop-in **Python & JavaScript SDKs**, a **browser extension** that screens prompts on web AI tools, and a **Helm chart + Kubernetes manifests** for cluster deployment.
 
 ## Architecture
 
@@ -115,10 +120,14 @@ A Spring Boot (Java 21, virtual threads) gateway over Postgres + Redis, with an 
 | Method | Path | Purpose |
 |---|---|---|
 | `POST` | `/v1/chat/completions` | the proxy hot path |
+| `POST` | `/v1/responses` | OpenAI Responses API (governed) |
+| `POST` | `/v1/embeddings`, `/v1/images/generations` | governed embeddings & image generation |
+| `POST` | `/v1/moderations` | native local screen (PII, secrets, injection, content-safety) |
 | `GET` | `/v1/me` | the tenant behind your key |
 | `GET/POST/PUT/DELETE` | `/v1/policies[/{id}]` | manage your policy rules |
 | `GET` | `/v1/audit`, `/v1/audit/verify` | query the audit log; verify the chain |
 | `GET` | `/v1/usage` | per-tenant usage summary |
+| `GET` | `/auth/oidc/{provider}/login` | start an OIDC sign-in (Google/Okta/…) |
 | `GET` | `/actuator/health` | health probe |
 
 The full set of diagrams — architecture, request sequence, ER, component map, request state machine, trust boundaries, and deployment — is in **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)**.
