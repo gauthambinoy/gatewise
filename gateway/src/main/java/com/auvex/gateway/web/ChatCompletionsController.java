@@ -1,5 +1,6 @@
 package com.auvex.gateway.web;
 
+import com.auvex.gateway.approval.ApprovalService;
 import com.auvex.gateway.audit.AuditEntry;
 import com.auvex.gateway.audit.AuditSink;
 import com.auvex.gateway.audit.Verdict;
@@ -81,6 +82,7 @@ public class ChatCompletionsController {
   private final TokenizationProperties tokenization;
   private final StreamContentExtractor streamExtractor;
   private final QuotaService quotas;
+  private final ApprovalService approvals;
   private final ObjectMapper objectMapper;
 
   public ChatCompletionsController(
@@ -101,6 +103,7 @@ public class ChatCompletionsController {
       TokenizationProperties tokenization,
       StreamContentExtractor streamExtractor,
       QuotaService quotas,
+      ApprovalService approvals,
       ObjectMapper objectMapper) {
     this.proxy = proxy;
     this.router = router;
@@ -119,6 +122,7 @@ public class ChatCompletionsController {
     this.tokenization = tokenization;
     this.streamExtractor = streamExtractor;
     this.quotas = quotas;
+    this.approvals = approvals;
     this.objectMapper = objectMapper;
   }
 
@@ -177,6 +181,35 @@ public class ChatCompletionsController {
           auditEntry(
               ctx, providerModel, Verdict.BLOCKED, body, null, null, null, null, redactionCounts));
       throw new PolicyDeniedException(decision.reason());
+    }
+
+    // Human-in-the-loop: hold high-risk calls for approval before they're forwarded. An approved
+    // prompt passes; a freshly-held one is recorded and returned as 202 pending.
+    if (approvals.enabled()) {
+      boolean injectionDetected = !injectionScanner.scan(redactedPrompt(body)).isEmpty();
+      java.util.Optional<UUID> heldId =
+          approvals.reviewIfNeeded(
+              ctx.tenantId(),
+              ctx.actor(),
+              providerModel,
+              redactedPrompt(body),
+              injectionDetected,
+              ctx.detectedDataTypes());
+      if (heldId.isPresent()) {
+        auditSink.record(
+            auditEntry(
+                ctx,
+                providerModel,
+                Verdict.BLOCKED,
+                body,
+                null,
+                null,
+                null,
+                null,
+                redactionCounts));
+        writeHeld(response, heldId.get());
+        return;
+      }
     }
 
     // Enforce the tenant's call budget before doing any upstream work.
@@ -303,6 +336,18 @@ public class ChatCompletionsController {
       semanticCache.store(tenantId, promptText, fresh);
     }
     return fresh;
+  }
+
+  // A 202 telling the caller the request is held for human approval, with its id.
+  private void writeHeld(HttpServletResponse response, UUID approvalId) throws IOException {
+    response.setStatus(HttpServletResponse.SC_ACCEPTED);
+    response.setCharacterEncoding(StandardCharsets.UTF_8.name());
+    response.setContentType("application/json");
+    ObjectNode body = objectMapper.createObjectNode();
+    body.put("status", "pending_approval");
+    body.put("approval_id", approvalId.toString());
+    body.put("message", "This request requires human approval before it can be sent.");
+    response.getOutputStream().write(objectMapper.writeValueAsBytes(body));
   }
 
   private static void writeResponse(HttpServletResponse response, CachedResponse cached)
