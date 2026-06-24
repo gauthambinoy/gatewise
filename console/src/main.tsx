@@ -11,8 +11,8 @@ import { App } from './App'
 import { AuthProvider } from './auth/AuthContext'
 import { I18nProvider } from './lib/i18n'
 
-// Restore the saved theme before first paint.
-const theme = localStorage.getItem('auvex.theme') === 'dark' ? 'dark' : 'light'
+// Restore the saved theme before first paint — dark-first by design.
+const theme = localStorage.getItem('auvex.theme') === 'light' ? 'light' : 'dark'
 document.body.className = theme
 
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(

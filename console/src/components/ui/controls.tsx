@@ -57,12 +57,12 @@ export function Button({
 
   const palette: Record<ButtonVariant, CSSProperties> = {
     primary: {
-      background: 'linear-gradient(135deg, #3a8ce0, #185fa5)',
+      background: 'var(--accent-grad)',
       color: '#fff',
       border: 'none',
       boxShadow: lift
-        ? '0 8px 24px rgba(24, 95, 165, 0.45)'
-        : '0 4px 14px rgba(24, 95, 165, 0.3)',
+        ? '0 10px 30px -6px rgba(109, 92, 255, 0.6)'
+        : '0 4px 16px -4px rgba(109, 92, 255, 0.45)',
     },
     secondary: {
       background: hover && !isDisabled ? 'var(--color-background-secondary)' : 'transparent',
