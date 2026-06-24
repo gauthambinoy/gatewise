@@ -19,9 +19,33 @@ curl https://your-auvex/v1/chat/completions \
 #   the call is policy-checked, audited (redacted), and the response is returned.
 ```
 
+## Integrate your app — any platform
+
+Auvex is **OpenAI-compatible**, so every SDK, framework and tool works by changing one line — the base URL and key. The in-console **Connect** page generates these pre-filled with your URL + key.
+
+```python
+# Python (openai)
+from openai import OpenAI
+client = OpenAI(base_url="https://your-gateway/v1", api_key="auvex_sk_...")
+client.chat.completions.create(model="smart", messages=[{"role": "user", "content": "Hello"}])
+```
+```javascript
+// Node / TypeScript (openai)
+import OpenAI from "openai";
+const client = new OpenAI({ baseURL: "https://your-gateway/v1", apiKey: "auvex_sk_..." });
+await client.chat.completions.create({ model: "smart", messages: [{ role: "user", content: "Hello" }] });
+```
+```python
+# LangChain
+from langchain_openai import ChatOpenAI
+llm = ChatOpenAI(base_url="https://your-gateway/v1", api_key="auvex_sk_...", model="smart")
+```
+
+**No-code / existing tools** — set the OpenAI endpoint to your Base URL: **Cursor · Continue.dev · n8n · Open WebUI · LibreChat · Flowise / Dify · Vercel AI SDK**. Full API in [`docs/openapi.yaml`](docs/openapi.yaml) (+ a [Postman collection](docs/auvex.postman_collection.json)).
+
 ## Live demo
 
-Run the whole stack in one command — `docker compose up -d --build` — then open **http://localhost:3000** and click **"Try the live demo"**: it signs you into a sandbox org pre-seeded with sample policies, members and routing (no key, no sign-up). A public hosted URL is the AWS deploy phase.
+**🔗 Live (hosted): https://auvex.54.170.218.176.nip.io** — open it and click **"Try the live demo"** for a sandbox org pre-seeded with real governed traffic (no key, no sign-up). Or run the whole stack locally in one command — `docker compose up -d --build` — and open **http://localhost:3000**.
 
 ![Login](docs/screenshots/login.png)
 

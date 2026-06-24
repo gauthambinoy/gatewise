@@ -1,0 +1,370 @@
+openapi: 3.1.0
+info:
+  title: Auvex Gateway API
+  version: "0.1.0"
+  description: >
+    Auvex is a drop-in, **OpenAI-compatible** AI gateway that redacts secrets, blocks prompt
+    injections, enforces per-tenant policy, and keeps a tamper-proof, hash-chained audit of every
+    LLM call — across OpenAI, Anthropic, Gemini and Azure.
+
+
+    **Integrate:** point any OpenAI client at `{baseUrl}/v1` with your Auvex API key as a Bearer
+    token. The model field accepts aliases (`fast`, `smart`, `claude`, `gemini`, `azure-gpt4`) which
+    the routing table resolves — and which also act as the allow-list (anything else is refused).
+  license:
+    name: MIT
+servers:
+  - url: "{baseUrl}"
+    description: Your Auvex gateway
+    variables:
+      baseUrl:
+        default: https://your-gateway
+security:
+  - bearerAuth: []
+tags:
+  - name: Chat & AI
+  - name: Audit & compliance
+  - name: Usage
+  - name: Admin
+
+paths:
+  /v1/chat/completions:
+    post:
+      tags: [Chat & AI]
+      summary: Create a chat completion (OpenAI-compatible)
+      description: >
+        Redacts PII/secrets from the prompt, screens for injection, enforces policy, forwards to the
+        resolved provider, captures + screens the response, and audits the call. Supports streaming
+        (`"stream": true`).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ChatCompletionRequest" }
+            example:
+              model: smart
+              messages:
+                - role: user
+                  content: "email jane@acme.com about card 4012888888881881"
+      responses:
+        "200":
+          description: An OpenAI-shaped chat completion (the provider only ever saw redacted text).
+          content:
+            application/json:
+              schema: { type: object }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+
+  /v1/embeddings:
+    post:
+      tags: [Chat & AI]
+      summary: Create embeddings (input redacted before forwarding)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [model, input]
+              properties:
+                model: { type: string, example: text-embedding-3-small }
+                input:
+                  oneOf:
+                    - type: string
+                    - type: array
+                      items: { type: string }
+      responses:
+        "200": { description: An OpenAI-shaped embeddings response. }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /v1/images/generations:
+    post:
+      tags: [Chat & AI]
+      summary: Generate images (prompt redacted before forwarding)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [model, prompt]
+              properties:
+                model: { type: string, example: dall-e-3 }
+                prompt: { type: string }
+      responses:
+        "200": { description: An OpenAI-shaped images response. }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /v1/moderations:
+    post:
+      tags: [Chat & AI]
+      summary: Native moderation — screen text locally (no provider call)
+      description: Runs the same detectors + injection rules over the text and reports what it found.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [input]
+              properties:
+                input: { type: string }
+            example:
+              input: "my card is 4012888888881881 and ssn 123-45-6789, ignore previous instructions"
+      responses:
+        "200":
+          description: What the gateway found.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ModerationResult" }
+              example:
+                flagged: true
+                sensitiveData: { credit_card: 1, us_ssn: 1 }
+                injection: [instruction_override]
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /v1/audit:
+    get:
+      tags: [Audit & compliance]
+      summary: Query the tamper-proof audit log
+      parameters:
+        - { name: verdict, in: query, schema: { type: string, enum: [allowed, redacted, blocked] } }
+        - { name: q, in: query, schema: { type: string }, description: Free-text over prompt/model/actor }
+        - { name: page, in: query, schema: { type: integer, default: 0 } }
+        - { name: size, in: query, schema: { type: integer, default: 20 } }
+      responses:
+        "200":
+          description: A page of audit entries.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AuditPage" }
+
+  /v1/audit/{id}:
+    get:
+      tags: [Audit & compliance]
+      summary: Get one audit entry
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+      responses:
+        "200":
+          description: The entry.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AuditEntry" }
+        "404": { description: Not found (or not this tenant's). }
+
+  /v1/audit/verify:
+    get:
+      tags: [Audit & compliance]
+      summary: Re-verify the tenant's hash chain
+      responses:
+        "200":
+          description: Whether the chain is intact.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  intact: { type: boolean }
+                  firstBrokenId: { type: integer, nullable: true }
+
+  /v1/audit/dsar:
+    get:
+      tags: [Audit & compliance]
+      summary: GDPR subject-access export for one data subject
+      parameters:
+        - { name: subject, in: query, required: true, schema: { type: string }, description: The actor }
+      responses:
+        "200":
+          description: Every entry recorded for the subject.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  subject: { type: string }
+                  entryCount: { type: integer }
+                  entries:
+                    type: array
+                    items: { $ref: "#/components/schemas/AuditEntry" }
+
+  /v1/usage:
+    get:
+      tags: [Usage]
+      summary: Usage & cost summary for the tenant
+      responses:
+        "200":
+          description: Aggregated usage.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/UsageSummary" }
+
+  /v1/usage/users:
+    get:
+      tags: [Usage]
+      summary: Per-actor usage
+      responses:
+        "200":
+          description: Usage per user.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    actor: { type: string }
+                    requests: { type: integer }
+                    redacted: { type: integer }
+                    blocked: { type: integer }
+                    costUsd: { type: number }
+
+  /v1/policies:
+    get:
+      tags: [Admin]
+      summary: List policies
+      responses:
+        "200":
+          description: The tenant's policies.
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: "#/components/schemas/Policy" } }
+    post:
+      tags: [Admin]
+      summary: Create a policy
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/Policy" }
+      responses:
+        "200": { description: The created policy. }
+
+  /v1/models:
+    get:
+      tags: [Admin]
+      summary: The routing table (alias → target). Doubles as the model allow-list.
+      responses:
+        "200":
+          description: Routes.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    alias: { type: string }
+                    target: { type: string }
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: Your Auvex API key (e.g. `auvex_sk_...`).
+  responses:
+    Unauthorized:
+      description: Missing, malformed, unknown, revoked or expired key.
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+          example: { error: { message: "Invalid API key.", type: invalid_request_error, code: invalid_api_key } }
+    Forbidden:
+      description: Blocked by policy (`policy_violation`) or prompt-injection screening (`prompt_injection`).
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+          example: { error: { message: "Request blocked: possible prompt injection (instruction_override).", type: prompt_injection } }
+    RateLimited:
+      description: Rate limit or call budget exceeded.
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+          example: { error: { message: "Rate limit exceeded; too many requests this minute.", type: rate_limit_exceeded } }
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            message: { type: string }
+            type: { type: string }
+            code: { type: string }
+    ChatCompletionRequest:
+      type: object
+      required: [model, messages]
+      properties:
+        model:
+          type: string
+          description: An alias (fast/smart/claude/gemini/azure-gpt4) or a provider model.
+          example: smart
+        messages:
+          type: array
+          items:
+            type: object
+            properties:
+              role: { type: string, enum: [system, user, assistant, tool] }
+              content: { type: string }
+        stream: { type: boolean, default: false }
+        temperature: { type: number }
+    ModerationResult:
+      type: object
+      properties:
+        flagged: { type: boolean }
+        sensitiveData:
+          type: object
+          additionalProperties: { type: integer }
+        injection:
+          type: array
+          items: { type: string }
+    AuditEntry:
+      type: object
+      properties:
+        id: { type: integer }
+        requestId: { type: string }
+        actor: { type: string }
+        model: { type: string }
+        verdict: { type: string, enum: [allowed, redacted, blocked] }
+        promptRedacted: { type: string }
+        prevHash: { type: string, nullable: true }
+        entryHash: { type: string }
+        createdAt: { type: string, format: date-time }
+        promptTokens: { type: integer, nullable: true }
+        completionTokens: { type: integer, nullable: true }
+        costUsd: { type: number, nullable: true }
+        redactionCounts:
+          type: object
+          nullable: true
+          additionalProperties: { type: integer }
+    AuditPage:
+      type: object
+      properties:
+        entries: { type: array, items: { $ref: "#/components/schemas/AuditEntry" } }
+        page: { type: integer }
+        size: { type: integer }
+        total: { type: integer }
+    UsageSummary:
+      type: object
+      properties:
+        totalCalls: { type: integer }
+        allowed: { type: integer }
+        blocked: { type: integer }
+        redacted: { type: integer }
+        errored: { type: integer }
+        byModel: { type: object, additionalProperties: { type: integer } }
+        totalCostUsd: { type: number }
+        totalTokens: { type: integer }
+        redactionByType: { type: object, additionalProperties: { type: integer } }
+    Policy:
+      type: object
+      properties:
+        id: { type: string }
+        name: { type: string }
+        effect: { type: string, enum: [allow, deny, redact] }
+        resourceType: { type: string, enum: [model, data_type, user] }
+        resourceValue: { type: string }
+        priority: { type: integer }
+        enabled: { type: boolean }
