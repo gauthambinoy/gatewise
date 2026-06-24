@@ -211,6 +211,34 @@ paths:
         "200": { description: A JSON-RPC 2.0 result or error envelope. }
         "401": { $ref: "#/components/responses/Unauthorized" }
 
+  /v1/approvals:
+    get:
+      tags: [Governance]
+      summary: The human-in-the-loop approval queue (pending held calls)
+      responses:
+        "200": { description: Pending held requests, oldest first. }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /v1/approvals/{id}/decision:
+    post:
+      tags: [Governance]
+      summary: Approve or reject a held call (an approved prompt is then allowed through)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [decision]
+              properties:
+                decision: { type: string, enum: [approve, reject] }
+                decidedBy: { type: string }
+      responses:
+        "200": { description: The updated held request. }
+        "400": { description: Invalid decision or already decided. }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { description: No such held request for this tenant. }
+
   /v1/discovery:
     get:
       tags: [Governance]

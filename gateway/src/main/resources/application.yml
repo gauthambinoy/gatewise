@@ -153,6 +153,14 @@ auvex:
     per-user-per-day: ${AUVEX_QUOTA_PER_USER_PER_DAY:0}
     per-model-per-day: ${AUVEX_QUOTA_PER_MODEL_PER_DAY:0}
 
+  # Human-in-the-loop approval: hold high-risk calls for a reviewer before forwarding. Off by
+  # default. review-data-types holds any call carrying one of those redacted types; review-injection
+  # holds any call where prompt-injection is detected.
+  approval:
+    enabled: ${AUVEX_APPROVAL_ENABLED:false}
+    review-injection: ${AUVEX_APPROVAL_REVIEW_INJECTION:false}
+    review-data-types: ${AUVEX_APPROVAL_REVIEW_DATA_TYPES:}
+
   # Fallback provider, tried (non-streaming) when the primary can't be reached or 5xxs.
   failover:
     enabled: ${AUVEX_FAILOVER_ENABLED:false}
