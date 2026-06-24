@@ -1,5 +1,6 @@
 package com.auvex.gateway.web;
 
+import com.auvex.gateway.oidc.OidcException;
 import com.auvex.gateway.policy.PolicyDeniedException;
 import com.auvex.gateway.proxy.UpstreamUnavailableException;
 import com.auvex.gateway.routing.ModelNotAllowedException;
@@ -67,6 +68,12 @@ public class GatewayExceptionHandler {
   @ExceptionHandler(NotFoundException.class)
   public ResponseEntity<Map<String, Object>> handleNotFound(NotFoundException e) {
     return error(HttpStatus.NOT_FOUND, e.getMessage(), "not_found");
+  }
+
+  /** An OIDC sign-in that failed verification (bad state, token or id_token) → 401. */
+  @ExceptionHandler(OidcException.class)
+  public ResponseEntity<Map<String, Object>> handleOidc(OidcException e) {
+    return error(HttpStatus.UNAUTHORIZED, e.getMessage(), "authentication_error");
   }
 
   /** Bean-validation failure on a request body → 400, naming the first bad field. */

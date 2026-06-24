@@ -94,11 +94,7 @@ public class AuthController {
   @GetMapping("/providers")
   public List<ProviderView> providers() {
     return properties.sso().entrySet().stream()
-        .map(
-            entry ->
-                new ProviderView(
-                    entry.getKey(),
-                    entry.getValue().clientId() != null && !entry.getValue().clientId().isBlank()))
+        .map(entry -> new ProviderView(entry.getKey(), entry.getValue().configured()))
         .sorted(Comparator.comparing(ProviderView::name))
         .toList();
   }

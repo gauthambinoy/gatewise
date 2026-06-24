@@ -171,13 +171,32 @@ auvex:
     session-secret: ${AUVEX_SESSION_SECRET:dev-insecure-session-secret-change-me-please-0123456789}
     session-ttl: ${AUVEX_SESSION_TTL:8h}
     dev-login-enabled: ${AUVEX_DEV_LOGIN_ENABLED:false}
+    # Real OIDC sign-in (Authorization Code flow). A provider goes live once its client id/secret,
+    # endpoints and target tenant are set. Google's endpoints are derived from the issuer; for other
+    # providers supply authorization-uri/token-uri/jwks-uri. redirect-uri must be registered with the
+    # provider and point at this gateway's /auth/oidc/<name>/callback.
     sso:
       google:
         issuer: https://accounts.google.com
         client-id: ${GOOGLE_CLIENT_ID:}
+        client-secret: ${GOOGLE_CLIENT_SECRET:}
+        redirect-uri: ${GOOGLE_REDIRECT_URI:}
+        post-login-redirect: ${SSO_POST_LOGIN_REDIRECT:/}
+        tenant-slug: ${GOOGLE_TENANT_SLUG:}
+        auto-provision: ${GOOGLE_AUTO_PROVISION:false}
+        default-role: ${GOOGLE_DEFAULT_ROLE:auditor}
       okta:
         issuer: ${OKTA_ISSUER:}
         client-id: ${OKTA_CLIENT_ID:}
+        client-secret: ${OKTA_CLIENT_SECRET:}
+        authorization-uri: ${OKTA_AUTHORIZATION_URI:}
+        token-uri: ${OKTA_TOKEN_URI:}
+        jwks-uri: ${OKTA_JWKS_URI:}
+        redirect-uri: ${OKTA_REDIRECT_URI:}
+        post-login-redirect: ${SSO_POST_LOGIN_REDIRECT:/}
+        tenant-slug: ${OKTA_TENANT_SLUG:}
+        auto-provision: ${OKTA_AUTO_PROVISION:false}
+        default-role: ${OKTA_DEFAULT_ROLE:auditor}
 
   # Demo seed for the console's "Try the live demo" button. Off by default; never enable in prod.
   demo:
