@@ -96,6 +96,30 @@ paths:
         "200": { description: An OpenAI-shaped images response. }
         "401": { $ref: "#/components/responses/Unauthorized" }
 
+  /v1/responses:
+    post:
+      tags: [Chat & AI]
+      summary: Create a model response (OpenAI Responses API); input redacted before forwarding
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [model, input]
+              properties:
+                model: { type: string, example: gpt-4o }
+                input:
+                  oneOf:
+                    - type: string
+                    - type: array
+                      items: { type: object }
+                  description: A prompt string, or an array of input items.
+      responses:
+        "200": { description: An OpenAI-shaped Responses body; assistant text screened into the audit log. }
+        "400": { description: Missing or invalid model/input. }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
   /v1/moderations:
     post:
       tags: [Chat & AI]
