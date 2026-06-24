@@ -1,5 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
 import type { CSSProperties, ReactNode } from 'react'
+import { intlLocale } from '../lib/i18n'
+
+// The component library (MUI-grade primitives) lives in sibling files; re-export so every page can
+// import from one place: `../components/ui`.
+export * from './ui/controls'
+export * from './ui/surfaces'
+export * from './ui/data'
+export * from './ui/overlays'
 
 export type Tone = 'info' | 'danger' | 'success' | 'warning'
 
@@ -177,20 +185,30 @@ export function Skeleton({ style }: { style?: CSSProperties }) {
   return <div className="skel" style={{ height: 14, ...style }} />
 }
 
-/** Formats a number as USD. */
+/** Formats a USD amount in the active European locale's conventions (e.g. de-DE → "1.234,56 $"). */
 export function money(n: number | null | undefined): string {
   if (n === null || n === undefined) return '—'
-  return n.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 4 })
+  return n.toLocaleString(intlLocale(), {
+    style: 'currency',
+    currency: 'USD',
+    maximumFractionDigits: 4,
+  })
 }
 
-/** Formats an ISO timestamp as a short local time. */
+/** Formats a plain number in the active locale (European grouping/decimals). */
+export function num(n: number | null | undefined): string {
+  if (n === null || n === undefined) return '—'
+  return n.toLocaleString(intlLocale())
+}
+
+/** Formats an ISO timestamp as a short local date-time, in the active locale. */
 export function dt(iso: string): string {
   const d = new Date(iso)
-  return Number.isNaN(d.getTime()) ? iso : d.toLocaleString()
+  return Number.isNaN(d.getTime()) ? iso : d.toLocaleString(intlLocale())
 }
 
-/** Formats an ISO timestamp as HH:MM:SS. */
+/** Formats an ISO timestamp as a locale time. */
 export function clock(iso: string): string {
   const d = new Date(iso)
-  return Number.isNaN(d.getTime()) ? iso : d.toLocaleTimeString()
+  return Number.isNaN(d.getTime()) ? iso : d.toLocaleTimeString(intlLocale())
 }
