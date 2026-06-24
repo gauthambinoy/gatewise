@@ -16,6 +16,11 @@ public interface AuditLogRepository extends JpaRepository<AuditLog, Long> {
   /** Total calls for a tenant (for the usage summary). */
   long countByTenantId(UUID tenantId);
 
+  /** Deletes entries older than the cutoff (data-retention enforcement); returns how many. */
+  @org.springframework.transaction.annotation.Transactional
+  @org.springframework.data.jpa.repository.Modifying
+  long deleteByCreatedAtBefore(java.time.OffsetDateTime cutoff);
+
   /** Calls for a tenant with a given verdict. */
   long countByTenantIdAndVerdict(UUID tenantId, String verdict);
 

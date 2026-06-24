@@ -161,6 +161,13 @@ auvex:
     review-injection: ${AUVEX_APPROVAL_REVIEW_INJECTION:false}
     review-data-types: ${AUVEX_APPROVAL_REVIEW_DATA_TYPES:}
 
+  # Compliance & data retention. retention-days is reported in the compliance report; when
+  # retention-delete-enabled is on, a daily sweep hard-deletes audit entries older than that window.
+  compliance:
+    retention-days: ${AUVEX_RETENTION_DAYS:365}
+    retention-delete-enabled: ${AUVEX_RETENTION_DELETE_ENABLED:false}
+    retention-cron: ${AUVEX_RETENTION_CRON:0 0 3 * * *}
+
   # Fallback provider, tried (non-streaming) when the primary can't be reached or 5xxs.
   failover:
     enabled: ${AUVEX_FAILOVER_ENABLED:false}

@@ -74,9 +74,15 @@ public class AuditService {
    */
   @Transactional(readOnly = true)
   public Optional<Long> firstBrokenLink(UUID tenantId) {
-    String expectedPrev = AuditChain.GENESIS;
+    // The earliest remaining entry anchors the chain: data-retention may legitimately have purged
+    // an
+    // older prefix, so we accept the first row's prev_hash as-is and check contiguity from there.
+    // Tampering (the entry-hash recomputation folds in prev_hash) and mid-chain deletion (a
+    // prev_hash
+    // that doesn't continue) are still detected.
+    String expectedPrev = null;
     for (AuditLog row : repository.findByTenantIdOrderByIdAsc(tenantId)) {
-      if (!expectedPrev.equals(row.getPrevHash())) {
+      if (expectedPrev != null && !expectedPrev.equals(row.getPrevHash())) {
         return Optional.of(row.getId());
       }
       if (!AuditChain.entryHash(row.getPrevHash(), toEntry(row)).equals(row.getEntryHash())) {
