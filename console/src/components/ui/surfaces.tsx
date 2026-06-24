@@ -170,10 +170,19 @@ export function StatCard({
       </div>
       <div
         style={{
-          fontSize: 24,
-          fontWeight: 600,
-          lineHeight: 1.2,
+          fontSize: 30,
+          fontWeight: 700,
+          lineHeight: 1.15,
+          letterSpacing: '-0.03em',
           color: tone ? `var(--color-text-${tone})` : undefined,
+          ...(tone
+            ? {}
+            : {
+                background: 'var(--accent-grad-soft)',
+                WebkitBackgroundClip: 'text',
+                backgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+              }),
         }}
       >
         {value}
