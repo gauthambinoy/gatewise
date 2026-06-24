@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Auvex Desktop</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="app-header">
+      <svg class="logo" viewBox="0 0 32 32" aria-hidden="true">
+        <path
+          d="M16 2 L27 6 V15 C27 22.5 22.2 27.6 16 30 C9.8 27.6 5 22.5 5 15 V6 Z"
+          fill="currentColor"
+        />
+        <path
+          d="M11 16.2 L14.4 19.6 L21.2 11.6"
+          stroke="#0d1117"
+          stroke-width="2.4"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          fill="none"
+        />
+      </svg>
+      <div>
+        <h1>Auvex Desktop</h1>
+        <p class="subtitle">Machine-wide AI governance</p>
+      </div>
+    </header>
+
+    <main>
+      <!-- Connection settings -->
+      <section class="card">
+        <h2>Gateway</h2>
+        <label for="base-url">Base URL</label>
+        <input
+          id="base-url"
+          type="url"
+          placeholder="http://localhost:8080"
+          autocomplete="off"
+          spellcheck="false"
+        />
+
+        <label for="api-key">API key</label>
+        <input
+          id="api-key"
+          type="password"
+          placeholder="Bearer key"
+          autocomplete="off"
+          spellcheck="false"
+        />
+
+        <div class="row">
+          <button id="save-btn" class="secondary">Save</button>
+          <button id="test-btn">Test connection</button>
+        </div>
+
+        <div id="status" class="status">
+          <span class="dot dot-unknown" id="status-dot"></span>
+          <span id="status-text">Not tested yet.</span>
+        </div>
+      </section>
+
+      <!-- System proxy -->
+      <section class="card">
+        <h2>System proxy</h2>
+        <p class="hint">
+          Routes the machine's HTTP/HTTPS traffic through the gateway egress proxy so
+          AI-bound calls are governed.
+        </p>
+        <div class="row">
+          <label for="proxy-host" class="inline-label">Host</label>
+          <input id="proxy-host" type="text" class="small" placeholder="127.0.0.1" />
+          <label for="proxy-port" class="inline-label">Port</label>
+          <input id="proxy-port" type="number" class="small" placeholder="8888" min="1" max="65535" />
+        </div>
+        <div class="row">
+          <button id="proxy-on-btn">Turn proxy ON</button>
+          <button id="proxy-off-btn" class="secondary">Turn proxy OFF</button>
+        </div>
+        <div id="proxy-state" class="status">
+          <span class="dot dot-unknown" id="proxy-dot"></span>
+          <span id="proxy-text">Checking proxy state…</span>
+        </div>
+      </section>
+
+      <!-- CA trust -->
+      <section class="card">
+        <h2>CA trust</h2>
+        <p class="hint">
+          TLS interception needs the Auvex Egress CA trusted on this machine. Fetch it
+          from the gateway if available, then follow the install steps for your OS.
+        </p>
+        <div class="row">
+          <button id="ca-btn">Fetch CA from gateway</button>
+        </div>
+        <pre id="ca-output" class="output hidden"></pre>
+        <details class="instructions">
+          <summary>How to install the root CA</summary>
+          <p><strong>Windows:</strong> save the PEM as <code>auvex-ca.crt</code>, then run
+            <code>certutil -addstore -user Root auvex-ca.crt</code> (current user) or open the
+            file and choose <em>Install Certificate → Local Machine → Trusted Root</em>.</p>
+          <p><strong>macOS:</strong> double-click the PEM to add it to the login keychain,
+            then set it to <em>Always Trust</em>; or
+            <code>security add-trusted-cert -d -r trustRoot -k ~/Library/Keychains/login.keychain auvex-ca.pem</code>.</p>
+          <p><strong>Linux:</strong> copy to <code>/usr/local/share/ca-certificates/auvex-ca.crt</code>
+            and run <code>sudo update-ca-certificates</code>. Firefox/Chrome keep their own
+            stores — import there too if needed.</p>
+        </details>
+      </section>
+
+      <!-- Moderation test -->
+      <section class="card">
+        <h2>Prompt screen</h2>
+        <p class="hint">Send text to the gateway's moderation endpoint and see the verdict.</p>
+        <textarea
+          id="mod-input"
+          rows="3"
+          placeholder="Type a prompt to screen, e.g. an email and an API key…"
+        ></textarea>
+        <div class="row">
+          <button id="mod-btn">Screen text</button>
+        </div>
+        <div id="mod-result" class="mod-result hidden"></div>
+      </section>
+    </main>
+
+    <footer class="app-footer">
+      <span id="toast" class="toast"></span>
+    </footer>
+
+    <script src="main.js"></script>
+  </body>
+</html>

@@ -1,0 +1,42 @@
+[package]
+name = "auvex-desktop"
+version = "0.1.0"
+description = "Tray app that brings Auvex governance to a whole machine."
+authors = ["Auvex"]
+edition = "2021"
+rust-version = "1.77"
+
+# The library is what Tauri's mobile/desktop entry points share; main.rs is a thin
+# wrapper around it. This split is the v2 convention and keeps the run logic testable.
+[lib]
+name = "auvex_desktop_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = ["tray-icon"] }
+
+# HTTP client for talking to the gateway. rustls avoids a system OpenSSL dependency,
+# which keeps the build portable across platforms.
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
+
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+# Async runtime. Tauri commands are async, and reqwest needs an executor.
+tokio = { version = "1", features = ["rt-multi-thread", "macros"] }
+
+# Friendly error type so commands can use `?` freely and return readable messages
+# to the frontend.
+thiserror = "2"
+
+[target.'cfg(target_os = "windows")'.dependencies]
+# Read/write the per-user Internet Settings used by WinINET/WinHTTP for the
+# system proxy. winreg is the idiomatic, dependency-light registry crate.
+winreg = "0.52"
+
+[features]
+# This feature is enabled when building the production app (release).
+custom-protocol = ["tauri/custom-protocol"]
