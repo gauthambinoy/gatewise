@@ -111,7 +111,8 @@ Every push and PR runs the same canonical pipeline (GitHub Actions, least-privil
 - **Provider adapters** — OpenAI-compatible, **Anthropic**, **Google Gemini**, **Azure OpenAI**, and **AWS Bedrock** (native SigV4 signing); each translates to/from the OpenAI shape, so governance is provider-agnostic.
 - **Content safety & prompt-injection** — intent-focused detection across self-harm, violence, harassment, hate and sexual categories, plus injection/jailbreak rules (detect-and-allow, or block on a flag).
 - **Real OIDC SSO** — Authorization Code flow (Google/Okta/any OIDC) with full id_token verification (RS256 via JWKS, issuer/audience/expiry/nonce), CSRF-safe signed state, and member auto-provisioning.
-- **Reach every user** — drop-in **Python & JavaScript SDKs**, a **browser extension** that screens prompts on web AI tools, and a **Helm chart + Kubernetes manifests** for cluster deployment.
+- **Human-in-the-loop approval** — hold high-risk calls (by data type or detected injection) for a reviewer; an approved prompt is then allowed through. **Per-user/model daily quotas** and a **semantic (near-duplicate) cache** round out the controls.
+- **Reach every user** — drop-in **Python & JavaScript SDKs**, a **browser extension** that screens prompts on web AI tools, a **Tauri desktop app** that routes a whole machine's AI traffic through the gateway, and a **Helm chart + Kubernetes manifests** for cluster deployment.
 
 ## Architecture
 
@@ -127,6 +128,7 @@ A Spring Boot (Java 21, virtual threads) gateway over Postgres + Redis, with an 
 | `POST` | `/v1/mcp` | MCP server (JSON-RPC governance tools) |
 | `GET` | `/v1/discovery` | shadow-AI discovery — un-sanctioned model usage |
 | `GET` | `/v1/compliance/report` | controls mapped to GDPR / EU AI Act / DORA |
+| `GET/POST` | `/v1/approvals[/{id}/decision]` | human-in-the-loop review queue |
 | `GET` | `/v1/me` | the tenant behind your key |
 | `GET/POST/PUT/DELETE` | `/v1/policies[/{id}]` | manage your policy rules |
 | `GET` | `/v1/audit`, `/v1/audit/verify` | query the audit log; verify the chain |
