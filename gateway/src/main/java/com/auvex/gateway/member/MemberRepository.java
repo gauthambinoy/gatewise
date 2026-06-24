@@ -19,4 +19,7 @@ public interface MemberRepository extends JpaRepository<Member, UUID> {
 
   /** A tenant's member by email, for console sign-in. */
   Optional<Member> findByTenantIdAndEmail(UUID tenantId, String email);
+
+  /** The first member with a given role (e.g. an owner), for demo sign-in. */
+  Optional<Member> findFirstByTenantIdAndRole(UUID tenantId, String role);
 }

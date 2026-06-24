@@ -37,19 +37,44 @@ public class AuthController {
   private static final String BEARER = "Bearer ";
 
   private final AuthProperties properties;
+  private final com.auvex.gateway.config.DemoProperties demoProperties;
   private final ConsoleSessionService sessions;
   private final TenantRepository tenants;
   private final MemberRepository members;
 
   public AuthController(
       AuthProperties properties,
+      com.auvex.gateway.config.DemoProperties demoProperties,
       ConsoleSessionService sessions,
       TenantRepository tenants,
       MemberRepository members) {
     this.properties = properties;
+    this.demoProperties = demoProperties;
     this.sessions = sessions;
     this.tenants = tenants;
     this.members = members;
+  }
+
+  /**
+   * Demo-only: mints a console session for the seeded demo tenant's owner, so the "Try the live
+   * demo" button works under RBAC without a real login. Enabled only when the demo seed is on.
+   */
+  @PostMapping("/demo-login")
+  public DevLoginResponse demoLogin() {
+    if (!demoProperties.enabled()) {
+      throw new NotFoundException("Demo login is disabled.");
+    }
+    Tenant tenant =
+        tenants
+            .findBySlug("demo")
+            .orElseThrow(() -> new NotFoundException("Demo tenant is not seeded."));
+    Member owner = members.findFirstByTenantIdAndRole(tenant.getId(), "owner").orElse(null);
+    String email = owner != null ? owner.getEmail() : "demo@auvex.io";
+    java.util.UUID memberId = owner != null ? owner.getId() : null;
+    Instant expiresAt = Instant.now().plus(properties.sessionTtl());
+    ConsoleSession session =
+        new ConsoleSession(tenant.getId(), memberId, email, "owner", expiresAt);
+    return new DevLoginResponse(sessions.mint(session), email, "owner", expiresAt);
   }
 
   /** Dev-only: mints a console session for a member, without a password (off in production). */

@@ -9,6 +9,7 @@ import java.util.Locale;
  * policy, routing and keys; {@code AUDITOR} has read-only access to logs and usage.
  */
 public enum Role {
+  // Declared most- to least-privileged; ordinal drives the hierarchy (lower ordinal = more rights).
   OWNER,
   SECURITY_ADMIN,
   AUDITOR;
@@ -16,6 +17,14 @@ public enum Role {
   /** The stored lowercase form (e.g. {@code security_admin}). */
   public String value() {
     return name().toLowerCase(Locale.ROOT);
+  }
+
+  /**
+   * True when this role is at least as privileged as {@code required} (OWNER ≥ SECURITY_ADMIN ≥
+   * AUDITOR).
+   */
+  public boolean atLeast(Role required) {
+    return this.ordinal() <= required.ordinal();
   }
 
   /** Parses the stored text; an unknown value is the least-privileged role (fail-safe). */

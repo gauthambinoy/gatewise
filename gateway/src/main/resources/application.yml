@@ -161,6 +161,12 @@ auvex:
     review-injection: ${AUVEX_APPROVAL_REVIEW_INJECTION:false}
     review-data-types: ${AUVEX_APPROVAL_REVIEW_DATA_TYPES:}
 
+  # Role-based access control. When on, /v1 management endpoints (policies, members, keys, approvals,
+  # audit, usage, discovery, compliance) require a console-session token with a sufficient role
+  # instead of a machine API key; the AI/proxy endpoints always stay API-key authenticated.
+  rbac:
+    enabled: ${AUVEX_RBAC_ENABLED:false}
+
   # Compliance & data retention. retention-days is reported in the compliance report; when
   # retention-delete-enabled is on, a daily sweep hard-deletes audit entries older than that window.
   compliance:

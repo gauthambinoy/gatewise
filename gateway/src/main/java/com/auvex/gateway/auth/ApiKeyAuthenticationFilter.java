@@ -1,5 +1,6 @@
 package com.auvex.gateway.auth;
 
+import com.auvex.gateway.config.RbacProperties;
 import com.auvex.gateway.ratelimit.RateLimiter;
 import com.auvex.gateway.tenant.ApiKey;
 import com.auvex.gateway.tenant.ApiKeyRepository;
@@ -34,22 +35,30 @@ public class ApiKeyAuthenticationFilter extends OncePerRequestFilter {
   private final TenantRepository tenants;
   private final ObjectMapper json;
   private final RateLimiter rateLimiter;
+  private final RbacProperties rbac;
 
   public ApiKeyAuthenticationFilter(
       ApiKeyRepository apiKeys,
       TenantRepository tenants,
       ObjectMapper json,
-      RateLimiter rateLimiter) {
+      RateLimiter rateLimiter,
+      RbacProperties rbac) {
     this.apiKeys = apiKeys;
     this.tenants = tenants;
     this.json = json;
     this.rateLimiter = rateLimiter;
+    this.rbac = rbac;
   }
 
-  // Guard only the gateway API surface; health checks and other paths stay public.
+  // Guard the gateway API surface; health checks and other paths stay public. When RBAC is on, the
+  // human-managed endpoints are handled by the console-session filter instead of by API key.
   @Override
   protected boolean shouldNotFilter(HttpServletRequest request) {
-    return !request.getRequestURI().startsWith("/v1/");
+    String uri = request.getRequestURI();
+    if (!uri.startsWith("/v1/")) {
+      return true;
+    }
+    return rbac.enabled() && ManagementAccess.isManagement(uri);
   }
 
   @Override
