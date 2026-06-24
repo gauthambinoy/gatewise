@@ -44,6 +44,7 @@ class OidcLoginIntegrationTest extends AbstractPostgresIntegrationTest {
 
   @Test
   void unknownProviderIs404() throws Exception {
-    mvc.perform(MockMvcRequestBuilders.get("/auth/oidc/nope/login")).andExpect(status().isNotFound());
+    mvc.perform(MockMvcRequestBuilders.get("/auth/oidc/nope/login"))
+        .andExpect(status().isNotFound());
   }
 }

@@ -33,10 +33,14 @@ public class OidcTokenClient {
   public String exchangeForIdToken(SsoProvider provider, String code) {
     String form =
         "grant_type=authorization_code"
-            + "&code=" + enc(code)
-            + "&redirect_uri=" + enc(provider.redirectUri())
-            + "&client_id=" + enc(provider.clientId())
-            + "&client_secret=" + enc(provider.clientSecret());
+            + "&code="
+            + enc(code)
+            + "&redirect_uri="
+            + enc(provider.redirectUri())
+            + "&client_id="
+            + enc(provider.clientId())
+            + "&client_secret="
+            + enc(provider.clientSecret());
     try {
       HttpResponse<String> response =
           http.send(

@@ -65,7 +65,10 @@ public class HttpJwkSource implements JwkSource {
     try {
       HttpResponse<String> response =
           http.send(
-              HttpRequest.newBuilder(URI.create(jwksUri)).timeout(Duration.ofSeconds(10)).GET().build(),
+              HttpRequest.newBuilder(URI.create(jwksUri))
+                  .timeout(Duration.ofSeconds(10))
+                  .GET()
+                  .build(),
               HttpResponse.BodyHandlers.ofString());
       if (response.statusCode() != 200) {
         throw new OidcException("JWKS endpoint returned HTTP " + response.statusCode() + ".");

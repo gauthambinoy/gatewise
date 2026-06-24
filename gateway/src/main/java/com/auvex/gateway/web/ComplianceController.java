@@ -116,6 +116,5 @@ public class ComplianceController {
       List<ControlStatus> controls) {}
 
   /** One enforced control mapped to the framework it supports, with live evidence. */
-  public record ControlStatus(
-      String control, String framework, String status, String evidence) {}
+  public record ControlStatus(String control, String framework, String status, String evidence) {}
 }

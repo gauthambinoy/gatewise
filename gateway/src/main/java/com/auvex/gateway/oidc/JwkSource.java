@@ -8,6 +8,8 @@ import java.security.PublicKey;
  */
 public interface JwkSource {
 
-  /** The public key for {@code kid} published at {@code jwksUri}, or throws if it can't be found. */
+  /**
+   * The public key for {@code kid} published at {@code jwksUri}, or throws if it can't be found.
+   */
   PublicKey publicKey(String jwksUri, String kid);
 }

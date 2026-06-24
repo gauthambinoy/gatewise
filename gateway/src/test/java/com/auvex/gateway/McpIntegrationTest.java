@@ -73,7 +73,9 @@ class McpIntegrationTest extends AbstractPostgresIntegrationTest {
         .andExpect(status().isOk())
         .andExpect(
             jsonPath("$.result.content[0].text")
-                .value(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("bob@secret.com"))));
+                .value(
+                    org.hamcrest.Matchers.not(
+                        org.hamcrest.Matchers.containsString("bob@secret.com"))));
   }
 
   @Test

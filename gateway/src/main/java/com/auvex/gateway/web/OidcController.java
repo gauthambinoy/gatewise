@@ -75,11 +75,16 @@ public class OidcController {
     String authorizationUrl =
         config.authorizationUri()
             + "?response_type=code"
-            + "&client_id=" + enc(config.clientId())
-            + "&redirect_uri=" + enc(config.redirectUri())
-            + "&scope=" + enc(config.scopes())
-            + "&state=" + enc(state)
-            + "&nonce=" + enc(nonce);
+            + "&client_id="
+            + enc(config.clientId())
+            + "&redirect_uri="
+            + enc(config.redirectUri())
+            + "&scope="
+            + enc(config.scopes())
+            + "&state="
+            + enc(state)
+            + "&nonce="
+            + enc(nonce);
     return ResponseEntity.status(HttpStatus.FOUND).location(URI.create(authorizationUrl)).build();
   }
 

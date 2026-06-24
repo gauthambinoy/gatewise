@@ -14,8 +14,8 @@ import org.springframework.stereotype.Component;
  * two differences: there is no top-level {@code model} (the model id lives in the URL), and the API
  * version travels in the body as {@code anthropic_version} rather than as a header. So this reuses
  * {@link AnthropicTranslator} for the heavy lifting and applies just those two adjustments. The
- * response is the Anthropic Messages shape, so {@link AnthropicTranslator#toOpenAiResponse} converts
- * it back to the canonical OpenAI shape unchanged.
+ * response is the Anthropic Messages shape, so {@link AnthropicTranslator#toOpenAiResponse}
+ * converts it back to the canonical OpenAI shape unchanged.
  */
 @Component
 public class BedrockTranslator {

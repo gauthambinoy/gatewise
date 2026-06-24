@@ -68,11 +68,7 @@ public class BedrockAdapter implements ProviderAdapter {
     String modelId = modelIdOf(requestBody);
     URI uri =
         URI.create(
-            "https://"
-                + properties.host()
-                + "/model/"
-                + Aws4Signer.uriEncode(modelId)
-                + "/invoke");
+            "https://" + properties.host() + "/model/" + Aws4Signer.uriEncode(modelId) + "/invoke");
     byte[] bedrockBody = translator.toBedrockRequest(requestBody);
 
     Map<String, String> signed =
