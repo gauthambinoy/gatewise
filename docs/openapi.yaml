@@ -149,6 +149,45 @@ paths:
                 moderation: []
         "401": { $ref: "#/components/responses/Unauthorized" }
 
+  /v1/audio/speech:
+    post:
+      tags: [Chat & AI]
+      summary: Text-to-speech (input redacted before forwarding); returns audio
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [model, input]
+              properties:
+                model: { type: string, example: tts-1 }
+                input: { type: string }
+                voice: { type: string, example: alloy }
+      responses:
+        "200": { description: The synthesized audio bytes. }
+        "400": { description: Missing or invalid model/input. }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /v1/audio/transcriptions:
+    post:
+      tags: [Chat & AI]
+      summary: Speech-to-text; the returned transcript is screened for PII into the audit log
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file, model]
+              properties:
+                file: { type: string, format: binary }
+                model: { type: string, example: whisper-1 }
+      responses:
+        "200": { description: An OpenAI-shaped transcription response. }
+        "400": { description: Missing file or model. }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
   /v1/mcp:
     post:
       tags: [Chat & AI]
