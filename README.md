@@ -123,6 +123,10 @@ A Spring Boot (Java 21, virtual threads) gateway over Postgres + Redis, with an 
 | `POST` | `/v1/responses` | OpenAI Responses API (governed) |
 | `POST` | `/v1/embeddings`, `/v1/images/generations` | governed embeddings & image generation |
 | `POST` | `/v1/moderations` | native local screen (PII, secrets, injection, content-safety) |
+| `POST` | `/v1/audio/speech`, `/v1/audio/transcriptions` | governed text-to-speech & speech-to-text |
+| `POST` | `/v1/mcp` | MCP server (JSON-RPC governance tools) |
+| `GET` | `/v1/discovery` | shadow-AI discovery — un-sanctioned model usage |
+| `GET` | `/v1/compliance/report` | controls mapped to GDPR / EU AI Act / DORA |
 | `GET` | `/v1/me` | the tenant behind your key |
 | `GET/POST/PUT/DELETE` | `/v1/policies[/{id}]` | manage your policy rules |
 | `GET` | `/v1/audit`, `/v1/audit/verify` | query the audit log; verify the chain |
