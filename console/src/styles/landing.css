@@ -1,0 +1,112 @@
+/* Public landing page styles. */
+
+.lp-grad {
+  background: var(--accent-grad-soft);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.lp-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 16px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  border: 1px solid transparent;
+  text-decoration: none;
+  color: var(--color-text-primary);
+  transition:
+    transform 0.2s var(--ease-spring),
+    box-shadow 0.3s var(--ease-out),
+    background 0.2s,
+    border-color 0.2s,
+    filter 0.2s;
+}
+.lp-btn-lg {
+  padding: 13px 24px;
+  font-size: 16px;
+  border-radius: 14px;
+}
+.lp-btn-primary {
+  background: var(--accent-grad);
+  color: #fff;
+  box-shadow: 0 8px 28px -6px rgba(109, 92, 255, 0.6);
+}
+.lp-btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 40px -8px rgba(109, 92, 255, 0.72);
+  filter: brightness(1.06);
+}
+.lp-btn-ghost {
+  background: color-mix(in srgb, var(--color-background-primary) 45%, transparent);
+  border: 1px solid var(--color-border-secondary);
+  backdrop-filter: blur(8px);
+}
+.lp-btn-ghost:hover {
+  transform: translateY(-2px);
+  border-color: var(--accent);
+}
+.lp-btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+  transform: none;
+}
+
+.lp-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border-radius: 100px;
+  border: 1px solid var(--color-border-secondary);
+  background: color-mix(in srgb, var(--color-background-primary) 50%, transparent);
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  backdrop-filter: blur(8px);
+}
+
+.logo {
+  background: var(--accent-grad);
+  box-shadow: 0 4px 16px -4px rgba(109, 92, 255, 0.6);
+}
+
+.lp-feature {
+  padding: 24px 22px;
+}
+.lp-feature-icon {
+  width: 46px;
+  height: 46px;
+  border-radius: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, var(--accent) 18%, transparent);
+  color: var(--color-text-info);
+  font-size: 23px;
+}
+
+.lp-eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-text-info);
+}
+
+.lp-code {
+  text-align: left;
+  padding: 22px 24px;
+  font-size: 14px;
+  line-height: 1.7;
+  overflow-x: auto;
+}
+
+.lp-cta {
+  padding: 44px 32px;
+  text-align: center;
+}

@@ -3,6 +3,7 @@ import { useAuth } from './auth/AuthContext'
 import { AppShell } from './components/AppShell'
 import { Spinner } from './components/ui'
 import { Login } from './pages/Login'
+import { Landing } from './pages/Landing'
 import { Dashboard } from './pages/Dashboard'
 import { Connect } from './pages/Connect'
 import { Monitor } from './pages/Monitor'
@@ -39,7 +40,9 @@ export function App() {
   if (!tenant) {
     return (
       <Routes>
-        <Route path="*" element={<Login />} />
+        <Route path="/" element={<Landing />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     )
   }
