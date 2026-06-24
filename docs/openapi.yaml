@@ -172,6 +172,17 @@ paths:
         "200": { description: A JSON-RPC 2.0 result or error envelope. }
         "401": { $ref: "#/components/responses/Unauthorized" }
 
+  /v1/discovery:
+    get:
+      tags: [Governance]
+      summary: Shadow-AI discovery — observed models/providers, with un-sanctioned usage flagged
+      description: >
+        Derives an AI-usage inventory from the audit log and flags any model not in the routing
+        allow-list as "shadow" (un-sanctioned) usage.
+      responses:
+        "200": { description: A breakdown by provider plus the list of shadow models. }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
   /v1/audit:
     get:
       tags: [Audit & compliance]
