@@ -1,0 +1,15 @@
+import { chromium } from 'playwright';
+const BASE = 'https://auvex.54.170.218.176.nip.io';
+const b = await chromium.launch();
+const ctx = await b.newContext({ viewport: { width: 1440, height: 900 }, deviceScaleFactor: 2, ignoreHTTPSErrors: true });
+const p = await ctx.newPage();
+await p.goto(BASE + '/', { waitUntil: 'networkidle' });
+await p.getByRole('button', { name: /try the live demo/i }).click();
+await p.waitForLoadState('networkidle'); await p.waitForTimeout(2500);
+await p.getByRole('button', { name: /dark/i }).click();
+await p.waitForTimeout(3200);
+await p.screenshot({ path: 'shots-v2/05-dashboard-dark.png', fullPage: true });
+await p.goto(BASE + '/usage', { waitUntil: 'networkidle' }); await p.waitForTimeout(2200);
+await p.screenshot({ path: 'shots-v2/06-usage-dark.png', fullPage: true });
+await b.close();
+console.log('dark shots done');

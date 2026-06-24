@@ -412,3 +412,19 @@ label {
     transform: rotate(360deg);
   }
 }
+
+/* ---- v2 design tokens (shared by the component library) ---- */
+body {
+  --primary: var(--color-text-info);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 14px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 12px 34px rgba(0, 0, 0, 0.12);
+  --shadow-xl: 0 24px 60px rgba(0, 0, 0, 0.2);
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 20px;
+  --sp-6: 24px;
+  --sp-8: 32px;
+}

@@ -9,6 +9,7 @@ import './styles/tokens.css'
 import './styles/animations.css'
 import { App } from './App'
 import { AuthProvider } from './auth/AuthContext'
+import { I18nProvider } from './lib/i18n'
 
 // Restore the saved theme before first paint.
 const theme = localStorage.getItem('auvex.theme') === 'dark' ? 'dark' : 'light'
@@ -17,9 +18,11 @@ document.body.className = theme
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>
     <BrowserRouter>
-      <AuthProvider>
-        <App />
-      </AuthProvider>
+      <I18nProvider>
+        <AuthProvider>
+          <App />
+        </AuthProvider>
+      </I18nProvider>
     </BrowserRouter>
   </React.StrictMode>,
 )
