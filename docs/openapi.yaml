@@ -149,6 +149,29 @@ paths:
                 moderation: []
         "401": { $ref: "#/components/responses/Unauthorized" }
 
+  /v1/mcp:
+    post:
+      tags: [Chat & AI]
+      summary: Model Context Protocol (MCP) server — JSON-RPC 2.0 governance tools
+      description: >
+        Speaks MCP over JSON-RPC 2.0 (initialize, tools/list, tools/call). Tools: redact, moderate,
+        scan_injection — each runs the same engines as the /v1 endpoints. Authenticated per tenant.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [jsonrpc, method]
+              properties:
+                jsonrpc: { type: string, example: "2.0" }
+                id: { type: integer, example: 1 }
+                method: { type: string, example: tools/list }
+                params: { type: object }
+      responses:
+        "200": { description: A JSON-RPC 2.0 result or error envelope. }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
   /v1/audit:
     get:
       tags: [Audit & compliance]
