@@ -45,9 +45,12 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      # CodeQL needs the Java compiled to trace it; a plain compile is enough.
+      # CodeQL traces the compiler as it runs, so javac MUST actually execute.
+      # --rerun-tasks + --no-build-cache stop Gradle from serving compileJava from
+      # the (CI-populated) build cache, which would leave CodeQL with no source to
+      # analyse ("no source code seen during build").
       - name: Compile for analysis
-        run: ./gradlew :gateway:compileJava :gateway:compileTestJava --no-daemon
+        run: ./gradlew :gateway:compileJava :gateway:compileTestJava --no-daemon --rerun-tasks --no-build-cache
 
       - name: Perform CodeQL analysis
         uses: github/codeql-action/analyze@v3
