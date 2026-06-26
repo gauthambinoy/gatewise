@@ -38,6 +38,7 @@ public class AuthController {
 
   private final AuthProperties properties;
   private final com.auvex.gateway.config.DemoProperties demoProperties;
+  private final com.auvex.gateway.config.RbacProperties rbacProperties;
   private final ConsoleSessionService sessions;
   private final TenantRepository tenants;
   private final MemberRepository members;
@@ -45,14 +46,25 @@ public class AuthController {
   public AuthController(
       AuthProperties properties,
       com.auvex.gateway.config.DemoProperties demoProperties,
+      com.auvex.gateway.config.RbacProperties rbacProperties,
       ConsoleSessionService sessions,
       TenantRepository tenants,
       MemberRepository members) {
     this.properties = properties;
     this.demoProperties = demoProperties;
+    this.rbacProperties = rbacProperties;
     this.sessions = sessions;
     this.tenants = tenants;
     this.members = members;
+  }
+
+  /**
+   * Public client config the console reads at startup. {@code rbacEnabled} tells it whether
+   * management calls must carry a console-session token (RBAC on) or may use the API key (off).
+   */
+  @GetMapping("/config")
+  public ClientConfig config() {
+    return new ClientConfig(rbacProperties.enabled(), demoProperties.enabled());
   }
 
   /**
@@ -132,4 +144,10 @@ public class AuthController {
 
   /** An SSO provider and whether it's wired up. */
   public record ProviderView(String name, boolean configured) {}
+
+  /**
+   * Public client config the console reads at startup: whether RBAC is enforced (so it knows to
+   * send a console-session token rather than an API key) and whether the demo seed is on.
+   */
+  public record ClientConfig(boolean rbacEnabled, boolean demoEnabled) {}
 }
