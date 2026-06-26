@@ -2,7 +2,11 @@
 
 **A drop-in AI gateway that redacts, routes, governs, and logs every LLM call an enterprise makes.** Point one URL at Auvex and every prompt flows through a single controlled, audited passage.
 
-> **Badges** (CI · Security · CodeQL · Coverage · Tests · License) wire to the live GitHub Actions workflows on the first push. They're intentionally omitted until then — no decorative or fake badges.
+[![CI](https://github.com/gauthambinoy/auvex/actions/workflows/ci.yml/badge.svg)](https://github.com/gauthambinoy/auvex/actions/workflows/ci.yml)
+[![CodeQL](https://github.com/gauthambinoy/auvex/actions/workflows/codeql.yml/badge.svg)](https://github.com/gauthambinoy/auvex/actions/workflows/codeql.yml)
+[![Security](https://github.com/gauthambinoy/auvex/actions/workflows/security.yml/badge.svg)](https://github.com/gauthambinoy/auvex/actions/workflows/security.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Java 21](https://img.shields.io/badge/Java-21-orange.svg)](https://adoptium.net/temurin/releases/?version=21)
 
 ## What it does
 
