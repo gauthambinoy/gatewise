@@ -301,6 +301,12 @@ auvex:
     enabled: ${AUVEX_INJECTION_ENABLED:true}
     block: ${AUVEX_INJECTION_BLOCK:false}
 
+  # Plugin marketplace: operator-registered custom regex redaction detectors + the /v1/plugins
+  # catalog of installed governance plugins. Off/empty by default (no custom detectors).
+  plugins:
+    enabled: ${AUVEX_PLUGINS_ENABLED:false}
+    detectors: []
+
   # Stream every audit event to a webhook / SIEM (Splunk, Datadog, …). Off by default; delivery is
   # asynchronous and fail-open, so it never blocks or breaks a gateway call.
   webhook:
