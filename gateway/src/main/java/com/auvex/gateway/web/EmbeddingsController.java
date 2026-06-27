@@ -5,7 +5,7 @@ import com.auvex.gateway.audit.AuditSink;
 import com.auvex.gateway.audit.Verdict;
 import com.auvex.gateway.auth.TenantContext;
 import com.auvex.gateway.proxy.CachedResponse;
-import com.auvex.gateway.proxy.UpstreamUnavailableException;
+import com.auvex.gateway.proxy.EmbeddingsProxy;
 import com.auvex.gateway.redaction.Match;
 import com.auvex.gateway.redaction.RedactionEngine;
 import com.auvex.gateway.redaction.RedactionResult;
@@ -16,7 +16,6 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -27,8 +26,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.client.ResourceAccessException;
-import org.springframework.web.client.RestClient;
 
 /**
  * OpenAI-compatible embeddings endpoint, governed like the chat path: the input text is redacted
@@ -38,19 +35,19 @@ import org.springframework.web.client.RestClient;
 @RequestMapping("/v1")
 public class EmbeddingsController {
 
-  private final RestClient openRouter;
+  private final EmbeddingsProxy embeddingsProxy;
   private final RedactionEngine redaction;
   private final AuditSink auditSink;
   private final ResidencyEnforcer residency;
   private final ObjectMapper objectMapper;
 
   public EmbeddingsController(
-      RestClient openRouterRestClient,
+      EmbeddingsProxy embeddingsProxy,
       RedactionEngine redaction,
       AuditSink auditSink,
       ResidencyEnforcer residency,
       ObjectMapper objectMapper) {
-    this.openRouter = openRouterRestClient;
+    this.embeddingsProxy = embeddingsProxy;
     this.redaction = redaction;
     this.auditSink = auditSink;
     this.residency = residency;
@@ -87,7 +84,7 @@ public class EmbeddingsController {
             Instant.now()));
 
     byte[] forwarded = objectMapper.writeValueAsBytes(body);
-    CachedResponse response = forward(forwarded);
+    CachedResponse response = embeddingsProxy.embed(forwarded);
     return ResponseEntity.status(response.status())
         .contentType(MediaType.APPLICATION_JSON)
         .body(response.body());
@@ -123,27 +120,6 @@ public class EmbeddingsController {
       }
     }
     return text.toString();
-  }
-
-  private CachedResponse forward(byte[] requestBody) {
-    try {
-      return openRouter
-          .post()
-          .uri("/embeddings")
-          .contentType(MediaType.APPLICATION_JSON)
-          .body(requestBody)
-          .exchange(
-              (request, response) -> {
-                byte[] body = response.getBody().readAllBytes();
-                return new CachedResponse(
-                    response.getStatusCode().value(),
-                    MediaType.APPLICATION_JSON_VALUE,
-                    new String(body, StandardCharsets.UTF_8));
-              });
-    } catch (ResourceAccessException e) {
-      throw new UpstreamUnavailableException(
-          "The upstream model provider is unavailable or timed out.", e);
-    }
   }
 
   private void validate(JsonNode body) {
