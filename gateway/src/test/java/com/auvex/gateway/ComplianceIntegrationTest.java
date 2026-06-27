@@ -5,6 +5,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.auvex.gateway.audit.AuditEntry;
+import com.auvex.gateway.audit.AuditLog;
+import com.auvex.gateway.audit.AuditService;
 import com.auvex.gateway.audit.AuditSink;
 import com.auvex.gateway.audit.Verdict;
 import com.auvex.gateway.auth.ApiKeyHasher;
@@ -29,6 +31,7 @@ class ComplianceIntegrationTest extends AbstractPostgresIntegrationTest {
   @Autowired private TenantRepository tenants;
   @Autowired private ApiKeyRepository apiKeys;
   @Autowired private AuditSink auditSink;
+  @Autowired private AuditService audit;
 
   @Test
   void reportsActivityControlsAndChainIntegrity() throws Exception {
@@ -72,5 +75,43 @@ class ComplianceIntegrationTest extends AbstractPostgresIntegrationTest {
         .andExpect(jsonPath("$.auditChainIntact").value(true))
         .andExpect(jsonPath("$.retentionDays").value(365))
         .andExpect(jsonPath("$.controls[0].framework").exists());
+  }
+
+  @Test
+  void notarizationReturnsTheChainHeadForTheTenant() throws Exception {
+    Tenant tenant = tenants.save(new Tenant("Acme", "acme-" + UUID.randomUUID()));
+    String raw = "auvex_" + UUID.randomUUID().toString().replace("-", "");
+    apiKeys.save(
+        new ApiKey(tenant.getId(), "default", ApiKeyHasher.hash(raw), raw.substring(0, 12)));
+
+    audit.append(
+        new AuditEntry(
+            tenant.getId(),
+            UUID.randomUUID(),
+            "a",
+            "model-x",
+            Verdict.ALLOWED,
+            "one",
+            null,
+            Instant.now()));
+    AuditLog head =
+        audit.append(
+            new AuditEntry(
+                tenant.getId(),
+                UUID.randomUUID(),
+                "a",
+                "model-x",
+                Verdict.ALLOWED,
+                "two",
+                null,
+                Instant.now()));
+
+    mvc.perform(get("/v1/compliance/notarization").header("Authorization", "Bearer " + raw))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.tenantId").value(tenant.getId().toString()))
+        .andExpect(jsonPath("$.headEntryId").value(head.getId().intValue()))
+        .andExpect(jsonPath("$.headHash").value(head.getEntryHash()))
+        .andExpect(jsonPath("$.chainIntact").value(true))
+        .andExpect(jsonPath("$.generatedAt").exists());
   }
 }
