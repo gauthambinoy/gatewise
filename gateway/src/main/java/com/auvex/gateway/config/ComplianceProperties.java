@@ -10,9 +10,12 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @param retentionDeleteEnabled actually delete audit entries older than {@code retentionDays} on a
  *     daily schedule (off by default; a hard delete truncates the oldest end of the hash chain —
  *     the remaining chain stays verifiable from its earliest surviving entry)
+ * @param notaryUrl optional external timestamping/notary endpoint; when set, the chain anchor from
+ *     {@code GET /v1/compliance/notarization} is also POSTed there (fail-open). Off when unset.
  */
 @ConfigurationProperties(prefix = "auvex.compliance")
-public record ComplianceProperties(Integer retentionDays, boolean retentionDeleteEnabled) {
+public record ComplianceProperties(
+    Integer retentionDays, boolean retentionDeleteEnabled, String notaryUrl) {
 
   public ComplianceProperties {
     if (retentionDays == null || retentionDays <= 0) {

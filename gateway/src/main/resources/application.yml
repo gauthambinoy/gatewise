@@ -167,12 +167,22 @@ auvex:
   rbac:
     enabled: ${AUVEX_RBAC_ENABLED:false}
 
+  # Field-level encryption of audit data at rest (bring-your-own-KMS). When on, the redacted prompt
+  # and response columns are stored AES-256-GCM-encrypted; the key is base64 of 32 bytes and must be
+  # supplied when enabled. Off by default. The hash chain is computed over plaintext, so verification
+  # is unaffected; note free-text prompt search can't match encrypted columns while this is on.
+  encryption:
+    enabled: ${AUVEX_ENCRYPTION_ENABLED:false}
+    key: ${AUVEX_ENCRYPTION_KEY:}
+
   # Compliance & data retention. retention-days is reported in the compliance report; when
   # retention-delete-enabled is on, a daily sweep hard-deletes audit entries older than that window.
+  # notary-url, if set, is where GET /v1/compliance/notarization also POSTs the chain anchor.
   compliance:
     retention-days: ${AUVEX_RETENTION_DAYS:365}
     retention-delete-enabled: ${AUVEX_RETENTION_DELETE_ENABLED:false}
     retention-cron: ${AUVEX_RETENTION_CRON:0 0 3 * * *}
+    notary-url: ${AUVEX_NOTARY_URL:}
 
   # Fallback provider, tried (non-streaming) when the primary can't be reached or 5xxs.
   failover:

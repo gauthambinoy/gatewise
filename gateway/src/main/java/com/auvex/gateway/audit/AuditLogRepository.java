@@ -143,6 +143,12 @@ public interface AuditLogRepository extends JpaRepository<AuditLog, Long> {
   /**
    * Free-text search over the redacted prompt, model and actor (case-insensitive), with an optional
    * verdict filter. Tenant-scoped; the verdict is applied only when non-null.
+   *
+   * <p>Caveat: when field-level encryption is on (auvex.encryption.enabled), the prompt column
+   * holds ciphertext, so this LIKE can't match against it — free-text matches on the prompt won't
+   * be found while encryption is enabled (model and actor, which aren't encrypted, still match).
+   * This is an inherent trade-off of encrypting at rest, not a bug; searchable encryption would
+   * need a separate index and is out of scope here.
    */
   @Query(
       "SELECT a FROM AuditLog a WHERE a.tenantId = :tenantId"

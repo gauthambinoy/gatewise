@@ -1,6 +1,7 @@
 package com.auvex.gateway.audit;
 
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -36,9 +37,13 @@ public class AuditLog {
   @Column(nullable = false)
   private String verdict;
 
+  // Encrypted at rest when field-level encryption is on (transparently, via the converter). The
+  // hash chain is taken over the plaintext, so encryption doesn't affect chain verification.
+  @Convert(converter = AuditFieldConverter.class)
   @Column(name = "prompt_redacted")
   private String promptRedacted;
 
+  @Convert(converter = AuditFieldConverter.class)
   @Column(name = "response_redacted")
   private String responseRedacted;
 

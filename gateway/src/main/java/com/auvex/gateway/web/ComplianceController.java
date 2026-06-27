@@ -1,8 +1,12 @@
 package com.auvex.gateway.web;
 
+import com.auvex.gateway.audit.AuditChain;
+import com.auvex.gateway.audit.AuditLog;
 import com.auvex.gateway.audit.AuditLogRepository;
 import com.auvex.gateway.audit.AuditLogRepository.TypeCount;
 import com.auvex.gateway.audit.AuditService;
+import com.auvex.gateway.audit.NotarizationAnchor;
+import com.auvex.gateway.audit.NotaryPublisher;
 import com.auvex.gateway.auth.TenantContext;
 import com.auvex.gateway.config.ComplianceProperties;
 import java.time.Instant;
@@ -30,12 +34,17 @@ public class ComplianceController {
   private final AuditLogRepository audit;
   private final AuditService auditService;
   private final ComplianceProperties properties;
+  private final NotaryPublisher notary;
 
   public ComplianceController(
-      AuditLogRepository audit, AuditService auditService, ComplianceProperties properties) {
+      AuditLogRepository audit,
+      AuditService auditService,
+      ComplianceProperties properties,
+      NotaryPublisher notary) {
     this.audit = audit;
     this.auditService = auditService;
     this.properties = properties;
+    this.notary = notary;
   }
 
   /** Builds the compliance report for the calling tenant. */
@@ -103,6 +112,29 @@ public class ComplianceController {
         firstBroken.orElse(null),
         retention,
         controls);
+  }
+
+  /**
+   * Returns the tenant's current chain head as a notarization anchor: the head entry's id and hash,
+   * whether the chain verifies intact right now, and when it was produced. An operator publishes
+   * this to an external timestamping/notary service to get an independent, dated record that the
+   * audit log was in this state at this time. If {@code auvex.compliance.notary-url} is set, the
+   * gateway also POSTs the anchor there (fail-open). Tenant-scoped.
+   */
+  @GetMapping("/compliance/notarization")
+  public NotarizationAnchor notarization() {
+    UUID tenantId = TenantContext.require().tenantId();
+    Optional<AuditLog> head = audit.findTopByTenantIdOrderByIdDesc(tenantId);
+    boolean intact = auditService.firstBrokenLink(tenantId).isEmpty();
+    NotarizationAnchor anchor =
+        new NotarizationAnchor(
+            tenantId,
+            head.map(AuditLog::getId).orElse(null),
+            head.map(AuditLog::getEntryHash).orElse(AuditChain.GENESIS),
+            Instant.now(),
+            intact);
+    notary.publish(anchor);
+    return anchor;
   }
 
   /**
