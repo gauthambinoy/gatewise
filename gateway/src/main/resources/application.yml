@@ -242,6 +242,31 @@ auvex:
         auto-provision: ${OKTA_AUTO_PROVISION:false}
         default-role: ${OKTA_DEFAULT_ROLE:auditor}
 
+  # SAML 2.0 single sign-on (SP-initiated). A provider goes live once its entity id, SSO URL, signing
+  # certificate (PEM) and our SP entity id + ACS URL are set. The signing certificate is the only
+  # credentials-gated blank — paste it once the IdP application exists. acs-url must point at this
+  # gateway's /auth/saml/<name>/acs and be registered with the IdP.
+  saml:
+    providers:
+      okta:
+        entity-id: ${SAML_OKTA_ENTITY_ID:}
+        sso-url: ${SAML_OKTA_SSO_URL:}
+        signing-certificate: ${SAML_OKTA_CERT:}
+        sp-entity-id: ${SAML_OKTA_SP_ENTITY_ID:}
+        acs-url: ${SAML_OKTA_ACS_URL:}
+        tenant-slug: ${SAML_OKTA_TENANT_SLUG:}
+        post-login-redirect: ${SSO_POST_LOGIN_REDIRECT:/}
+        auto-provision: ${SAML_OKTA_AUTO_PROVISION:false}
+        default-role: ${SAML_OKTA_DEFAULT_ROLE:auditor}
+
+  # SCIM 2.0 provisioning. The IdP creates/updates/deactivates members under /scim/v2 with its own
+  # bearer token (separate from API keys), provisioning into tenant-slug. Off until a token is set —
+  # an empty token rejects every SCIM call. The token is the credentials-gated blank.
+  scim:
+    token: ${SCIM_TOKEN:}
+    tenant-slug: ${SCIM_TENANT_SLUG:}
+    default-role: ${SCIM_DEFAULT_ROLE:auditor}
+
   # Demo seed for the console's "Try the live demo" button. Off by default; never enable in prod.
   demo:
     enabled: ${AUVEX_DEMO_ENABLED:false}
