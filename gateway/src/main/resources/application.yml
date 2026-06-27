@@ -278,3 +278,20 @@ auvex:
   cost-alert:
     enabled: ${AUVEX_COST_ALERT_ENABLED:false}
     threshold-usd: ${AUVEX_COST_ALERT_THRESHOLD:100}
+
+  # Egress / forward transparent-proxy (TLS MITM): catches AI-bound HTTPS from apps that don't point
+  # at the gateway. OFF by default — when off, no extra listener is opened and the main app on 8080 is
+  # untouched. When on, the proxy listens on `port`; a CONNECT to a host in `intercept-hosts` is
+  # TLS-intercepted and run through the same redaction/injection/policy/audit pipeline, and any other
+  # host is tunnelled opaquely. `block-uncovered` is the mandatory-routing switch: with it on, an
+  # intercepted request that fails policy is refused, not forwarded. `tenant-id` must be an existing
+  # tenant (intercepted traffic carries the app's provider key, not an Auvex key, so the tenant can't
+  # be derived). `ca-file`, if set, also writes the root CA to that path on startup. Install the CA
+  # (GET /v1/egress/ca.pem) on every client — see gateway/docs/EGRESS.md.
+  egress:
+    enabled: ${AUVEX_EGRESS_ENABLED:false}
+    port: ${AUVEX_EGRESS_PORT:8888}
+    block-uncovered: ${AUVEX_EGRESS_BLOCK_UNCOVERED:false}
+    tenant-id: ${AUVEX_EGRESS_TENANT_ID:}
+    ca-file: ${AUVEX_EGRESS_CA_FILE:}
+    intercept-hosts: ${AUVEX_EGRESS_INTERCEPT_HOSTS:api.openai.com,api.anthropic.com,generativelanguage.googleapis.com}

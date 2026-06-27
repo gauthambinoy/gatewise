@@ -58,6 +58,11 @@ public class ApiKeyAuthenticationFilter extends OncePerRequestFilter {
     if (!uri.startsWith("/v1/")) {
       return true;
     }
+    if (uri.equals("/v1/egress/ca.pem")) {
+      // The egress CA is public bootstrap material: a fresh client must fetch and trust it before
+      // it has any credential to present, so this one endpoint stays open.
+      return true;
+    }
     return rbac.enabled() && ManagementAccess.isManagement(uri);
   }
 
