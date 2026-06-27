@@ -16,10 +16,22 @@ public interface AuditLogRepository extends JpaRepository<AuditLog, Long> {
   /** Total calls for a tenant (for the usage summary). */
   long countByTenantId(UUID tenantId);
 
-  /** Deletes entries older than the cutoff (data-retention enforcement); returns how many. */
+  /**
+   * Deletes entries older than the cutoff that are NOT under legal hold (data-retention
+   * enforcement); returns how many. Held entries are preserved regardless of age.
+   */
   @org.springframework.transaction.annotation.Transactional
   @org.springframework.data.jpa.repository.Modifying
-  long deleteByCreatedAtBefore(java.time.OffsetDateTime cutoff);
+  long deleteByCreatedAtBeforeAndLegalHoldFalse(java.time.OffsetDateTime cutoff);
+
+  /** Places or releases a legal hold on every entry for one data subject; returns rows affected. */
+  @org.springframework.transaction.annotation.Transactional
+  @org.springframework.data.jpa.repository.Modifying
+  @Query(
+      "UPDATE AuditLog a SET a.legalHold = :hold"
+          + " WHERE a.tenantId = :tenantId AND a.actor = :actor")
+  int setLegalHoldForActor(
+      @Param("tenantId") UUID tenantId, @Param("actor") String actor, @Param("hold") boolean hold);
 
   /** Calls for a tenant with a given verdict. */
   long countByTenantIdAndVerdict(UUID tenantId, String verdict);

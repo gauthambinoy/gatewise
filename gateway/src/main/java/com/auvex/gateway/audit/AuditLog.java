@@ -75,6 +75,10 @@ public class AuditLog {
   @Column(name = "principal_email")
   private String principalEmail;
 
+  // True while this entry is under a legal hold and so exempt from retention deletion.
+  @Column(name = "legal_hold", nullable = false)
+  private boolean legalHold;
+
   /** JPA requires a no-arg constructor; not for application use. */
   protected AuditLog() {}
 
@@ -186,5 +190,9 @@ public class AuditLog {
 
   public String getPrincipalEmail() {
     return principalEmail;
+  }
+
+  public boolean isLegalHold() {
+    return legalHold;
   }
 }

@@ -12,6 +12,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -102,6 +104,28 @@ public class ComplianceController {
         retention,
         controls);
   }
+
+  /**
+   * Places or releases a legal hold on every audit entry for a data subject (matched on the actor).
+   * Held entries are exempt from retention deletion — the control for preserving a subject's
+   * records during litigation or an investigation, satisfying a legal-hold obligation over the GDPR
+   * retention default.
+   */
+  @PostMapping("/compliance/legal-hold")
+  public LegalHoldResult legalHold(@RequestBody(required = false) LegalHoldRequest request) {
+    if (request == null || request.subject() == null || request.subject().isBlank()) {
+      throw new InvalidRequestException("'subject' is required.");
+    }
+    UUID tenantId = TenantContext.require().tenantId();
+    int affected = audit.setLegalHoldForActor(tenantId, request.subject(), request.hold());
+    return new LegalHoldResult(request.subject(), request.hold(), affected);
+  }
+
+  /** A request to place ({@code hold=true}) or release a legal hold on a data subject's entries. */
+  public record LegalHoldRequest(String subject, boolean hold) {}
+
+  /** The outcome of a legal-hold change: the subject, the new state, and rows affected. */
+  public record LegalHoldResult(String subject, boolean hold, int affected) {}
 
   /** The compliance report. */
   public record ComplianceReport(
