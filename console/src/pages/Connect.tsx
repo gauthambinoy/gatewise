@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { api, getApiKey } from '../lib/api'
+import { useT } from '../lib/i18n'
 import type { ModerationResult } from '../lib/types'
 import {
   Alert,
@@ -104,6 +105,7 @@ resp, _ := client.CreateChatCompletion(ctx, openai.ChatCompletionRequest{
 
 function CopyField({ label, value, mono = true }: { label: string; value: string; mono?: boolean }) {
   const { toast } = useToast()
+  const { t } = useT()
   return (
     <div>
       <div style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginBottom: 6 }}>{label}</div>
@@ -126,10 +128,10 @@ function CopyField({ label, value, mono = true }: { label: string; value: string
         </code>
         <IconButton
           icon="ti-copy"
-          label={`Copy ${label}`}
+          label={t('connect.copyField', { label })}
           onClick={() => {
             void navigator.clipboard.writeText(value)
-            toast(`${label} copied`, 'success')
+            toast(t('connect.copiedField', { label }), 'success')
           }}
         />
       </div>
@@ -139,6 +141,7 @@ function CopyField({ label, value, mono = true }: { label: string; value: string
 
 function CodeBlock({ code }: { code: string }) {
   const { toast } = useToast()
+  const { t } = useT()
   return (
     <div style={{ position: 'relative' }}>
       <pre
@@ -159,11 +162,11 @@ function CodeBlock({ code }: { code: string }) {
       <div style={{ position: 'absolute', top: 8, right: 8 }}>
         <IconButton
           icon="ti-copy"
-          label="Copy code"
+          label={t('connect.copyCode')}
           variant="solid"
           onClick={() => {
             void navigator.clipboard.writeText(code)
-            toast('Snippet copied', 'success')
+            toast(t('connect.snippetCopied'), 'success')
           }}
         />
       </div>
@@ -172,6 +175,7 @@ function CodeBlock({ code }: { code: string }) {
 }
 
 function ConnectInner() {
+  const { t } = useT()
   const key = getApiKey() ?? 'YOUR_AUVEX_KEY'
   const [tab, setTab] = useState('curl')
   const [testing, setTesting] = useState(false)
@@ -199,20 +203,28 @@ function ConnectInner() {
   return (
     <>
       <div style={{ marginBottom: 20 }}>
-        <div style={{ fontSize: 22, fontWeight: 700, letterSpacing: '-0.02em' }}>Connect your app</div>
+        <div style={{ fontSize: 22, fontWeight: 700, letterSpacing: '-0.02em' }}>
+          {t('connect.title')}
+        </div>
         <div className="muted" style={{ fontSize: 13, marginTop: 2 }}>
-          Auvex is OpenAI-compatible — point any client at one URL and every call is governed.
+          {t('connect.subtitle')}
         </div>
       </div>
 
       <Card style={{ marginBottom: 16 }}>
-        <CardHeader title="Your credentials" subtitle="Use these as the base URL and API key in any SDK." icon="ti-plug-connected" />
+        <CardHeader
+          title={t('connect.credentials')}
+          subtitle={t('connect.credentialsSub')}
+          icon="ti-plug-connected"
+        />
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-          <CopyField label="Base URL" value={BASE_URL} />
-          <CopyField label="API key" value={key} />
+          <CopyField label={t('connect.baseUrl')} value={BASE_URL} />
+          <CopyField label={t('connect.apiKey')} value={key} />
         </div>
         <div style={{ marginTop: 16, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-          <span style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>Model aliases:</span>
+          <span style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>
+            {t('connect.aliases')}
+          </span>
           {MODELS.map((m) => (
             <Chip key={m} tone="info" icon="ti-cpu">
               {m}
@@ -222,7 +234,7 @@ function ConnectInner() {
       </Card>
 
       <Card style={{ marginBottom: 16 }}>
-        <CardHeader title="Drop-in code" subtitle="Same one-URL change in every ecosystem." icon="ti-code" />
+        <CardHeader title={t('connect.dropIn')} subtitle={t('connect.dropInSub')} icon="ti-code" />
         <div style={{ marginBottom: 14 }}>
           <Tabs tabs={TABS} value={tab} onChange={setTab} />
         </div>
@@ -231,22 +243,29 @@ function ConnectInner() {
 
       <Card style={{ marginBottom: 16 }}>
         <CardHeader
-          title="Test the connection"
-          subtitle="Send a sample with PII + an injection attempt — watch Auvex catch it live."
+          title={t('connect.test')}
+          subtitle={t('connect.testSub')}
           icon="ti-radar"
           actions={
             <Button variant="primary" icon="ti-player-play" loading={testing} onClick={runTest}>
-              Run test
+              {t('connect.runTest')}
             </Button>
           }
         />
-        {error && <Alert tone="danger" title="Couldn't reach the gateway">{error}</Alert>}
+        {error && (
+          <Alert tone="danger" title={t('connect.errTitle')}>
+            {error}
+          </Alert>
+        )}
         {result && (
-          <Alert tone={result.flagged ? 'success' : 'info'} title={result.flagged ? 'Connected — and governing your traffic ✓' : 'Connected ✓'}>
+          <Alert
+            tone={result.flagged ? 'success' : 'info'}
+            title={result.flagged ? t('connect.resultGoverning') : t('connect.resultOk')}
+          >
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 8 }}>
-              {Object.entries(result.sensitiveData).map(([t, n]) => (
-                <Chip key={t} tone="info" icon="ti-eye-off">
-                  {t.replace(/_/g, ' ')} ×{n}
+              {Object.entries(result.sensitiveData).map(([type, n]) => (
+                <Chip key={type} tone="info" icon="ti-eye-off">
+                  {type.replace(/_/g, ' ')} ×{n}
                 </Chip>
               ))}
               {result.injection.map((c) => (
@@ -254,12 +273,11 @@ function ConnectInner() {
                   {c.replace(/_/g, ' ')}
                 </Chip>
               ))}
-              {!result.flagged && <span className="sub">Nothing sensitive in the sample.</span>}
+              {!result.flagged && <span className="sub">{t('connect.nothingSensitive')}</span>}
             </div>
             {result.flagged && (
               <div className="sub" style={{ marginTop: 10, fontSize: 12 }}>
-                Caught {piiCount} sensitive value(s) and {result.injection.length} injection attempt(s) —
-                this is what every one of your app's calls now gets.
+                {t('connect.caught', { pii: piiCount, inj: result.injection.length })}
               </div>
             )}
           </Alert>
@@ -267,7 +285,7 @@ function ConnectInner() {
       </Card>
 
       <Card>
-        <CardHeader title="Connect existing tools" subtitle="No code — just set the OpenAI endpoint." icon="ti-apps" />
+        <CardHeader title={t('connect.tools')} subtitle={t('connect.toolsSub')} icon="ti-apps" />
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 12 }}>
           {GUIDES.map((g) => (
             <div

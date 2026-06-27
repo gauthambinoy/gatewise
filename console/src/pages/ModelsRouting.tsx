@@ -27,13 +27,13 @@ export function ModelsRouting() {
   const columns: Column<Route>[] = [
     {
       key: 'alias',
-      header: 'Alias',
+      header: tr('models.colAlias'),
       width: '1fr',
       render: (r) => <span className="mono">{r.alias}</span>,
     },
     {
       key: 'target',
-      header: 'Routes to',
+      header: tr('models.colTarget'),
       width: '1.6fr',
       render: (r) => (
         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
@@ -48,11 +48,11 @@ export function ModelsRouting() {
     },
     {
       key: 'status',
-      header: 'Status',
+      header: tr('models.colStatus'),
       width: '120px',
       render: () => (
         <Chip tone="success" icon="ti-circle-check" size="sm">
-          configured
+          {tr('models.configured')}
         </Chip>
       ),
     },
@@ -60,29 +60,24 @@ export function ModelsRouting() {
 
   return (
     <Card>
-      <CardHeader
-        icon="ti-route"
-        title={tr('nav.models')}
-        subtitle="Give each model a friendly name. Switch providers by changing one line."
-      />
+      <CardHeader icon="ti-route" title={tr('nav.models')} subtitle={tr('models.subtitle')} />
 
       {routes.loading ? (
         <Loading label={tr('common.loading')} />
       ) : routes.error || !routes.data ? (
-        <ErrorState message={routes.error ?? 'No data'} onRetry={routes.reload} />
+        <ErrorState message={routes.error ?? tr('common.noData')} onRetry={routes.reload} />
       ) : routes.data.length === 0 ? (
         <EmptyState
           icon="ti-route"
-          title="No routes configured"
-          message="Add a route to give a model a friendly name and point it at a provider."
+          title={tr('models.emptyTitle')}
+          message={tr('models.emptyMsg')}
         />
       ) : (
         <>
           <DataTable columns={columns} rows={routes.data} rowKey={(r) => r.alias} />
           <div className="hint" style={{ marginTop: 18 }}>
             <i className="ti ti-refresh" style={{ fontSize: 16 }} aria-hidden />
-            If a provider becomes unreachable, Auvex automatically fails over to a configured backup
-            provider.
+            {tr('models.failover')}
           </div>
         </>
       )}

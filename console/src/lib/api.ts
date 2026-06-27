@@ -5,6 +5,7 @@ import type {
   ApiKey,
   AuditEntry,
   AuditPage,
+  ChargebackReport,
   CreatedKey,
   Member,
   MemberInput,
@@ -79,6 +80,7 @@ export const api = {
 
   usage: () => request<UsageSummary>('GET', '/v1/usage'),
   usageByUser: () => request<UserUsage[]>('GET', '/v1/usage/users'),
+  chargeback: () => request<ChargebackReport>('GET', '/v1/usage/chargeback'),
 
   audit: (params: AuditQuery = {}) =>
     request<AuditPage>(

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import type { CSSProperties, KeyboardEvent, ReactNode } from 'react'
+import { intlLocale, useT } from '../../lib/i18n'
 
 /* ------------------------------------------------------------------------------------------------
  * Data-display primitives for the Auvex console.
@@ -45,6 +46,7 @@ export function DataTable<T>({
   empty,
   dense,
 }: DataTableProps<T>): JSX.Element {
+  const { t } = useT()
   const reduce = reduceMotion()
   const [hovered, setHovered] = useState<string | number | null>(null)
 
@@ -105,7 +107,7 @@ export function DataTable<T>({
             role="row"
             className="row"
             tabIndex={clickable ? 0 : undefined}
-            aria-label={clickable ? 'Row, press Enter to open' : undefined}
+            aria-label={clickable ? t('table.rowHint') : undefined}
             onClick={onRowClick ? () => onRowClick(row) : undefined}
             onKeyDown={onRowClick ? (e) => activate(row, e) : undefined}
             onMouseEnter={() => setHovered(key)}
@@ -160,8 +162,9 @@ export function Pagination({
   pageCount,
   total,
   onPage,
-  itemLabel = 'items',
+  itemLabel,
 }: PaginationProps): JSX.Element {
+  const { t } = useT()
   const count = Math.max(1, pageCount)
   const atStart = page <= 0
   const atEnd = page >= count - 1
@@ -173,16 +176,16 @@ export function Pagination({
       <span>
         {total !== undefined && (
           <>
-            {total.toLocaleString()} {itemLabel} ·{' '}
+            {total.toLocaleString(intlLocale())} {itemLabel ?? t('pag.items')} ·{' '}
           </>
         )}
-        page {Math.min(page, count - 1) + 1} of {count}
+        {t('pag.pageOf', { page: Math.min(page, count - 1) + 1, count })}
       </span>
-      <div style={{ display: 'flex', gap: 'var(--sp-1)' }} role="group" aria-label="Pagination">
+      <div style={{ display: 'flex', gap: 'var(--sp-1)' }} role="group" aria-label={t('pag.label')}>
         <button
           type="button"
           disabled={atStart}
-          aria-label="First page"
+          aria-label={t('pag.first')}
           onClick={() => onPage(0)}
           style={btn}
         >
@@ -191,7 +194,7 @@ export function Pagination({
         <button
           type="button"
           disabled={atStart}
-          aria-label="Previous page"
+          aria-label={t('pag.prev')}
           onClick={() => onPage(page - 1)}
           style={btn}
         >
@@ -200,7 +203,7 @@ export function Pagination({
         <button
           type="button"
           disabled={atEnd}
-          aria-label="Next page"
+          aria-label={t('pag.next')}
           onClick={() => onPage(page + 1)}
           style={btn}
         >
@@ -209,7 +212,7 @@ export function Pagination({
         <button
           type="button"
           disabled={atEnd}
-          aria-label="Last page"
+          aria-label={t('pag.last')}
           onClick={() => onPage(count - 1)}
           style={btn}
         >

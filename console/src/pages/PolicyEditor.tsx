@@ -11,17 +11,13 @@ import type { Policy, PolicyInput } from '../lib/types'
 type Effect = Policy['effect']
 type ResourceType = Policy['resourceType']
 
-const EFFECT_OPTIONS: { value: Effect; label: string }[] = [
-  { value: 'allow', label: 'Allow' },
-  { value: 'deny', label: 'Deny' },
-  { value: 'redact', label: 'Redact' },
-]
-
-const RESOURCE_TYPE_OPTIONS: { value: ResourceType; label: string }[] = [
-  { value: 'model', label: 'model' },
-  { value: 'data_type', label: 'data_type' },
-  { value: 'user', label: 'user' },
-]
+const EFFECTS: Effect[] = ['allow', 'deny', 'redact']
+const RESOURCE_TYPES: ResourceType[] = ['model', 'data_type', 'user']
+const RES_TYPE_KEY: Record<ResourceType, string> = {
+  model: 'res.model',
+  data_type: 'res.dataType',
+  user: 'res.user',
+}
 
 export function PolicyEditor() {
   const { id } = useParams()
@@ -29,6 +25,12 @@ export function PolicyEditor() {
   const navigate = useNavigate()
   const { t } = useT()
   const tr = t as (k: string) => string
+
+  const effectOptions = EFFECTS.map((value) => ({ value, label: tr(`effect.${value}`) }))
+  const resourceTypeOptions = RESOURCE_TYPES.map((value) => ({
+    value,
+    label: tr(RES_TYPE_KEY[value]),
+  }))
 
   const loaded = useApi(() => (id ? api.policy(id) : Promise.resolve(undefined)), [id])
 
@@ -63,7 +65,7 @@ export function PolicyEditor() {
       else await api.createPolicy(body)
       navigate('/policies')
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Something went wrong')
+      setError(err instanceof ApiError ? err.message : tr('common.somethingWrong'))
     } finally {
       setSubmitting(false)
     }
@@ -77,17 +79,13 @@ export function PolicyEditor() {
     <Card>
       <CardHeader
         icon="ti-shield-plus"
-        title={editing ? 'Edit policy' : 'New policy'}
-        subtitle={
-          editing
-            ? 'Update this rule — changes apply to new requests immediately.'
-            : 'Add a rule to govern which models and data types are allowed.'
-        }
+        title={editing ? tr('pol.editTitle') : tr('pol.new')}
+        subtitle={editing ? tr('pol.editSubtitle') : tr('pol.newSubtitle')}
       />
 
       <form onSubmit={save} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
         <TextField
-          label="Policy name"
+          label={tr('pol.fieldName')}
           value={name}
           onChange={setName}
           placeholder="redact-PII-external"
@@ -98,16 +96,16 @@ export function PolicyEditor() {
         <div style={{ display: 'flex', gap: 12, alignItems: 'flex-end' }}>
           <div style={{ flex: 1 }}>
             <Select
-              label="When data type is"
+              label={tr('pol.whenType')}
               value={resourceType}
               onChange={(v) => setResourceType(v as ResourceType)}
-              options={RESOURCE_TYPE_OPTIONS}
+              options={resourceTypeOptions}
               fullWidth
             />
           </div>
           <div style={{ flex: 1 }}>
             <TextField
-              label="And model is"
+              label={tr('pol.andValue')}
               value={resourceValue}
               onChange={setResourceValue}
               placeholder="e.g. email, gpt-4, alice@corp.com"
@@ -116,7 +114,7 @@ export function PolicyEditor() {
           </div>
           <div style={{ width: 110 }}>
             <TextField
-              label="Priority"
+              label={tr('pol.colPriority')}
               type="number"
               value={String(priority)}
               onChange={(v) => setPriority(Number(v))}
@@ -127,18 +125,18 @@ export function PolicyEditor() {
 
         <div style={{ maxWidth: 220 }}>
           <Select
-            label="Then take action"
+            label={tr('pol.thenAction')}
             value={effect}
             onChange={(v) => setEffect(v as Effect)}
-            options={EFFECT_OPTIONS}
+            options={effectOptions}
             fullWidth
           />
         </div>
 
-        <Switch checked={enabled} onChange={setEnabled} label="Enabled" />
+        <Switch checked={enabled} onChange={setEnabled} label={tr('pol.enabled')} />
 
         <Alert tone="info" icon="ti-info-circle">
-          If no rule matches, Auvex defaults to the safest option (deny unknown).
+          {tr('pol.defaultDeny')}
         </Alert>
 
         {error && <Alert tone="danger">{error}</Alert>}

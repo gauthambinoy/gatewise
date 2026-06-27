@@ -24,13 +24,12 @@ import {
 } from '../components/ui'
 
 const ROLES = ['owner', 'security_admin', 'auditor'] as const
-const ROLE_OPTIONS = ROLES.map((r) => ({ value: r, label: roleLabel(r) }))
 
-function roleLabel(role: string): string {
-  if (role === 'owner') return 'Owner'
-  if (role === 'security_admin') return 'Security admin'
-  if (role === 'auditor') return 'Auditor'
-  return role
+// Maps a backend role onto its translation key (security_admin uses camelCase in i18n).
+const ROLE_KEY: Record<string, string> = {
+  owner: 'role.owner',
+  security_admin: 'role.securityAdmin',
+  auditor: 'role.auditor',
 }
 
 function roleTone(role: string): 'info' | 'warning' | 'success' {
@@ -44,6 +43,9 @@ function TeamRolesInner() {
   const tr = t as (k: string) => string
   const { toast } = useToast()
   const members = useApi(() => api.members(), [])
+
+  const roleLabel = (role: string) => tr(ROLE_KEY[role] ?? role)
+  const roleOptions = ROLES.map((r) => ({ value: r, label: roleLabel(r) }))
 
   const [showForm, setShowForm] = useState(false)
   const [email, setEmail] = useState('')
@@ -71,9 +73,9 @@ function TeamRolesInner() {
       setRole('auditor')
       setShowForm(false)
       await members.reload()
-      toast('Invitation sent', 'success')
+      toast(tr('team.toastInvited'), 'success')
     } catch (err) {
-      setFormError(err instanceof ApiError ? err.message : 'Could not invite member')
+      setFormError(err instanceof ApiError ? err.message : tr('team.errInvite'))
     } finally {
       setSaving(false)
     }
@@ -87,31 +89,31 @@ function TeamRolesInner() {
       status: m.status,
     })
     await members.reload()
-    toast('Role updated', 'success')
+    toast(tr('team.toastRole'), 'success')
   }
 
   async function remove(m: Member) {
     await api.deleteMember(m.id)
     await members.reload()
-    toast('Member removed', 'success')
+    toast(tr('team.toastRemoved'), 'success')
   }
 
   const inviteBtn = (
     <Button variant="primary" icon="ti-user-plus" onClick={openForm}>
-      Invite
+      {tr('team.invite')}
     </Button>
   )
 
   if (members.loading) return <Loading />
   if (members.error || !members.data)
-    return <ErrorState message={members.error ?? 'No data'} onRetry={members.reload} />
+    return <ErrorState message={members.error ?? tr('common.noData')} onRetry={members.reload} />
 
   const data = members.data
 
   const columns: Column<Member>[] = [
     {
       key: 'member',
-      header: 'Member',
+      header: tr('team.colMember'),
       width: '1.6fr',
       render: (m) => (
         <span style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
@@ -137,7 +139,7 @@ function TeamRolesInner() {
     },
     {
       key: 'role',
-      header: 'Role',
+      header: tr('team.colRole'),
       width: '1fr',
       render: (m) => (
         <span style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0, width: '100%' }}>
@@ -148,7 +150,7 @@ function TeamRolesInner() {
             <Select
               value={m.role}
               onChange={(v) => void changeRole(m, v)}
-              options={ROLE_OPTIONS}
+              options={roleOptions}
               fullWidth
             />
           </span>
@@ -157,7 +159,7 @@ function TeamRolesInner() {
     },
     {
       key: 'status',
-      header: 'Status',
+      header: tr('team.colStatus'),
       width: '90px',
       render: (m) => (
         <Chip tone={m.status === 'active' ? 'success' : 'warning'} size="sm">
@@ -185,16 +187,16 @@ function TeamRolesInner() {
     <Card>
       <CardHeader
         icon="ti-users-group"
-        title="Team & roles"
-        subtitle="Control who can view logs, edit policy, or manage keys."
+        title={tr('nav.team')}
+        subtitle={tr('team.subtitle')}
         actions={data.length > 0 ? inviteBtn : undefined}
       />
 
       {data.length === 0 ? (
         <EmptyState
           icon="ti-users-group"
-          title="No team members yet"
-          message="Invite teammates to give them console access."
+          title={tr('team.emptyTitle')}
+          message={tr('team.emptyMsg')}
           action={inviteBtn}
         />
       ) : (
@@ -204,7 +206,7 @@ function TeamRolesInner() {
       <Dialog
         open={showForm}
         onClose={() => setShowForm(false)}
-        title="Invite a member"
+        title={tr('team.inviteTitle')}
         actions={
           <>
             <Button variant="ghost" onClick={() => setShowForm(false)}>
@@ -217,7 +219,7 @@ function TeamRolesInner() {
               disabled={!email.trim()}
               onClick={() => void invite()}
             >
-              Send
+              {tr('common.send')}
             </Button>
           </>
         }
@@ -228,7 +230,7 @@ function TeamRolesInner() {
         >
           {formError && <Alert tone="danger">{formError}</Alert>}
           <TextField
-            label="Email"
+            label={tr('team.email')}
             type="email"
             value={email}
             onChange={setEmail}
@@ -237,14 +239,14 @@ function TeamRolesInner() {
             fullWidth
           />
           <TextField
-            label="Name"
+            label={tr('team.name')}
             value={name}
             onChange={setName}
-            placeholder="Optional"
+            placeholder={tr('common.optional')}
             icon="ti-user"
             fullWidth
           />
-          <Select label="Role" value={role} onChange={setRole} options={ROLE_OPTIONS} fullWidth />
+          <Select label={tr('team.role')} value={role} onChange={setRole} options={roleOptions} fullWidth />
           {/* Hidden submit so pressing Enter inside a field submits the form. */}
           <button type="submit" style={{ display: 'none' }} aria-hidden tabIndex={-1} />
         </form>

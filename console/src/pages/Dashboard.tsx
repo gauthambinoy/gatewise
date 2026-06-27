@@ -15,6 +15,7 @@ import {
   StatCard,
   clock,
   money,
+  num,
   verdictTone,
 } from '../components/ui'
 
@@ -116,7 +117,7 @@ export function Dashboard() {
             ))
           ) : (
             <div className="muted" style={{ fontSize: 13, padding: '14px 0' }}>
-              No requests yet — point an app at the gateway to see traffic here.
+              {tr('dash.noRequests')}
             </div>
           )}
         </Card>
@@ -133,14 +134,14 @@ export function Dashboard() {
                     <span className="sub" style={{ textTransform: 'capitalize' }}>
                       {type.replace(/_/g, ' ')}
                     </span>
-                    <span>{n.toLocaleString()}</span>
+                    <span>{num(n)}</span>
                   </div>
                   <ProgressBar value={(n / maxLeak) * 100} height={6} gradient />
                 </div>
               ))
             ) : (
               <div className="muted" style={{ fontSize: 12 }}>
-                Nothing sensitive masked yet.
+                {tr('dash.noLeaks')}
               </div>
             )}
           </Card>
@@ -163,7 +164,7 @@ export function Dashboard() {
               ))
             ) : (
               <div className="muted" style={{ fontSize: 12 }}>
-                No model traffic yet.
+                {tr('dash.noModels')}
               </div>
             )}
           </Card>

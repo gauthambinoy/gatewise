@@ -13,11 +13,12 @@ import {
   PageHeader,
 } from '../components/ui'
 
-const DEPLOY_TILES = [
-  { icon: 'ti-brand-aws', label: 'AWS' },
-  { icon: 'ti-brand-azure', label: 'Azure' },
-  { icon: 'ti-brand-google', label: 'GCP' },
-  { icon: 'ti-server', label: 'On-prem' },
+// `name` is a brand literal shown as-is; `label` (when set) is an i18n key used instead.
+const DEPLOY_TILES: { key: string; icon: string; name?: string; label?: string }[] = [
+  { key: 'aws', icon: 'ti-brand-aws', name: 'AWS' },
+  { key: 'azure', icon: 'ti-brand-azure', name: 'Azure' },
+  { key: 'gcp', icon: 'ti-brand-google', name: 'GCP' },
+  { key: 'onprem', icon: 'ti-server', label: 'settings.onPrem' },
 ]
 
 function cap(s: string): string {
@@ -34,7 +35,7 @@ export function Settings() {
     <>
       <PageHeader
         title={tr('nav.settings')}
-        subtitle="Providers, deployment and organization."
+        subtitle={tr('settings.subtitle')}
         actions={
           <Button variant="secondary" icon="ti-logout-2" onClick={logout}>
             {tr('common.signOut')}
@@ -44,12 +45,12 @@ export function Settings() {
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
         <Card>
-          <CardHeader icon="ti-building" title="Organization" />
-          <Field label="Name">{tenant?.name ?? '—'}</Field>
-          <Field label="Slug" mono>
+          <CardHeader icon="ti-building" title={tr('settings.org')} />
+          <Field label={tr('settings.name')}>{tenant?.name ?? '—'}</Field>
+          <Field label={tr('settings.slug')} mono>
             {tenant?.slug ?? '—'}
           </Field>
-          <Field label="Tenant ID" mono muted last>
+          <Field label={tr('settings.tenantId')} mono muted last>
             {tenant?.id ?? '—'}
           </Field>
         </Card>
@@ -57,8 +58,8 @@ export function Settings() {
         <Card>
           <CardHeader
             icon="ti-lock"
-            title="Single sign-on"
-            subtitle="SSO sign-in requires an OAuth client id/secret and is wired up per provider."
+            title={tr('settings.sso')}
+            subtitle={tr('settings.ssoSubtitle')}
           />
           {providers.loading ? (
             <Loading label={tr('common.loading')} />
@@ -79,10 +80,10 @@ export function Settings() {
                   <span style={{ flex: 1, fontSize: 13 }}>{cap(p.name)}</span>
                   {p.configured ? (
                     <Chip tone="success" icon="ti-circle-check">
-                      Configured
+                      {tr('settings.configured')}
                     </Chip>
                   ) : (
-                    <Chip icon="ti-minus">Not configured</Chip>
+                    <Chip icon="ti-minus">{tr('settings.notConfigured')}</Chip>
                   )}
                 </div>
               </div>
@@ -93,19 +94,19 @@ export function Settings() {
         <Card>
           <CardHeader
             icon="ti-cloud-cog"
-            title="Deployment & data"
-            subtitle="Self-host on AWS, Azure, GCP or on-prem. Audit logs never leave your region."
+            title={tr('settings.deploy')}
+            subtitle={tr('settings.deploySubtitle')}
             actions={
               <span className="muted" style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11 }}>
-                <i className="ti ti-info-circle" style={{ fontSize: 14 }} />
-                Configuration guidance
+                <i className="ti ti-info-circle" style={{ fontSize: 14 }} aria-hidden />
+                {tr('settings.configGuidance')}
               </span>
             }
           />
           <div style={{ display: 'flex', gap: 10 }}>
-            {DEPLOY_TILES.map((t) => (
+            {DEPLOY_TILES.map((tile) => (
               <div
-                key={t.label}
+                key={tile.key}
                 style={{
                   flex: 1,
                   border: '0.5px solid var(--color-border-secondary)',
@@ -114,9 +115,13 @@ export function Settings() {
                   textAlign: 'center',
                 }}
               >
-                <i className={`ti ${t.icon}`} style={{ fontSize: 20, color: 'var(--color-text-secondary)' }} />
+                <i
+                  className={`ti ${tile.icon}`}
+                  style={{ fontSize: 20, color: 'var(--color-text-secondary)' }}
+                  aria-hidden
+                />
                 <div style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginTop: 4 }}>
-                  {t.label}
+                  {tile.label ? tr(tile.label) : tile.name}
                 </div>
               </div>
             ))}

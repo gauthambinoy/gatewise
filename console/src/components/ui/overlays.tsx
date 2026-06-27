@@ -9,6 +9,7 @@ import {
 } from 'react'
 import { createPortal } from 'react-dom'
 import type { CSSProperties, KeyboardEvent as ReactKeyboardEvent, ReactNode } from 'react'
+import { useT } from '../../lib/i18n'
 
 // Layered overlay primitives (Dialog, Tooltip, Menu, Toast) — built on plain React + portals, no
 // external UI lib. Everything draws from the design tokens in styles/tokens.css + animations.css;
@@ -54,6 +55,7 @@ export function Dialog({
   actions?: ReactNode
   size?: 'sm' | 'md' | 'lg'
 }) {
+  const { t } = useT()
   const panelRef = useRef<HTMLDivElement>(null)
   const labelId = useId()
   const reduce = prefersReducedMotion()
@@ -145,7 +147,7 @@ export function Dialog({
             <button
                 type="button"
                 onClick={onClose}
-                aria-label="Close dialog"
+                aria-label={t('common.close')}
                 style={{
                   display: 'flex',
                   alignItems: 'center',

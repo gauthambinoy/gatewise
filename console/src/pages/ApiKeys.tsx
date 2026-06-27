@@ -55,7 +55,7 @@ function ApiKeysInner() {
       setName('')
       setShowForm(false)
       keys.reload()
-      toast('Key created', 'success')
+      toast(tr('keys.toastCreated'), 'success')
     } finally {
       setCreating(false)
     }
@@ -65,25 +65,25 @@ function ApiKeysInner() {
     if (!secret) return
     await navigator.clipboard.writeText(secret)
     setCopied(true)
-    toast('Copied to clipboard', 'success')
+    toast(tr('keys.toastCopied'), 'success')
   }
 
   async function revoke(id: string) {
     await api.revokeKey(id)
     keys.reload()
-    toast('Key revoked', 'info')
+    toast(tr('keys.toastRevoked'), 'info')
   }
 
   const newKeyBtn = (
     <Button variant="primary" icon="ti-plus" onClick={openForm}>
-      New key
+      {tr('keys.new')}
     </Button>
   )
 
   const columns: Column<ApiKey>[] = [
     {
       key: 'name',
-      header: 'Name',
+      header: tr('keys.colName'),
       width: '1.1fr',
       render: (k) => (
         <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -93,7 +93,7 @@ function ApiKeysInner() {
     },
     {
       key: 'prefix',
-      header: 'Key',
+      header: tr('keys.colKey'),
       width: '1.2fr',
       render: (k) => (
         <span className="mono sub" style={{ fontSize: 12 }}>
@@ -103,7 +103,7 @@ function ApiKeysInner() {
     },
     {
       key: 'status',
-      header: 'Status',
+      header: tr('keys.colStatus'),
       width: '90px',
       render: (k) => (
         <Chip tone={statusTone(k.status)} size="sm">
@@ -113,7 +113,7 @@ function ApiKeysInner() {
     },
     {
       key: 'lastUsed',
-      header: 'Last used',
+      header: tr('keys.colLastUsed'),
       width: '120px',
       render: (k) => (
         <span className="muted" style={{ fontSize: 12 }}>
@@ -123,7 +123,7 @@ function ApiKeysInner() {
     },
     {
       key: 'created',
-      header: 'Created',
+      header: tr('keys.colCreated'),
       width: '120px',
       render: (k) => (
         <span className="sub" style={{ fontSize: 12 }}>
@@ -139,7 +139,7 @@ function ApiKeysInner() {
       render: (k) =>
         k.status === 'active' ? (
           <Button variant="danger" size="sm" onClick={() => void revoke(k.id)}>
-            Revoke
+            {tr('keys.revoke')}
           </Button>
         ) : null,
     },
@@ -149,20 +149,20 @@ function ApiKeysInner() {
     <Card>
       <CardHeader
         icon="ti-key"
-        title="API keys"
-        subtitle="One key per app or team. Revoke instantly if leaked."
+        title={tr('nav.keys')}
+        subtitle={tr('keys.subtitle')}
         actions={newKeyBtn}
       />
 
       {keys.loading ? (
         <Loading />
       ) : keys.error || !keys.data ? (
-        <ErrorState message={keys.error ?? 'No data'} onRetry={keys.reload} />
+        <ErrorState message={keys.error ?? tr('common.noData')} onRetry={keys.reload} />
       ) : keys.data.length === 0 ? (
         <EmptyState
           icon="ti-key"
-          title="No API keys yet"
-          message="Create a key to authenticate apps against the gateway."
+          title={tr('keys.emptyTitle')}
+          message={tr('keys.emptyMsg')}
           action={newKeyBtn}
         />
       ) : (
@@ -177,7 +177,7 @@ function ApiKeysInner() {
       <Dialog
         open={showForm}
         onClose={() => setShowForm(false)}
-        title="New API key"
+        title={tr('keys.newTitle')}
         size="sm"
         actions={
           <>
@@ -198,10 +198,10 @@ function ApiKeysInner() {
       >
         <form onSubmit={(e) => void create(e)}>
           <TextField
-            label="Key name"
+            label={tr('keys.nameLabel')}
             value={name}
             onChange={setName}
-            placeholder="Key name (e.g. finance-app)"
+            placeholder={tr('keys.namePlaceholder')}
             icon="ti-tag"
             fullWidth
           />
@@ -216,7 +216,7 @@ function ApiKeysInner() {
           setSecret(null)
           setCopied(false)
         }}
-        title="Key created"
+        title={tr('keys.createdTitle')}
         size="md"
         actions={
           <Button
@@ -226,13 +226,13 @@ function ApiKeysInner() {
               setCopied(false)
             }}
           >
-            Done
+            {tr('common.done')}
           </Button>
         }
       >
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-          <Alert tone="warning" title="Copy this now — it won't be shown again.">
-            This is the only time the full secret is displayed. Store it somewhere safe.
+          <Alert tone="warning" title={tr('keys.copyNow')}>
+            {tr('keys.secretOnce')}
           </Alert>
           <div style={{ display: 'flex', alignItems: 'stretch', gap: 8 }}>
             <div
@@ -254,7 +254,7 @@ function ApiKeysInner() {
             </div>
             <IconButton
               icon={copied ? 'ti-check' : 'ti-copy'}
-              label={copied ? 'Copied' : 'Copy'}
+              label={copied ? tr('common.copied') : tr('common.copy')}
               variant="solid"
               onClick={() => void copy()}
             />

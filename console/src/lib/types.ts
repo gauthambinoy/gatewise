@@ -26,6 +26,14 @@ export interface UserUsage {
   costUsd: number
 }
 
+export interface ChargebackReport {
+  totalCostUsd: number
+  costByModel: Record<string, number>
+  costByUser: UserUsage[]
+  last30DaysCostUsd: number
+  projectedMonthlyCostUsd: number
+}
+
 export interface AuditEntry {
   id: number
   requestId: string

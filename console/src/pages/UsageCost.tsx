@@ -1,5 +1,6 @@
 import { api } from '../lib/api'
 import { useApi } from '../lib/useApi'
+import { useT } from '../lib/i18n'
 import {
   Card,
   CardHeader,
@@ -11,6 +12,7 @@ import {
   ProgressBar,
   StatCard,
   money,
+  num,
 } from '../components/ui'
 import type { Tone } from '../components/ui'
 
@@ -47,7 +49,7 @@ function Bar({
         >
           {capitalize ? label.replace(/_/g, ' ') : label}
         </span>
-        <span>{value.toLocaleString()}</span>
+        <span>{num(value)}</span>
       </div>
       <ProgressBar value={(value / max) * 100} height={6} tone={tone ?? 'info'} />
     </div>
@@ -55,22 +57,24 @@ function Bar({
 }
 
 export function UsageCost() {
+  const { t } = useT()
+  const tr = t as (k: string) => string
   const usage = useApi(() => api.usage())
 
   if (usage.loading) return <Loading />
   if (usage.error || !usage.data)
-    return <ErrorState message={usage.error ?? 'No data'} onRetry={usage.reload} />
+    return <ErrorState message={usage.error ?? tr('common.noData')} onRetry={usage.reload} />
 
   const d = usage.data
 
   if (d.totalCalls === 0) {
     return (
       <>
-        <PageHeader title="Usage & cost" subtitle="Cost and traffic across the gateway" />
+        <PageHeader title={tr('nav.usage')} subtitle={tr('usage.subtitle')} />
         <EmptyState
           icon="ti-chart-bar"
-          title="No usage yet"
-          message="Send some traffic through the gateway to see cost and usage here."
+          title={tr('usage.emptyTitle')}
+          message={tr('usage.emptyMsg')}
         />
       </>
     )
@@ -83,48 +87,48 @@ export function UsageCost() {
   const maxRedaction = Math.max(1, ...redactions.map(([, n]) => n))
 
   const verdicts: { label: string; value: number; tone: Tone }[] = [
-    { label: 'Allowed', value: d.allowed, tone: 'success' },
-    { label: 'Redacted', value: d.redacted, tone: 'info' },
-    { label: 'Blocked', value: d.blocked, tone: 'danger' },
+    { label: tr('verdict.allowed'), value: d.allowed, tone: 'success' },
+    { label: tr('verdict.redacted'), value: d.redacted, tone: 'info' },
+    { label: tr('verdict.blocked'), value: d.blocked, tone: 'danger' },
   ]
   const maxVerdict = Math.max(1, ...verdicts.map((v) => v.value))
 
   return (
     <>
-      <PageHeader title="Usage & cost" subtitle="Cost and traffic across the gateway" />
+      <PageHeader title={tr('nav.usage')} subtitle={tr('usage.subtitle')} />
 
       <div className="stat-grid" style={{ marginBottom: 16 }}>
-        <StatCard label="Total cost" value={money(d.totalCostUsd)} icon="ti-coin" />
-        <StatCard label="Requests" value={d.totalCalls.toLocaleString()} icon="ti-activity" />
-        <StatCard label="Total tokens" value={d.totalTokens.toLocaleString()} icon="ti-hash" />
+        <StatCard label={tr('dash.totalCost')} value={money(d.totalCostUsd)} icon="ti-coin" />
+        <StatCard label={tr('usage.requests')} value={num(d.totalCalls)} icon="ti-activity" />
+        <StatCard label={tr('usage.totalTokens')} value={num(d.totalTokens)} icon="ti-hash" />
         <StatCard
-          label="Redacted"
-          value={d.redacted.toLocaleString()}
+          label={tr('usage.redacted')}
+          value={num(d.redacted)}
           icon="ti-eye-off"
           tone="info"
         />
       </div>
 
       <Card style={{ marginBottom: 16 }}>
-        <CardHeader title="Requests by model" icon="ti-cpu" />
+        <CardHeader title={tr('usage.byModel')} icon="ti-cpu" />
         {models.length > 0 ? (
           models.map(([model, n]) => <Bar key={model} label={model} value={n} max={maxModel} />)
         ) : (
           <div className="muted" style={{ fontSize: 12 }}>
-            No model traffic yet.
+            {tr('dash.noModels')}
           </div>
         )}
       </Card>
 
       <Card style={{ marginBottom: 16 }}>
         <CardHeader
-          title="Verdict mix"
+          title={tr('usage.verdictMix')}
           icon="ti-gavel"
           actions={
             <div style={{ display: 'flex', gap: 'var(--sp-2)' }}>
               {verdicts.map((v) => (
                 <Chip key={v.label} tone={v.tone} size="sm">
-                  {v.value.toLocaleString()}
+                  {num(v.value)}
                 </Chip>
               ))}
             </div>
@@ -136,14 +140,14 @@ export function UsageCost() {
       </Card>
 
       <Card>
-        <CardHeader title="Redactions by type" icon="ti-shield-lock" />
+        <CardHeader title={tr('usage.byType')} icon="ti-shield-lock" />
         {redactions.length > 0 ? (
           redactions.map(([type, n]) => (
             <Bar key={type} label={type} value={n} max={maxRedaction} capitalize />
           ))
         ) : (
           <div className="muted" style={{ fontSize: 12 }}>
-            Nothing sensitive masked yet.
+            {tr('dash.noLeaks')}
           </div>
         )}
       </Card>

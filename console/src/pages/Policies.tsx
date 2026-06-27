@@ -21,6 +21,13 @@ const EFFECT_ICON: Record<Policy['effect'], string> = {
   redact: 'ti-eye-off',
 }
 
+// Maps a policy's resource type onto its translation key (data_type uses camelCase in i18n).
+const RES_TYPE_KEY: Record<Policy['resourceType'], string> = {
+  model: 'res.model',
+  data_type: 'res.dataType',
+  user: 'res.user',
+}
+
 export function Policies() {
   const { t } = useT()
   const tr = t as (k: string) => string
@@ -40,53 +47,53 @@ export function Policies() {
 
   const newButton = (
     <Button variant="primary" icon="ti-plus" onClick={() => navigate('/policies/new')}>
-      New policy
+      {tr('pol.new')}
     </Button>
   )
 
   const columns: Column<Policy>[] = [
     {
       key: 'name',
-      header: 'Policy',
+      header: tr('pol.colName'),
       width: '1.4fr',
       render: (p) => <span style={{ fontWeight: 500 }}>{p.name}</span>,
     },
     {
       key: 'resource',
-      header: 'Applies to',
+      header: tr('pol.colApplies'),
       width: '1.2fr',
       render: (p) => (
         <span className="sub" style={{ fontSize: 12 }}>
-          {`${p.resourceType} : ${p.resourceValue}`}
+          {`${tr(RES_TYPE_KEY[p.resourceType])} : ${p.resourceValue}`}
         </span>
       ),
     },
     {
       key: 'priority',
-      header: 'Priority',
+      header: tr('pol.colPriority'),
       width: '90px',
       align: 'right',
       render: (p) => <span className="muted" style={{ fontSize: 12 }}>{p.priority}</span>,
     },
     {
       key: 'effect',
-      header: 'Action',
+      header: tr('pol.colAction'),
       width: '110px',
       render: (p) => (
         <Chip tone={effectTone(p.effect)} icon={EFFECT_ICON[p.effect]} size="sm">
-          {p.effect}
+          {tr(`effect.${p.effect}`)}
         </Chip>
       ),
     },
     {
       key: 'enabled',
-      header: 'Status',
+      header: tr('pol.colStatus'),
       width: '90px',
       render: (p) =>
         p.enabled ? (
-          <Badge tone="success">active</Badge>
+          <Badge tone="success">{tr('pol.statusActive')}</Badge>
         ) : (
-          <Badge>disabled</Badge>
+          <Badge>{tr('pol.statusDisabled')}</Badge>
         ),
     },
     {
@@ -118,20 +125,20 @@ export function Policies() {
     <Card>
       <CardHeader
         icon="ti-shield-check"
-        title="Policies"
-        subtitle="Rules run by priority — most-restrictive match wins (deny > redact > allow)."
+        title={tr('nav.policies')}
+        subtitle={tr('pol.subtitle')}
         actions={newButton}
       />
 
       {policies.loading ? (
         <Loading />
       ) : policies.error || !policies.data ? (
-        <ErrorState message={policies.error ?? 'No data'} onRetry={policies.reload} />
+        <ErrorState message={policies.error ?? tr('common.noData')} onRetry={policies.reload} />
       ) : policies.data.length === 0 ? (
         <EmptyState
           icon="ti-shield-check"
-          title="No policies yet"
-          message="Add a rule to start governing which models and data types are allowed."
+          title={tr('pol.emptyTitle')}
+          message={tr('pol.emptyMsg')}
           action={newButton}
         />
       ) : (

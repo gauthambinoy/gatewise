@@ -1,5 +1,6 @@
 import { api } from '../lib/api'
 import { useApi } from '../lib/useApi'
+import { useT } from '../lib/i18n'
 import type { UserUsage } from '../lib/types'
 import type { Column } from '../components/ui'
 import {
@@ -13,14 +14,17 @@ import {
   Loading,
   Stat,
   money,
+  num,
 } from '../components/ui'
 
 export function Users() {
+  const { t } = useT()
+  const tr = t as (k: string) => string
   const users = useApi(() => api.usageByUser(), [])
 
   if (users.loading) return <Loading />
   if (users.error || !users.data)
-    return <ErrorState message={users.error ?? 'No data'} onRetry={users.reload} />
+    return <ErrorState message={users.error ?? tr('common.noData')} onRetry={users.reload} />
 
   const data = users.data
   const totalRequests = data.reduce((s, u) => s + u.requests, 0)
@@ -30,7 +34,7 @@ export function Users() {
   const columns: Column<UserUsage>[] = [
     {
       key: 'person',
-      header: 'Person',
+      header: tr('users.colPerson'),
       render: (u) => {
         const flaggedRow = u.blocked > 0
         return (
@@ -59,29 +63,27 @@ export function Users() {
     },
     {
       key: 'requests',
-      header: 'Requests',
+      header: tr('users.colRequests'),
       width: '90px',
       align: 'right',
-      render: (u) => u.requests.toLocaleString(),
+      render: (u) => num(u.requests),
     },
     {
       key: 'redacted',
-      header: 'Redacted',
+      header: tr('users.colRedacted'),
       width: '90px',
       align: 'right',
-      render: (u) => (
-        <span style={{ color: 'var(--color-text-info)' }}>{u.redacted.toLocaleString()}</span>
-      ),
+      render: (u) => <span style={{ color: 'var(--color-text-info)' }}>{num(u.redacted)}</span>,
     },
     {
       key: 'blocked',
-      header: 'Blocked',
+      header: tr('users.colBlocked'),
       width: '90px',
       align: 'right',
       render: (u) =>
         u.blocked > 0 ? (
           <Chip tone="danger" size="sm">
-            {u.blocked.toLocaleString()}
+            {num(u.blocked)}
           </Chip>
         ) : (
           <span style={{ color: 'var(--color-text-tertiary)' }}>0</span>
@@ -89,7 +91,7 @@ export function Users() {
     },
     {
       key: 'cost',
-      header: 'Cost',
+      header: tr('users.colCost'),
       width: '90px',
       align: 'right',
       render: (u) => <span className="sub">{money(u.costUsd)}</span>,
@@ -98,25 +100,21 @@ export function Users() {
 
   return (
     <Card>
-      <CardHeader
-        icon="ti-users"
-        title="Users"
-        subtitle="Everyone calling the gateway, by the user attached to each request. Spot risky usage at a glance."
-      />
+      <CardHeader icon="ti-users" title={tr('nav.users')} subtitle={tr('users.subtitle')} />
 
       {data.length === 0 ? (
         <EmptyState
           icon="ti-users"
-          title="No user activity yet"
-          message="Per-user metrics appear once requests include a user. Send traffic through the gateway to populate this."
+          title={tr('users.emptyTitle')}
+          message={tr('users.emptyMsg')}
         />
       ) : (
         <>
           <div className="stat-grid" style={{ marginBottom: 18 }}>
-            <Stat label="Total users" value={data.length.toLocaleString()} />
-            <Stat label="Total requests" value={totalRequests.toLocaleString()} />
-            <Stat label="Flagged" value={flagged.toLocaleString()} tone="danger" />
-            <Stat label="Total cost" value={money(totalCost)} />
+            <Stat label={tr('users.total')} value={num(data.length)} />
+            <Stat label={tr('dash.totalRequests')} value={num(totalRequests)} />
+            <Stat label={tr('users.flagged')} value={num(flagged)} tone="danger" />
+            <Stat label={tr('dash.totalCost')} value={money(totalCost)} />
           </div>
 
           <DataTable columns={columns} rows={data} rowKey={(u) => u.actor} />

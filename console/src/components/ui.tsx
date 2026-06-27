@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import type { CSSProperties, ReactNode } from 'react'
-import { intlLocale } from '../lib/i18n'
+import { intlLocale, useT } from '../lib/i18n'
 
 // The component library (MUI-grade primitives) lives in sibling files; re-export so every page can
 // import from one place: `../components/ui`.
@@ -45,7 +45,7 @@ export function CountUp({
     }
   }, [end, duration, reduce])
 
-  return <>{format ? format(n) : Math.round(n).toLocaleString()}</>
+  return <>{format ? format(n) : Math.round(n).toLocaleString(intlLocale())}</>
 }
 
 /** A page title + optional subtitle and right-aligned actions. */
@@ -107,18 +107,26 @@ export function Spinner() {
   return <i className="ti ti-loader-2 spin" aria-hidden />
 }
 
-export function Loading({ label = 'Loading…' }: { label?: string }) {
+export function Loading({ label }: { label?: string }) {
+  const { t } = useT()
   return (
-    <div className="card" style={{ textAlign: 'center', color: 'var(--color-text-tertiary)' }}>
-      <Spinner /> {label}
+    <div
+      className="card"
+      role="status"
+      aria-live="polite"
+      style={{ textAlign: 'center', color: 'var(--color-text-tertiary)' }}
+    >
+      <Spinner /> {label ?? t('common.loading')}
     </div>
   )
 }
 
 export function ErrorState({ message, onRetry }: { message: string; onRetry?: () => void }) {
+  const { t } = useT()
   return (
     <div
       className="card"
+      role="alert"
       style={{
         borderColor: 'var(--color-border-danger)',
         background: 'var(--color-background-danger)',
@@ -127,15 +135,16 @@ export function ErrorState({ message, onRetry }: { message: string; onRetry?: ()
     >
       <i
         className="ti ti-alert-triangle"
+        aria-hidden
         style={{ fontSize: 24, color: 'var(--color-text-danger)' }}
       />
-      <div style={{ fontWeight: 500, margin: '8px 0 4px' }}>Something went wrong</div>
+      <div style={{ fontWeight: 500, margin: '8px 0 4px' }}>{t('common.somethingWrong')}</div>
       <div className="sub" style={{ fontSize: 13, marginBottom: onRetry ? 14 : 0 }}>
         {message}
       </div>
       {onRetry && (
         <button onClick={onRetry} style={{ padding: '8px 16px', fontSize: 13 }}>
-          <i className="ti ti-refresh" /> Retry
+          <i className="ti ti-refresh" aria-hidden /> {t('common.retry')}
         </button>
       )}
     </div>

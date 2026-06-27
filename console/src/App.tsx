@@ -13,6 +13,7 @@ import { Policies } from './pages/Policies'
 import { PolicyEditor } from './pages/PolicyEditor'
 import { ModelsRouting } from './pages/ModelsRouting'
 import { UsageCost } from './pages/UsageCost'
+import { Chargeback } from './pages/Chargeback'
 import { Users } from './pages/Users'
 import { TeamRoles } from './pages/TeamRoles'
 import { ApiKeys } from './pages/ApiKeys'
@@ -60,6 +61,7 @@ export function App() {
         <Route path="/policies/:id" element={<PolicyEditor />} />
         <Route path="/models" element={<ModelsRouting />} />
         <Route path="/usage" element={<UsageCost />} />
+        <Route path="/chargeback" element={<Chargeback />} />
         <Route path="/users" element={<Users />} />
         <Route path="/team" element={<TeamRoles />} />
         <Route path="/keys" element={<ApiKeys />} />

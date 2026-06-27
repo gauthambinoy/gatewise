@@ -25,7 +25,7 @@ const VERDICTS = ['', 'allowed', 'redacted', 'blocked']
 
 export function AuditLog() {
   const { t } = useT()
-  const tr = t as (k: string) => string
+  const tr = t as (k: string, vars?: Record<string, string | number>) => string
   const navigate = useNavigate()
 
   const [verdict, setVerdict] = useState('')
@@ -88,8 +88,10 @@ export function AuditLog() {
 
   const verifyBadge = verify.data && (
     <Badge tone={verify.data.intact ? 'success' : 'danger'}>
-      <i className={`ti ${verify.data.intact ? 'ti-lock-check' : 'ti-lock-open'}`} />{' '}
-      {verify.data.intact ? tr('audit.chainVerified') : `Broken at #${verify.data.firstBrokenId}`}
+      <i className={`ti ${verify.data.intact ? 'ti-lock-check' : 'ti-lock-open'}`} aria-hidden />{' '}
+      {verify.data.intact
+        ? tr('audit.chainVerified')
+        : tr('audit.brokenAt', { id: verify.data.firstBrokenId ?? 0 })}
     </Badge>
   )
 
@@ -114,7 +116,7 @@ export function AuditLog() {
           }}
           options={VERDICTS.map((v) => ({
             value: v,
-            label: v ? v[0].toUpperCase() + v.slice(1) : 'All verdicts',
+            label: v ? tr(`verdict.${v}`) : tr('common.allVerdicts'),
           }))}
         />
       </div>
@@ -122,16 +124,12 @@ export function AuditLog() {
       {audit.loading ? (
         <Loading />
       ) : audit.error || !audit.data ? (
-        <ErrorState message={audit.error ?? 'No data'} onRetry={audit.reload} />
+        <ErrorState message={audit.error ?? tr('common.noData')} onRetry={audit.reload} />
       ) : audit.data.entries.length === 0 ? (
         <EmptyState
           icon="ti-list-search"
-          title="No requests found"
-          message={
-            q || verdict
-              ? 'No entries match your filters.'
-              : 'Traffic will show up here once apps point at the gateway.'
-          }
+          title={tr('audit.emptyTitle')}
+          message={q || verdict ? tr('audit.emptyFiltered') : tr('audit.emptyDefault')}
         />
       ) : (
         <>
@@ -146,7 +144,7 @@ export function AuditLog() {
             pageCount={pages}
             total={total}
             onPage={setPage}
-            itemLabel={total === 1 ? 'entry' : 'entries'}
+            itemLabel={total === 1 ? tr('audit.entry') : tr('audit.entries')}
           />
         </>
       )}

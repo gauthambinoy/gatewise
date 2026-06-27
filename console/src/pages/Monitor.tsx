@@ -1,17 +1,35 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { api } from '../lib/api'
+import { useT } from '../lib/i18n'
 import type { AuditEntry, UsageSummary } from '../lib/types'
-import { Badge, Button, Card, CardHeader, Select, clock, verdictTone } from '../components/ui'
+import {
+  Badge,
+  Button,
+  Card,
+  CardHeader,
+  EmptyState,
+  ErrorState,
+  Loading,
+  Select,
+  clock,
+  num,
+  verdictTone,
+} from '../components/ui'
 
 const POLL_MS = 3000
 
 export function Monitor() {
+  const { t } = useT()
+  const tr = t as (k: string, vars?: Record<string, string | number>) => string
   const [entries, setEntries] = useState<AuditEntry[]>([])
   const [usage, setUsage] = useState<UsageSummary | null>(null)
   const [live, setLive] = useState(true)
   const [verdict, setVerdict] = useState('')
   const [freshIds, setFreshIds] = useState<Set<number>>(new Set())
+  // 'loading' until the first poll resolves; after that, transient poll errors keep the last good view.
+  const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading')
+  const [reloadKey, setReloadKey] = useState(0)
   const seen = useRef<Set<number>>(new Set())
 
   useEffect(() => {
@@ -31,8 +49,11 @@ export function Monitor() {
         }
         page.entries.forEach((e) => seen.current.add(e.id))
         setEntries(page.entries)
+        setStatus('ready')
       } catch {
-        /* transient — keep the last good view */
+        // Only surface an error on the very first load; later failures are transient, so we keep
+        // the last good view rather than flashing an error on every dropped poll.
+        if (active) setStatus((s) => (s === 'loading' ? 'error' : s))
       }
     }
     void poll()
@@ -41,7 +62,14 @@ export function Monitor() {
       active = false
       if (id) window.clearInterval(id)
     }
-  }, [live, verdict])
+  }, [live, verdict, reloadKey])
+
+  const verdictOptions = [
+    { value: '', label: tr('common.allVerdicts') },
+    { value: 'allowed', label: tr('verdict.allowed') },
+    { value: 'redacted', label: tr('verdict.redacted') },
+    { value: 'blocked', label: tr('verdict.blocked') },
+  ]
 
   return (
     <>
@@ -57,9 +85,12 @@ export function Monitor() {
       >
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <span style={{ fontSize: 22, fontWeight: 700, letterSpacing: '-0.02em' }}>Live monitoring</span>
+            <span style={{ fontSize: 22, fontWeight: 700, letterSpacing: '-0.02em' }}>
+              {tr('nav.monitor')}
+            </span>
             <span
               className="badge"
+              role="status"
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
@@ -70,6 +101,7 @@ export function Monitor() {
               }}
             >
               <span
+                aria-hidden
                 style={{
                   width: 7,
                   height: 7,
@@ -79,54 +111,74 @@ export function Monitor() {
                   animation: live ? 'dotPulseLive 1.6s ease-in-out infinite' : 'none',
                 }}
               />
-              {live ? 'LIVE' : 'PAUSED'}
+              {live ? tr('monitor.live') : tr('monitor.paused')}
             </span>
           </div>
           <div className="muted" style={{ fontSize: 13, marginTop: 2 }}>
-            Every AI call across the gateway, streaming in — sensitive data already masked.
+            {tr('monitor.subtitle')}
           </div>
         </div>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-          <Select
-            value={verdict}
-            onChange={setVerdict}
-            options={[
-              { value: '', label: 'All verdicts' },
-              { value: 'allowed', label: 'Allowed' },
-              { value: 'redacted', label: 'Redacted' },
-              { value: 'blocked', label: 'Blocked' },
-            ]}
-          />
+          <Select value={verdict} onChange={setVerdict} options={verdictOptions} />
           <Button
             variant={live ? 'secondary' : 'primary'}
             icon={live ? 'ti-player-pause' : 'ti-player-play'}
             onClick={() => setLive((v) => !v)}
           >
-            {live ? 'Pause' : 'Resume'}
+            {live ? tr('monitor.pause') : tr('monitor.resume')}
           </Button>
         </div>
       </div>
 
       {usage && (
         <div className="stat-grid" style={{ marginBottom: 16 }}>
-          <MiniStat label="Total calls" value={usage.totalCalls} icon="ti-activity" />
-          <MiniStat label="Allowed" value={usage.allowed} icon="ti-circle-check" tone="success" />
-          <MiniStat label="Redacted" value={usage.redacted} icon="ti-eye-off" tone="info" />
-          <MiniStat label="Blocked" value={usage.blocked} icon="ti-ban" tone="danger" />
+          <MiniStat label={tr('monitor.totalCalls')} value={usage.totalCalls} icon="ti-activity" />
+          <MiniStat label={tr('verdict.allowed')} value={usage.allowed} icon="ti-circle-check" tone="success" />
+          <MiniStat label={tr('verdict.redacted')} value={usage.redacted} icon="ti-eye-off" tone="info" />
+          <MiniStat label={tr('verdict.blocked')} value={usage.blocked} icon="ti-ban" tone="danger" />
         </div>
       )}
 
       <Card padding="8px 0">
         <CardHeader
-          title="Request feed"
-          subtitle={`Refreshing every ${POLL_MS / 1000}s`}
+          title={tr('monitor.feed')}
+          subtitle={tr('monitor.refreshing', { sec: POLL_MS / 1000 })}
           icon="ti-radar-2"
-          actions={<span className="muted" style={{ fontSize: 12 }}>{entries.length} shown</span>}
+          actions={
+            <span className="muted" style={{ fontSize: 12 }}>
+              {tr('monitor.shown', { count: entries.length })}
+            </span>
+          }
         />
         <div>
-          {entries.length === 0 ? (
-            <div className="muted" style={{ fontSize: 13, padding: '24px 18px', textAlign: 'center' }}>
-              Waiting for traffic… point an app at the gateway (see <Link to="/connect" style={{ color: 'var(--color-text-info)' }}>Connect</Link>).
+          {status === 'loading' ? (
+            <div style={{ padding: '0 18px 12px' }}>
+              <Loading />
+            </div>
+          ) : status === 'error' ? (
+            <div style={{ padding: '0 18px 12px' }}>
+              <ErrorState
+                message={tr('connect.errTitle')}
+                onRetry={() => {
+                  setStatus('loading')
+                  setReloadKey((k) => k + 1)
+                }}
+              />
+            </div>
+          ) : entries.length === 0 ? (
+            <div style={{ padding: '8px 18px 18px' }}>
+              <EmptyState
+                icon="ti-radar-2"
+                title={tr('monitor.waitingTitle')}
+                message={tr('monitor.waitingMsg')}
+                action={
+                  <Link to="/connect">
+                    <Button variant="secondary" icon="ti-plug-connected">
+                      {tr('monitor.goConnect')}
+                    </Button>
+                  </Link>
+                }
+              />
             </div>
           ) : (
             entries.map((e) => {
@@ -187,7 +239,7 @@ function MiniStat({
       />
       <div>
         <div style={{ fontSize: 22, fontWeight: 700, color: tone ? `var(--color-text-${tone})` : undefined }}>
-          {value.toLocaleString()}
+          {num(value)}
         </div>
         <div className="muted" style={{ fontSize: 12 }}>
           {label}

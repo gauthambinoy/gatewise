@@ -24,6 +24,7 @@ const NAV = [
     items: [
       { to: '/models', icon: 'ti-router', label: 'nav.models' },
       { to: '/usage', icon: 'ti-chart-bar', label: 'nav.usage' },
+      { to: '/chargeback', icon: 'ti-receipt', label: 'nav.chargeback' },
       { to: '/keys', icon: 'ti-key', label: 'nav.keys' },
       { to: '/team', icon: 'ti-users-group', label: 'nav.team' },
       { to: '/settings', icon: 'ti-settings', label: 'nav.settings' },
@@ -40,6 +41,7 @@ const TITLE_KEYS: Record<string, string> = {
   '/policies': 'nav.policies',
   '/models': 'nav.models',
   '/usage': 'nav.usage',
+  '/chargeback': 'nav.chargeback',
   '/keys': 'nav.keys',
   '/team': 'nav.team',
   '/settings': 'nav.settings',
@@ -64,17 +66,17 @@ export function AppShell() {
   const title = titleKey
     ? tr(titleKey)
     : loc.pathname.startsWith('/audit/')
-      ? 'Request detail'
+      ? tr('app.requestDetail')
       : loc.pathname.startsWith('/policies')
-        ? 'Policy editor'
+        ? tr('app.policyEditor')
         : 'Auvex'
 
   return (
     <div className="app">
       <a href="#main" className="skip-link">
-        Skip to content
+        {tr('app.skipToContent')}
       </a>
-      <nav className="side" aria-label="Primary">
+      <nav className="side" aria-label={tr('app.primaryNav')}>
         <div className="brand">
           <div className="logo">
             <i className="ti ti-shield-lock" aria-hidden />
@@ -99,11 +101,16 @@ export function AppShell() {
         ))}
       </nav>
       <div className="main">
-        <div className="top">
-          <span style={{ fontSize: 15, fontWeight: 600 }}>{title}</span>
+        <header className="top">
+          <h1 style={{ fontSize: 15, fontWeight: 600, margin: 0 }}>{title}</h1>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <LanguageSwitcher />
-            <button className="themebtn" onClick={toggleTheme}>
+            <button
+              className="themebtn"
+              onClick={toggleTheme}
+              aria-pressed={dark}
+              aria-label={dark ? tr('common.light') : tr('common.dark')}
+            >
               <i className={`ti ${dark ? 'ti-sun' : 'ti-moon'}`} aria-hidden />
               <span>{dark ? tr('common.light') : tr('common.dark')}</span>
             </button>
@@ -115,12 +122,18 @@ export function AppShell() {
             >
               <i className="ti ti-logout-2" aria-hidden />
             </button>
-            <div className="avatar" title={tenant?.name}>
+            <div className="avatar" title={tenant?.name} aria-hidden>
               {initials}
             </div>
           </div>
-        </div>
-        <main className="content anim" id="main" key={loc.pathname}>
+        </header>
+        <main
+          className="content anim"
+          id="main"
+          tabIndex={-1}
+          style={{ outline: 'none' }}
+          key={loc.pathname}
+        >
           <Outlet />
         </main>
       </div>

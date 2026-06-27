@@ -1,5 +1,6 @@
 import { useId, useState } from 'react'
 import type { CSSProperties, ReactNode } from 'react'
+import { useT } from '../../lib/i18n'
 
 // Form-control primitives for the Auvex console. Pure React 18 + TypeScript — no MUI or any
 // external UI library. Styling is inline + the shared className tokens from tokens.css /
@@ -405,13 +406,14 @@ export function SearchInput({
   value,
   onChange,
   onSubmit,
-  placeholder = 'Search…',
+  placeholder,
 }: {
   value: string
   onChange: (v: string) => void
   onSubmit?: () => void
   placeholder?: string
 }) {
+  const { t } = useT()
   const [focus, setFocus] = useState(false)
   const reduce = prefersReducedMotion()
 
@@ -439,7 +441,7 @@ export function SearchInput({
         type="search"
         role="searchbox"
         value={value}
-        placeholder={placeholder}
+        placeholder={placeholder ?? t('common.searchPlaceholder')}
         onChange={(e) => onChange(e.target.value)}
         onFocus={() => setFocus(true)}
         onBlur={() => setFocus(false)}
@@ -462,8 +464,8 @@ export function SearchInput({
       {value && (
         <button
           type="button"
-          aria-label="Clear search"
-          title="Clear search"
+          aria-label={t('common.clearSearch')}
+          title={t('common.clearSearch')}
           onClick={() => onChange('')}
           style={{
             display: 'inline-flex',
@@ -502,6 +504,7 @@ export function Switch({
   label?: string
   disabled?: boolean
 }) {
+  const { t } = useT()
   const reduce = prefersReducedMotion()
   const W = 40
   const H = 22
@@ -516,7 +519,7 @@ export function Switch({
       type="button"
       role="switch"
       aria-checked={checked}
-      aria-label={label ? undefined : 'Toggle'}
+      aria-label={label ? undefined : t('common.toggle')}
       disabled={disabled}
       onClick={toggle}
       style={{

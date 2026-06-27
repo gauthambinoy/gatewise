@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import type { CSSProperties, ReactNode } from 'react'
+import { useT } from '../../lib/i18n'
 
 // Surface & display primitives for the component library. Imported via the barrel `../ui`.
 // Pure React 18 + TS — no MUI. Re-uses the `.card`, `.badge`, `.stat`, `.avatar` classes from
@@ -237,6 +238,7 @@ export function Alert({
   icon?: string
   onClose?: () => void
 }) {
+  const { t } = useT()
   return (
     <div
       role={tone === 'danger' ? 'alert' : 'status'}
@@ -264,7 +266,7 @@ export function Alert({
         <button
           type="button"
           onClick={onClose}
-          aria-label="Dismiss"
+          aria-label={t('common.dismiss')}
           style={{
             flexShrink: 0,
             border: 'none',
@@ -299,6 +301,7 @@ export function Chip({
   onRemove?: () => void
   size?: 'sm' | 'md'
 }) {
+  const { t } = useT()
   const reduce = prefersReducedMotion()
   const [shown, setShown] = useState(reduce)
   useEffect(() => setShown(true), [])
@@ -328,7 +331,7 @@ export function Chip({
         <button
           type="button"
           onClick={onRemove}
-          aria-label="Remove"
+          aria-label={t('common.remove')}
           style={{
             display: 'inline-flex',
             alignItems: 'center',
@@ -361,6 +364,7 @@ function initials(name: string): string {
 /** A circular avatar — re-uses the `.avatar` look. Shows {@link src} as an image, otherwise the
  * initials of {@link name}, otherwise a fallback user icon. */
 export function Avatar({ name, src, size = 30 }: { name?: string; src?: string; size?: number }) {
+  const { t } = useT()
   const label = name ? initials(name) : ''
 
   return (
@@ -368,7 +372,7 @@ export function Avatar({ name, src, size = 30 }: { name?: string; src?: string; 
       className="avatar"
       title={name}
       role="img"
-      aria-label={name ?? 'Avatar'}
+      aria-label={name ?? t('common.avatar')}
       style={{
         width: size,
         height: size,

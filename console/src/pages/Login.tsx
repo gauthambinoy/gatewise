@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { useAuth } from '../auth/AuthContext'
 import { ApiError, api } from '../lib/api'
+import { useT } from '../lib/i18n'
 import type { SsoProvider } from '../lib/types'
 import { Alert, Button, Card, Divider, TextField } from '../components/ui'
 
@@ -9,6 +10,8 @@ const DEMO_KEY = 'auvex_demo_key'
 
 export function Login() {
   const { login } = useAuth()
+  const { t } = useT()
+  const tr = t as (k: string, vars?: Record<string, string | number>) => string
   const [key, setKey] = useState('')
   const [error, setError] = useState<string>()
   const [busy, setBusy] = useState(false)
@@ -20,7 +23,7 @@ export function Login() {
   }, [])
 
   function messageFor(err: unknown, fallback: string): string {
-    if (err instanceof ApiError && err.status === 401) return 'That API key was not recognized.'
+    if (err instanceof ApiError && err.status === 401) return tr('login.errBadKey')
     return err instanceof Error ? err.message : fallback
   }
 
@@ -31,7 +34,7 @@ export function Login() {
     try {
       await login(key)
     } catch (err) {
-      setError(messageFor(err, 'Sign-in failed.'))
+      setError(messageFor(err, tr('login.errFailed')))
     } finally {
       setBusy(false)
     }
@@ -43,7 +46,7 @@ export function Login() {
     try {
       await login(DEMO_KEY)
     } catch {
-      setError('The demo sandbox isn’t available on this server.')
+      setError(tr('login.errDemo'))
     } finally {
       setDemoBusy(false)
     }
@@ -71,12 +74,12 @@ export function Login() {
           }}
         >
           <div className="logo" style={{ width: 32, height: 32, borderRadius: 9 }}>
-            <i className="ti ti-shield-lock" style={{ color: '#fff', fontSize: 19 }} />
+            <i className="ti ti-shield-lock" style={{ color: '#fff', fontSize: 19 }} aria-hidden />
           </div>
           <span style={{ fontSize: 21, fontWeight: 600 }}>Auvex</span>
         </div>
         <div className="sub" style={{ textAlign: 'center', fontSize: 13, marginBottom: 22 }}>
-          Sign in to your console
+          {tr('login.subtitle')}
         </div>
 
         {/* One-click sandbox — no key needed. */}
@@ -87,15 +90,15 @@ export function Login() {
           loading={demoBusy}
           onClick={tryDemo}
         >
-          {demoBusy ? 'Loading demo…' : 'Try the live demo'}
+          {demoBusy ? tr('login.loadingDemo') : tr('login.tryDemo')}
         </Button>
         <div className="muted" style={{ textAlign: 'center', fontSize: 11, margin: '8px 0 2px' }}>
-          A sandbox org with sample data — no sign-up.
+          {tr('login.demoNote')}
         </div>
 
         {providers.length > 0 && (
           <>
-            <Divider label="or sign in" />
+            <Divider label={tr('login.orSignIn')} />
             {providers.map((p) => (
               <div key={p.name} style={{ marginBottom: 8 }}>
                 <Button
@@ -106,9 +109,9 @@ export function Login() {
                   iconRight="ti-arrow-right"
                   style={{ textTransform: 'capitalize' }}
                 >
-                  Continue with {p.name}
+                  {tr('login.continueWith', { name: p.name })}
                   <span className="badge" style={{ fontSize: 9, padding: '1px 6px', marginLeft: 4 }}>
-                    soon
+                    {tr('login.soon')}
                   </span>
                 </Button>
               </div>
@@ -116,11 +119,11 @@ export function Login() {
           </>
         )}
 
-        <Divider label="or use an API key" />
+        <Divider label={tr('login.orApiKey')} />
 
         <form onSubmit={submit}>
           <TextField
-            label="API key"
+            label={tr('login.apiKeyLabel')}
             type="password"
             icon="ti-key"
             placeholder="auvex_sk_…"
@@ -141,12 +144,12 @@ export function Login() {
               loading={busy}
               disabled={!key.trim()}
             >
-              {busy ? 'Signing in…' : 'Use API key'}
+              {busy ? tr('login.signingIn') : tr('login.useApiKey')}
             </Button>
           </div>
         </form>
         <div className="muted" style={{ textAlign: 'center', fontSize: 11, marginTop: 16 }}>
-          Your key is stored only in this browser.
+          {tr('login.keyStored')}
         </div>
       </Card>
     </div>
