@@ -28,4 +28,10 @@ public class UsageController {
   public List<UserUsageView> byUser() {
     return usage.byUser(TenantContext.require().tenantId());
   }
+
+  /** A cost chargeback/showback report: spend by model and user, plus a monthly projection. */
+  @GetMapping("/chargeback")
+  public ChargebackReport chargeback() {
+    return usage.chargeback(TenantContext.require().tenantId());
+  }
 }
