@@ -1,0 +1,19 @@
+# Local Terraform working data — never commit.
+.terraform/
+*.tfstate
+*.tfstate.*
+crash.log
+crash.*.log
+
+# Variable files may hold secrets / account-specific values.
+*.tfvars
+*.tfvars.json
+!example.tfvars
+
+# Override files are for local-only experiments.
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Keep .terraform.lock.hcl committed (it pins provider versions/hashes).

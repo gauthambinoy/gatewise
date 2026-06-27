@@ -1,0 +1,99 @@
+# Production stack for the single-EC2 deploy. Unlike the root docker-compose.yml
+# (which builds images locally for development), this pulls the gateway + console
+# images from GHCR and adds Caddy in front to terminate TLS with an automatic
+# Let's Encrypt certificate. Brought up by cloud-init at first boot and rolled by
+# the CD workflow on every push to main.
+#
+# Image tags, the public domain and all secrets come from the host .env (written
+# by Terraform's user-data / managed by CD) — nothing sensitive lives in here.
+name: auvex
+
+services:
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    # The only ports exposed to the internet. Everything else talks over the
+    # internal compose network.
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      AUVEX_DOMAIN: ${AUVEX_DOMAIN:?set AUVEX_DOMAIN in .env}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      console:
+        condition: service_healthy
+
+  console:
+    image: ${CONSOLE_IMAGE:-ghcr.io/gauthambinoy/auvex/console:latest}
+    restart: unless-stopped
+    depends_on:
+      gateway:
+        condition: service_healthy
+    healthcheck:
+      # 127.0.0.1 (not localhost) so busybox wget uses IPv4, where nginx listens.
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1/"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+
+  gateway:
+    image: ${GATEWAY_IMAGE:-ghcr.io/gauthambinoy/auvex/gateway:latest}
+    restart: unless-stopped
+    environment:
+      SERVER_PORT: 8080
+      OPENROUTER_BASE_URL: ${OPENROUTER_BASE_URL:-https://openrouter.ai/api/v1}
+      OPENROUTER_MODEL: ${OPENROUTER_MODEL:-openai/gpt-oss-120b:free}
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:?set OPENROUTER_API_KEY in .env}
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-auvex}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-auvex}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      AUVEX_DEMO_ENABLED: "true"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8080/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 45s
+
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-auvex}
+      POSTGRES_USER: ${POSTGRES_USER:-auvex}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      # $$ escapes compose interpolation so the shell expands the container's env.
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-auvex} -d $${POSTGRES_DB:-auvex}"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    # Cache only — no persistence needed.
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+
+volumes:
+  pgdata:
+  caddy_data:
+  caddy_config:
