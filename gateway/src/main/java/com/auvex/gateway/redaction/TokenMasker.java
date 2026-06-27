@@ -38,6 +38,11 @@ public class TokenMasker implements Masker {
       case CANADA_SIN -> "‹SIN_REDACTED›";
       case US_ITIN -> "‹ITIN_REDACTED›";
       case AU_TFN -> "‹TFN_REDACTED›";
+      case PERSON_NAME -> "‹NAME_REDACTED›";
+      case STREET_ADDRESS -> "‹ADDRESS_REDACTED›";
+      case DATE_OF_BIRTH -> "‹DOB_REDACTED›";
+      case PASSPORT -> "‹PASSPORT_REDACTED›";
+      case MEDICAL_RECORD_NUMBER -> "‹MRN_REDACTED›";
     };
   }
 }
