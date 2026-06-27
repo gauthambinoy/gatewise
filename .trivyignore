@@ -1,0 +1,34 @@
+# .trivyignore — accepted infrastructure findings, each with a justification.
+#
+# Every entry below is in REFERENCE/EXAMPLE infrastructure: the infra/ Terraform and the deploy/k8s
+# manifests, plus the console image. The LIVE deployment runs docker-compose behind Caddy on a
+# single box, not these manifests. Reviewed 2026-06-28; revisit any of these if the corresponding
+# IaC ever becomes the live path.
+
+# CRITICAL (AVD-AWS-0104): the single-box security group allows all outbound traffic. The box must
+# reach arbitrary HTTPS endpoints at runtime — any LLM provider API (OpenRouter, OpenAI, Anthropic,
+# Bedrock, Gemini, Azure...), GHCR for image pulls, Let's Encrypt for ACME, OS package mirrors — so
+# egress cannot be meaningfully restricted by CIDR. Inbound stays locked down: SSH by operator CIDR,
+# only 80/443 public, everything else closed.
+AVD-AWS-0104
+AWS-0104
+
+# HIGH (AVD-AWS-0132): the private, public-access-blocked S3 backups bucket uses SSE-S3 (AES256)
+# rather than a customer-managed KMS key. AES256 at-rest encryption is sufficient for these
+# operational backups; a CMK would add KMS cost and key-management overhead without a matching threat.
+AVD-AWS-0132
+AWS-0132
+
+# HIGH (AVD-DS-0002): the console image is built FROM the official nginx:alpine, whose master
+# process starts as root to bind :80 and then runs all worker processes as the unprivileged `nginx`
+# user — nginx's documented privilege-drop design. A non-root listener would only move the port.
+AVD-DS-0002
+DS-0002
+
+# HIGH (AVD-KSV-0014): the reference Kubernetes manifests (deploy/k8s — examples; the live stack is
+# docker-compose) don't set readOnlyRootFilesystem. nginx and Postgres both need a writable root
+# (cache, sockets, lock files), so hardening these is left to whoever adapts the manifests for a
+# real cluster.
+AVD-KSV-0014
+KSV-0014
+KSV0014
