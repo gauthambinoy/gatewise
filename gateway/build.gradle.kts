@@ -23,6 +23,12 @@ dependencies {
     implementation("org.flywaydb:flyway-core")
     implementation("org.flywaydb:flyway-database-postgresql")
     runtimeOnly("org.postgresql:postgresql")
+    // Local-first single-binary mode (the `sqlite` profile): an embedded SQLite file instead of
+    // Postgres/Redis, for an individual running the whole gateway from one jar. The driver and the
+    // community Hibernate dialect are only on the runtime classpath; the production Postgres path
+    // never loads them.
+    runtimeOnly("org.xerial:sqlite-jdbc:3.46.1.3")
+    runtimeOnly("org.hibernate.orm:hibernate-community-dialects")
     // Redis-backed response cache so repeat requests can skip the upstream call.
     implementation("org.springframework.boot:spring-boot-starter-data-redis")
     // Kafka, for the opt-in async audit pipeline (the audit write never blocks the call).
