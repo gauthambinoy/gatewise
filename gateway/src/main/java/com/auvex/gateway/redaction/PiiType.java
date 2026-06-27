@@ -27,5 +27,11 @@ public enum PiiType {
   INDIA_AADHAAR,
   CANADA_SIN,
   US_ITIN,
-  AU_TFN
+  AU_TFN,
+  // Unstructured / contextual PII (context-anchored to keep precision high)
+  PERSON_NAME,
+  STREET_ADDRESS,
+  DATE_OF_BIRTH,
+  PASSPORT,
+  MEDICAL_RECORD_NUMBER
 }
