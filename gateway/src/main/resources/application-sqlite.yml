@@ -1,0 +1,22 @@
+# Local-first single-binary profile (roadmap 9.4): run the entire gateway from one jar against an
+# embedded SQLite file — no Postgres, Redis or Kafka required — for an individual or "vibe coder".
+# Activate with --spring.profiles.active=sqlite (see gateway/docs/LOCAL.md). Postgres stays the
+# default for every other profile; nothing here changes it.
+spring:
+  datasource:
+    url: ${AUVEX_SQLITE_URL:jdbc:sqlite:./auvex.db}
+    driver-class-name: org.sqlite.JDBC
+    hikari:
+      # SQLite allows a single writer at a time; one pooled connection keeps writes serialised and
+      # avoids SQLITE_BUSY under the gateway's virtual-thread concurrency.
+      maximum-pool-size: 1
+  # SQLite can't run the Postgres migrations (advisory locks, gen_random_uuid(), TIMESTAMPTZ), so in
+  # this mode Hibernate owns the schema via the community SQLite dialect and Flyway is turned off.
+  flyway:
+    enabled: false
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.community.dialect.SQLiteDialect

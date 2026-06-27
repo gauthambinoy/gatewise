@@ -1,6 +1,5 @@
 package com.auvex.gateway.audit;
 
-import jakarta.persistence.EntityManager;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
@@ -13,31 +12,30 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * Appends entries to a tenant's hash chain and verifies it.
  *
- * <p>Each append takes a per-tenant Postgres advisory lock for the duration of its transaction, so
- * two concurrent appends for the same tenant can't both read the same chain head and fork the
- * chain; different tenants never contend. The write is synchronous (an async pipeline is a later
- * step) but is just a couple of indexed statements.
+ * <p>Each append takes a per-tenant {@link ChainLock} for the duration of its transaction, so two
+ * concurrent appends for the same tenant can't both read the same chain head and fork the chain;
+ * different tenants never contend. The lock is backend-specific (a Postgres advisory lock, or a
+ * no-op on the single-writer SQLite backend), so this code is the same on either. The write is
+ * synchronous (an async pipeline is a later step) but is just a couple of indexed statements.
  */
 @Component
 public class AuditService {
 
   private final AuditLogRepository repository;
-  private final EntityManager entityManager;
+  private final ChainLock chainLock;
   private final ApplicationEventPublisher events;
 
   public AuditService(
-      AuditLogRepository repository,
-      EntityManager entityManager,
-      ApplicationEventPublisher events) {
+      AuditLogRepository repository, ChainLock chainLock, ApplicationEventPublisher events) {
     this.repository = repository;
-    this.entityManager = entityManager;
+    this.chainLock = chainLock;
     this.events = events;
   }
 
   /** Appends an entry to its tenant's chain, computing and storing the link hashes. */
   @Transactional
   public AuditLog append(AuditEntry entry) {
-    lockChain(entry.tenantId());
+    chainLock.lockForAppend(entry.tenantId());
     String prevHash =
         repository
             .findTopByTenantIdOrderByIdDesc(entry.tenantId())
@@ -94,14 +92,6 @@ public class AuditService {
       expectedPrev = row.getEntryHash();
     }
     return Optional.empty();
-  }
-
-  // Serialize this tenant's appends; the lock auto-releases when the transaction ends.
-  private void lockChain(UUID tenantId) {
-    entityManager
-        .createNativeQuery("SELECT pg_advisory_xact_lock(hashtextextended(cast(:t as text), 42))")
-        .setParameter("t", tenantId.toString())
-        .getResultList();
   }
 
   private static AuditEntry toEntry(AuditLog row) {
