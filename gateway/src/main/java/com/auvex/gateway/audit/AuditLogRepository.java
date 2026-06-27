@@ -57,6 +57,26 @@ public interface AuditLogRepository extends JpaRepository<AuditLog, Long> {
   @Query("SELECT COALESCE(SUM(a.costUsd), 0) FROM AuditLog a WHERE a.tenantId = :tenantId")
   BigDecimal sumCostByTenantId(@Param("tenantId") UUID tenantId);
 
+  /** Total USD cost for a tenant since a cutoff — the basis for a spend window and projection. */
+  @Query(
+      "SELECT COALESCE(SUM(a.costUsd), 0) FROM AuditLog a"
+          + " WHERE a.tenantId = :tenantId AND a.createdAt >= :after")
+  BigDecimal sumCostByTenantIdAndCreatedAtAfter(
+      @Param("tenantId") UUID tenantId, @Param("after") java.time.OffsetDateTime after);
+
+  /** Total USD cost per model for a tenant (chargeback by model). */
+  @Query(
+      "SELECT a.model AS model, COALESCE(SUM(a.costUsd), 0) AS total FROM AuditLog a"
+          + " WHERE a.tenantId = :tenantId GROUP BY a.model")
+  List<ModelCost> costByModel(@Param("tenantId") UUID tenantId);
+
+  /** Projection for the per-model cost aggregation. */
+  interface ModelCost {
+    String getModel();
+
+    BigDecimal getTotal();
+  }
+
   /** Total tokens (prompt + completion) recorded for a tenant. */
   @Query(
       "SELECT COALESCE(SUM(a.promptTokens), 0) + COALESCE(SUM(a.completionTokens), 0)"
