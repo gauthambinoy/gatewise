@@ -28,6 +28,11 @@ public class Tenant {
   @Column(nullable = false)
   private String status = "active";
 
+  // The region this tenant's data is pinned to (e.g. 'eu-west-1'); null = unrestricted. Enforced
+  // only when auvex.residency.enabled is set.
+  @Column(name = "residency_region")
+  private String residencyRegion;
+
   @CreationTimestamp
   @Column(name = "created_at", nullable = false, updatable = false)
   private OffsetDateTime createdAt;
@@ -64,5 +69,15 @@ public class Tenant {
   /** True when the tenant is allowed to use the gateway at all. */
   public boolean isActive() {
     return "active".equals(status);
+  }
+
+  /** The region this tenant's data is pinned to, or null when unrestricted. */
+  public String getResidencyRegion() {
+    return residencyRegion;
+  }
+
+  /** Pins this tenant's data residency to a region (null clears the pin). */
+  public void setResidencyRegion(String residencyRegion) {
+    this.residencyRegion = residencyRegion;
   }
 }

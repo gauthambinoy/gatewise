@@ -31,6 +31,7 @@ import com.auvex.gateway.redaction.PromptRedactor;
 import com.auvex.gateway.redaction.ResponseRedaction;
 import com.auvex.gateway.redaction.ResponseRedactor;
 import com.auvex.gateway.redaction.ReversibleRedaction;
+import com.auvex.gateway.residency.ResidencyEnforcer;
 import com.auvex.gateway.routing.ModelRouter;
 import com.auvex.gateway.routing.RoutingContext;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -87,6 +88,7 @@ public class ChatCompletionsController {
   private final QuotaService quotas;
   private final ApprovalService approvals;
   private final ImageScanner imageScanner;
+  private final ResidencyEnforcer residency;
   private final ObjectMapper objectMapper;
 
   public ChatCompletionsController(
@@ -109,6 +111,7 @@ public class ChatCompletionsController {
       QuotaService quotas,
       ApprovalService approvals,
       ImageScanner imageScanner,
+      ResidencyEnforcer residency,
       ObjectMapper objectMapper) {
     this.proxy = proxy;
     this.router = router;
@@ -129,6 +132,7 @@ public class ChatCompletionsController {
     this.quotas = quotas;
     this.approvals = approvals;
     this.imageScanner = imageScanner;
+    this.residency = residency;
     this.objectMapper = objectMapper;
   }
 
@@ -144,6 +148,9 @@ public class ChatCompletionsController {
         new RoutingContext(TenantContext.require().tenantId(), estimatePromptTokens(body));
     String providerModel = router.resolve(body.get("model").asText(), routingContext);
     ((ObjectNode) body).put("model", providerModel);
+
+    // Data residency: a region-pinned tenant may only reach models that run in its region.
+    residency.enforce(TenantContext.require().tenantId(), providerModel);
 
     // Mask sensitive data out of the prompt, and learn which data types it contained. With
     // reversible tokenization on, the provider sees per-value tokens and the (non-streaming)

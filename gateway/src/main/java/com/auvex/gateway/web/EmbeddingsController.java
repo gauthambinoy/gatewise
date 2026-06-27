@@ -9,6 +9,7 @@ import com.auvex.gateway.proxy.UpstreamUnavailableException;
 import com.auvex.gateway.redaction.Match;
 import com.auvex.gateway.redaction.RedactionEngine;
 import com.auvex.gateway.redaction.RedactionResult;
+import com.auvex.gateway.residency.ResidencyEnforcer;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -40,16 +41,19 @@ public class EmbeddingsController {
   private final RestClient openRouter;
   private final RedactionEngine redaction;
   private final AuditSink auditSink;
+  private final ResidencyEnforcer residency;
   private final ObjectMapper objectMapper;
 
   public EmbeddingsController(
       RestClient openRouterRestClient,
       RedactionEngine redaction,
       AuditSink auditSink,
+      ResidencyEnforcer residency,
       ObjectMapper objectMapper) {
     this.openRouter = openRouterRestClient;
     this.redaction = redaction;
     this.auditSink = auditSink;
+    this.residency = residency;
     this.objectMapper = objectMapper;
   }
 
@@ -58,6 +62,9 @@ public class EmbeddingsController {
   public ResponseEntity<String> embeddings(@RequestBody JsonNode body) throws IOException {
     validate(body);
     String model = body.get("model").asText();
+
+    // Data residency: a region-pinned tenant may only reach models that run in its region.
+    residency.enforce(TenantContext.require().tenantId(), model);
 
     List<Match> found = new ArrayList<>();
     String redactedInput = redactInput((ObjectNode) body, found);

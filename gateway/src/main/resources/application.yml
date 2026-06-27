@@ -167,6 +167,15 @@ auvex:
   rbac:
     enabled: ${AUVEX_RBAC_ENABLED:false}
 
+  # Data residency / region pinning. When enabled, a tenant pinned to a region
+  # (tenant.residency_region) may only reach models whose region is listed in model-regions — keyed
+  # by a model id or a prefix it starts with (e.g. 'bedrock/eu.'). Off by default, and a tenant with
+  # no pinned region is never restricted, so this is drop-in safe. A pinned tenant calling a model
+  # with no configured region is refused (fail closed).
+  residency:
+    enabled: ${AUVEX_RESIDENCY_ENABLED:false}
+    model-regions: {}
+
   # Field-level encryption of audit data at rest (bring-your-own-KMS). When on, the redacted prompt
   # and response columns are stored AES-256-GCM-encrypted; the key is base64 of 32 bytes and must be
   # supplied when enabled. Off by default. The hash chain is computed over plaintext, so verification

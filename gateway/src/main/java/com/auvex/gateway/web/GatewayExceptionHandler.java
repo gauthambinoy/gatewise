@@ -5,6 +5,7 @@ import com.auvex.gateway.oidc.OidcException;
 import com.auvex.gateway.policy.PolicyDeniedException;
 import com.auvex.gateway.proxy.UpstreamUnavailableException;
 import com.auvex.gateway.ratelimit.QuotaExceededException;
+import com.auvex.gateway.residency.DataResidencyException;
 import com.auvex.gateway.routing.ModelNotAllowedException;
 import com.auvex.gateway.saml.SamlException;
 import com.auvex.gateway.scim.ScimException;
@@ -57,6 +58,12 @@ public class GatewayExceptionHandler {
   @ExceptionHandler(PromptInjectionException.class)
   public ResponseEntity<Map<String, Object>> handleInjection(PromptInjectionException e) {
     return error(HttpStatus.FORBIDDEN, e.getMessage(), "prompt_injection");
+  }
+
+  /** A request blocked because the model is outside the tenant's data-residency region → 403. */
+  @ExceptionHandler(DataResidencyException.class)
+  public ResponseEntity<Map<String, Object>> handleResidency(DataResidencyException e) {
+    return error(HttpStatus.FORBIDDEN, e.getMessage(), "data_residency_violation");
   }
 
   /** A request blocked because it carries image content the policy forbids → 403. */
