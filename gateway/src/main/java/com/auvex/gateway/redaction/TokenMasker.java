@@ -43,6 +43,7 @@ public class TokenMasker implements Masker {
       case DATE_OF_BIRTH -> "‹DOB_REDACTED›";
       case PASSPORT -> "‹PASSPORT_REDACTED›";
       case MEDICAL_RECORD_NUMBER -> "‹MRN_REDACTED›";
+      case CUSTOM -> "‹CUSTOM_REDACTED›";
     };
   }
 }

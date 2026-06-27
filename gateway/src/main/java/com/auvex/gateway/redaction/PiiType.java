@@ -33,5 +33,7 @@ public enum PiiType {
   STREET_ADDRESS,
   DATE_OF_BIRTH,
   PASSPORT,
-  MEDICAL_RECORD_NUMBER
+  MEDICAL_RECORD_NUMBER,
+  // Operator-defined: matched by a custom regex detector registered via the plugin marketplace
+  CUSTOM
 }
