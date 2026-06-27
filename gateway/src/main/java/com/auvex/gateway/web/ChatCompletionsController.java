@@ -30,6 +30,7 @@ import com.auvex.gateway.redaction.ResponseRedaction;
 import com.auvex.gateway.redaction.ResponseRedactor;
 import com.auvex.gateway.redaction.ReversibleRedaction;
 import com.auvex.gateway.routing.ModelRouter;
+import com.auvex.gateway.routing.RoutingContext;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -133,7 +134,10 @@ public class ChatCompletionsController {
     validate(body);
 
     // Resolve the client's alias to a real provider model (the routing table is the allow-list).
-    String providerModel = router.resolve(body.get("model").asText());
+    // When smart routing is on, the strategy may pick among a candidate pool for this request.
+    RoutingContext routingContext =
+        new RoutingContext(TenantContext.require().tenantId(), estimatePromptTokens(body));
+    String providerModel = router.resolve(body.get("model").asText(), routingContext);
     ((ObjectNode) body).put("model", providerModel);
 
     // Mask sensitive data out of the prompt, and learn which data types it contained. With
@@ -398,6 +402,18 @@ public class ChatCompletionsController {
         completionTokens,
         cost,
         redactionCounts);
+  }
+
+  // A rough token estimate from the prompt size (~4 chars per token), used for cost-based routing.
+  private static int estimatePromptTokens(JsonNode body) {
+    int chars = 0;
+    JsonNode messages = body.get("messages");
+    if (messages != null && messages.isArray()) {
+      for (JsonNode message : messages) {
+        chars += message.path("content").asText("").length();
+      }
+    }
+    return Math.max(1, chars / 4);
   }
 
   // Tally how many of each data type were redacted (e.g. {"email":2,"credit_card":1}).

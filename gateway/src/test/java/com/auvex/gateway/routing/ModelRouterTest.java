@@ -12,7 +12,9 @@ class ModelRouterTest {
   private final ModelRouter router =
       new ModelRouter(
           new ModelRoutingProperties(
-              Map.of("fast", "openai/gpt-4o-mini", "smart", "openai/gpt-4o")));
+              Map.of("fast", "openai/gpt-4o-mini", "smart", "openai/gpt-4o")),
+          new SmartRoutingProperties(false, Map.of()),
+          (candidates, context) -> candidates.get(0));
 
   @Test
   void resolvesKnownAlias() { // T16
