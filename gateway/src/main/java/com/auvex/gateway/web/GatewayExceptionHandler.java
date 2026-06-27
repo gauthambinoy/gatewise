@@ -1,5 +1,6 @@
 package com.auvex.gateway.web;
 
+import com.auvex.gateway.multimodal.MultimodalBlockedException;
 import com.auvex.gateway.oidc.OidcException;
 import com.auvex.gateway.policy.PolicyDeniedException;
 import com.auvex.gateway.proxy.UpstreamUnavailableException;
@@ -51,6 +52,12 @@ public class GatewayExceptionHandler {
   @ExceptionHandler(PromptInjectionException.class)
   public ResponseEntity<Map<String, Object>> handleInjection(PromptInjectionException e) {
     return error(HttpStatus.FORBIDDEN, e.getMessage(), "prompt_injection");
+  }
+
+  /** A request blocked because it carries image content the policy forbids → 403. */
+  @ExceptionHandler(MultimodalBlockedException.class)
+  public ResponseEntity<Map<String, Object>> handleMultimodalBlocked(MultimodalBlockedException e) {
+    return error(HttpStatus.FORBIDDEN, e.getMessage(), "content_blocked");
   }
 
   /** A tenant that has used up its call budget → 429. */
