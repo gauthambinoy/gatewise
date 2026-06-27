@@ -37,8 +37,7 @@ mod imp {
 
     // WinINET's per-user proxy configuration. This is what Chrome, Edge, and most
     // Windows apps honour as "the system proxy".
-    const SETTINGS_PATH: &str =
-        r"Software\Microsoft\Windows\CurrentVersion\Internet Settings";
+    const SETTINGS_PATH: &str = r"Software\Microsoft\Windows\CurrentVersion\Internet Settings";
 
     fn open_settings(access: u32) -> Result<RegKey, String> {
         RegKey::predef(HKEY_CURRENT_USER)
@@ -89,7 +88,10 @@ mod imp {
         let key = open_settings(KEY_READ)?;
         // A missing value means "never configured" → treat as disabled.
         let enabled = key.get_value::<u32, _>("ProxyEnable").unwrap_or(0) == 1;
-        let server = key.get_value::<String, _>("ProxyServer").ok().filter(|s| !s.is_empty());
+        let server = key
+            .get_value::<String, _>("ProxyServer")
+            .ok()
+            .filter(|s| !s.is_empty());
         Ok(ProxyState {
             enabled,
             server,
