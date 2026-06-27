@@ -6,6 +6,8 @@ import com.auvex.gateway.policy.PolicyDeniedException;
 import com.auvex.gateway.proxy.UpstreamUnavailableException;
 import com.auvex.gateway.ratelimit.QuotaExceededException;
 import com.auvex.gateway.routing.ModelNotAllowedException;
+import com.auvex.gateway.saml.SamlException;
+import com.auvex.gateway.scim.ScimException;
 import java.util.Map;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,6 +24,9 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
  */
 @RestControllerAdvice
 public class GatewayExceptionHandler {
+
+  private static final java.util.List<String> SCIM_ERROR_SCHEMAS =
+      java.util.List.of("urn:ietf:params:scim:api:messages:2.0:Error");
 
   /** A syntactically valid body that isn't a usable chat-completions payload → 400. */
   @ExceptionHandler(InvalidRequestException.class)
@@ -88,6 +93,25 @@ public class GatewayExceptionHandler {
   @ExceptionHandler(OidcException.class)
   public ResponseEntity<Map<String, Object>> handleOidc(OidcException e) {
     return error(HttpStatus.UNAUTHORIZED, e.getMessage(), "authentication_error");
+  }
+
+  /** A SAML sign-in that failed verification (bad signature, audience, time window) → 401. */
+  @ExceptionHandler(SamlException.class)
+  public ResponseEntity<Map<String, Object>> handleSaml(SamlException e) {
+    return error(HttpStatus.UNAUTHORIZED, e.getMessage(), "authentication_error");
+  }
+
+  /** A SCIM request that failed — returned in the SCIM 2.0 error envelope, not the gateway one. */
+  @ExceptionHandler(ScimException.class)
+  public ResponseEntity<Map<String, Object>> handleScim(ScimException e) {
+    Map<String, Object> body = new java.util.LinkedHashMap<>();
+    body.put("schemas", SCIM_ERROR_SCHEMAS);
+    body.put("detail", e.getMessage());
+    body.put("status", String.valueOf(e.status()));
+    if (e.scimType() != null) {
+      body.put("scimType", e.scimType());
+    }
+    return ResponseEntity.status(e.status()).body(body);
   }
 
   /** Bean-validation failure on a request body → 400, naming the first bad field. */

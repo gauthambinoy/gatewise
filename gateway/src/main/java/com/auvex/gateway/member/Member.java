@@ -59,6 +59,11 @@ public class Member {
     this.status = status;
   }
 
+  /** Changes this member's email / SCIM userName (used by the SCIM replace endpoint). */
+  public void changeEmail(String email) {
+    this.email = email;
+  }
+
   public UUID getId() {
     return id;
   }
