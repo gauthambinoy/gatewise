@@ -167,6 +167,16 @@ auvex:
   rbac:
     enabled: ${AUVEX_RBAC_ENABLED:false}
 
+  # Multi-region HA: when replica.enabled, read-only transactions are routed to a read replica
+  # and writes to the primary (see docs/HA.md). Off by default — the normal single datasource is
+  # used unchanged.
+  ha:
+    replica:
+      enabled: ${AUVEX_HA_REPLICA_ENABLED:false}
+      url: ${AUVEX_HA_REPLICA_URL:}
+      username: ${AUVEX_HA_REPLICA_USERNAME:}
+      password: ${AUVEX_HA_REPLICA_PASSWORD:}
+
   # Data residency / region pinning. When enabled, a tenant pinned to a region
   # (tenant.residency_region) may only reach models whose region is listed in model-regions — keyed
   # by a model id or a prefix it starts with (e.g. 'bedrock/eu.'). Off by default, and a tenant with
