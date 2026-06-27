@@ -61,7 +61,10 @@ public class AuditService {
             entry.promptTokens(),
             entry.completionTokens(),
             entry.costUsd(),
-            entry.redactionCounts());
+            entry.redactionCounts(),
+            entry.principalType(),
+            entry.principalId(),
+            entry.principalEmail());
     AuditLog saved = repository.save(row);
     events.publishEvent(new AuditRecordedEvent(saved));
     return saved;

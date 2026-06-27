@@ -5,6 +5,7 @@ import com.auvex.gateway.audit.AuditLogRepository;
 import com.auvex.gateway.audit.AuditService;
 import com.auvex.gateway.audit.Verdict;
 import com.auvex.gateway.auth.ApiKeyHasher;
+import com.auvex.gateway.auth.AuthenticatedTenant;
 import com.auvex.gateway.config.DemoProperties;
 import com.auvex.gateway.member.Member;
 import com.auvex.gateway.member.MemberRepository;
@@ -18,6 +19,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -114,6 +116,12 @@ public class DemoSeeder implements ApplicationRunner {
     };
     String[] redactTypes = {"email", "credit_card", "us_ssn", "phone", "api_key"};
 
+    // Attribute each seeded call to a real principal: the demo API key for service traffic, or the
+    // acting member (looked up once and cached) for a human actor — so the console shows who acted.
+    UUID demoKeyId =
+        apiKeys.findByKeyHash(ApiKeyHasher.hash(properties.key())).map(ApiKey::getId).orElse(null);
+    Map<String, UUID> memberCache = new HashMap<>();
+
     for (int i = 0; i < 24; i++) {
       String actor = actors[i % actors.length];
       String model = models[i % models.length];
@@ -143,20 +151,35 @@ public class DemoSeeder implements ApplicationRunner {
               .setScale(6, RoundingMode.HALF_UP);
       Instant when = Instant.now().minus(i * 7L, ChronoUnit.HOURS);
 
+      AuthenticatedTenant principal;
+      if (actor.contains("@")) {
+        UUID memberId =
+            memberCache.computeIfAbsent(
+                actor,
+                email ->
+                    members
+                        .findByTenantIdAndEmail(tenantId, email)
+                        .map(Member::getId)
+                        .orElse(null));
+        principal = new AuthenticatedTenant(tenantId, null, memberId, actor);
+      } else {
+        principal = new AuthenticatedTenant(tenantId, demoKeyId);
+      }
       audit.append(
           new AuditEntry(
-              tenantId,
-              UUID.randomUUID(),
-              actor,
-              model,
-              verdict,
-              prompt,
-              null,
-              when,
-              promptTokens,
-              completionTokens,
-              cost,
-              redactions));
+                  tenantId,
+                  UUID.randomUUID(),
+                  actor,
+                  model,
+                  verdict,
+                  prompt,
+                  null,
+                  when,
+                  promptTokens,
+                  completionTokens,
+                  cost,
+                  redactions)
+              .withPrincipal(principal));
     }
   }
 }
