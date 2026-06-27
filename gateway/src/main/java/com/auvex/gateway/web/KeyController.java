@@ -1,5 +1,6 @@
 package com.auvex.gateway.web;
 
+import com.auvex.gateway.audit.ManagementAuditService;
 import com.auvex.gateway.auth.TenantContext;
 import com.auvex.gateway.tenant.ApiKey;
 import java.util.List;
@@ -25,9 +26,11 @@ import org.springframework.web.bind.annotation.RestController;
 public class KeyController {
 
   private final KeyService service;
+  private final ManagementAuditService managementAudit;
 
-  public KeyController(KeyService service) {
+  public KeyController(KeyService service, ManagementAuditService managementAudit) {
     this.service = service;
+    this.managementAudit = managementAudit;
   }
 
   /** Lists the tenant's keys (masked). */
@@ -43,6 +46,7 @@ public class KeyController {
     KeyService.Created created =
         service.create(tenantId(), request == null ? null : request.name());
     ApiKey key = created.key();
+    managementAudit.record("key.create", "api_key", key.getId(), key.getName());
     return new CreatedKeyView(
         key.getId(),
         key.getName(),
@@ -57,6 +61,7 @@ public class KeyController {
   @ResponseStatus(HttpStatus.NO_CONTENT)
   public void revoke(@PathVariable UUID id) {
     service.revoke(tenantId(), id);
+    managementAudit.record("key.revoke", "api_key", id, null);
   }
 
   private static UUID tenantId() {

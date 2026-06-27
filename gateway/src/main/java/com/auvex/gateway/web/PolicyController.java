@@ -1,6 +1,8 @@
 package com.auvex.gateway.web;
 
+import com.auvex.gateway.audit.ManagementAuditService;
 import com.auvex.gateway.auth.TenantContext;
+import com.auvex.gateway.policy.Policy;
 import jakarta.validation.Valid;
 import java.util.List;
 import java.util.UUID;
@@ -26,9 +28,11 @@ import org.springframework.web.bind.annotation.RestController;
 public class PolicyController {
 
   private final PolicyAdminService service;
+  private final ManagementAuditService managementAudit;
 
-  public PolicyController(PolicyAdminService service) {
+  public PolicyController(PolicyAdminService service, ManagementAuditService managementAudit) {
     this.service = service;
+    this.managementAudit = managementAudit;
   }
 
   /** Lists the tenant's policy rules. */
@@ -41,7 +45,9 @@ public class PolicyController {
   @PostMapping
   @ResponseStatus(HttpStatus.CREATED)
   public PolicyView create(@Valid @RequestBody PolicyRequest request) {
-    return PolicyView.of(service.create(tenantId(), request));
+    Policy policy = service.create(tenantId(), request);
+    managementAudit.record("policy.create", "policy", policy.getId(), policy.getName());
+    return PolicyView.of(policy);
   }
 
   /** Returns one of the tenant's rules, or 404 if it isn't theirs. */
@@ -53,7 +59,9 @@ public class PolicyController {
   /** Replaces one of the tenant's rules. */
   @PutMapping("/{id}")
   public PolicyView update(@PathVariable UUID id, @Valid @RequestBody PolicyRequest request) {
-    return PolicyView.of(service.update(tenantId(), id, request));
+    Policy policy = service.update(tenantId(), id, request);
+    managementAudit.record("policy.update", "policy", id, policy.getName());
+    return PolicyView.of(policy);
   }
 
   /** Deletes one of the tenant's rules. */
@@ -61,6 +69,7 @@ public class PolicyController {
   @ResponseStatus(HttpStatus.NO_CONTENT)
   public void delete(@PathVariable UUID id) {
     service.delete(tenantId(), id);
+    managementAudit.record("policy.delete", "policy", id, null);
   }
 
   private static UUID tenantId() {

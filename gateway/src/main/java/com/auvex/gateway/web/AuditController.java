@@ -3,6 +3,8 @@ package com.auvex.gateway.web;
 import com.auvex.gateway.audit.AuditLog;
 import com.auvex.gateway.audit.AuditLogRepository;
 import com.auvex.gateway.audit.AuditService;
+import com.auvex.gateway.audit.ManagementAudit;
+import com.auvex.gateway.audit.ManagementAuditRepository;
 import com.auvex.gateway.auth.TenantContext;
 import java.util.List;
 import java.util.UUID;
@@ -27,10 +29,13 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuditController {
 
   private final AuditLogRepository entries;
+  private final ManagementAuditRepository managementEntries;
   private final AuditService audit;
 
-  public AuditController(AuditLogRepository entries, AuditService audit) {
+  public AuditController(
+      AuditLogRepository entries, ManagementAuditRepository managementEntries, AuditService audit) {
     this.entries = entries;
+    this.managementEntries = managementEntries;
     this.audit = audit;
   }
 
@@ -91,8 +96,27 @@ public class AuditController {
     return new DsarExport(subject, views.size(), views);
   }
 
+  /**
+   * A page of the tenant's console management actions (key/member/policy changes), newest first —
+   * the administrative counterpart to the AI-call audit trail, showing who changed what.
+   */
+  @GetMapping("/management")
+  public ManagementAuditPage management(
+      @PageableDefault(size = 20, sort = "id", direction = Sort.Direction.DESC) Pageable pageable) {
+    UUID tenantId = TenantContext.require().tenantId();
+    Page<ManagementAudit> page = managementEntries.findByTenantId(tenantId, pageable);
+    List<ManagementAuditView> views =
+        page.getContent().stream().map(ManagementAuditView::of).toList();
+    return new ManagementAuditPage(
+        views, page.getNumber(), page.getSize(), page.getTotalElements());
+  }
+
   /** A page of audit entries plus its paging metadata. */
   public record AuditPage(List<AuditView> entries, int page, int size, long total) {}
+
+  /** A page of management-action entries plus its paging metadata. */
+  public record ManagementAuditPage(
+      List<ManagementAuditView> entries, int page, int size, long total) {}
 
   /** A GDPR subject-access export for one data subject. */
   public record DsarExport(String subject, int entryCount, List<AuditView> entries) {}

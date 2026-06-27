@@ -1,6 +1,8 @@
 package com.auvex.gateway.web;
 
+import com.auvex.gateway.audit.ManagementAuditService;
 import com.auvex.gateway.auth.TenantContext;
+import com.auvex.gateway.member.Member;
 import jakarta.validation.Valid;
 import java.util.List;
 import java.util.UUID;
@@ -26,9 +28,11 @@ import org.springframework.web.bind.annotation.RestController;
 public class MemberController {
 
   private final MemberAdminService service;
+  private final ManagementAuditService managementAudit;
 
-  public MemberController(MemberAdminService service) {
+  public MemberController(MemberAdminService service, ManagementAuditService managementAudit) {
     this.service = service;
+    this.managementAudit = managementAudit;
   }
 
   /** Lists the tenant's members. */
@@ -41,7 +45,9 @@ public class MemberController {
   @PostMapping
   @ResponseStatus(HttpStatus.CREATED)
   public MemberView create(@Valid @RequestBody MemberRequest request) {
-    return MemberView.of(service.create(tenantId(), request));
+    Member member = service.create(tenantId(), request);
+    managementAudit.record("member.create", "member", member.getId(), member.getRole());
+    return MemberView.of(member);
   }
 
   /** Returns one of the tenant's members, or 404 if it isn't theirs. */
@@ -53,7 +59,9 @@ public class MemberController {
   /** Updates one of the tenant's members (name, role, status). */
   @PutMapping("/{id}")
   public MemberView update(@PathVariable UUID id, @Valid @RequestBody MemberRequest request) {
-    return MemberView.of(service.update(tenantId(), id, request));
+    Member member = service.update(tenantId(), id, request);
+    managementAudit.record("member.update", "member", id, member.getRole());
+    return MemberView.of(member);
   }
 
   /** Removes one of the tenant's members. */
@@ -61,6 +69,7 @@ public class MemberController {
   @ResponseStatus(HttpStatus.NO_CONTENT)
   public void delete(@PathVariable UUID id) {
     service.delete(tenantId(), id);
+    managementAudit.record("member.delete", "member", id, null);
   }
 
   private static UUID tenantId() {
