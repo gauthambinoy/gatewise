@@ -13,6 +13,8 @@ import com.auvex.gateway.config.RedactionProperties;
 import com.auvex.gateway.config.TokenizationProperties;
 import com.auvex.gateway.injection.InjectionFinding;
 import com.auvex.gateway.injection.InjectionScanner;
+import com.auvex.gateway.multimodal.ImageScanner;
+import com.auvex.gateway.multimodal.MultimodalBlockedException;
 import com.auvex.gateway.policy.Decision;
 import com.auvex.gateway.policy.EvaluationContext;
 import com.auvex.gateway.policy.PolicyDeniedException;
@@ -84,6 +86,7 @@ public class ChatCompletionsController {
   private final StreamContentExtractor streamExtractor;
   private final QuotaService quotas;
   private final ApprovalService approvals;
+  private final ImageScanner imageScanner;
   private final ObjectMapper objectMapper;
 
   public ChatCompletionsController(
@@ -105,6 +108,7 @@ public class ChatCompletionsController {
       StreamContentExtractor streamExtractor,
       QuotaService quotas,
       ApprovalService approvals,
+      ImageScanner imageScanner,
       ObjectMapper objectMapper) {
     this.proxy = proxy;
     this.router = router;
@@ -124,6 +128,7 @@ public class ChatCompletionsController {
     this.streamExtractor = streamExtractor;
     this.quotas = quotas;
     this.approvals = approvals;
+    this.imageScanner = imageScanner;
     this.objectMapper = objectMapper;
   }
 
@@ -157,6 +162,18 @@ public class ChatCompletionsController {
     Map<String, Integer> redactionCounts = countByType(found);
 
     EvaluationContext ctx = contextFor(body, providerModel, found);
+
+    // Image governance: count any multimodal images, strip or block them per policy.
+    ImageScanner.ScanResult imageScan = imageScanner.scan(body);
+    if (imageScan.imageCount() > 0) {
+      redactionCounts.merge("image", imageScan.imageCount(), Integer::sum);
+    }
+    if (imageScan.blocked()) {
+      auditSink.record(
+          auditEntry(
+              ctx, providerModel, Verdict.BLOCKED, body, null, null, null, null, redactionCounts));
+      throw new MultimodalBlockedException("Request blocked: image content is not permitted.");
+    }
 
     // Screen for prompt injection / jailbreak; when blocking is on, a hit is recorded and stops it.
     if (injectionProperties.enabled() && injectionProperties.block()) {
