@@ -29,9 +29,12 @@ public class RetentionService {
     this.properties = properties;
   }
 
-  /** Deletes every audit entry created before {@code cutoff}; returns how many were removed. */
+  /**
+   * Deletes every audit entry created before {@code cutoff} that isn't under legal hold; returns
+   * how many were removed.
+   */
   public long purgeOlderThan(Instant cutoff) {
-    return repository.deleteByCreatedAtBefore(cutoff.atOffset(ZoneOffset.UTC));
+    return repository.deleteByCreatedAtBeforeAndLegalHoldFalse(cutoff.atOffset(ZoneOffset.UTC));
   }
 
   /** Daily retention sweep — a no-op unless retention deletion is enabled. */
@@ -42,7 +45,7 @@ public class RetentionService {
     }
     OffsetDateTime cutoff =
         OffsetDateTime.now(ZoneOffset.UTC).minusDays(properties.retentionDays());
-    long removed = repository.deleteByCreatedAtBefore(cutoff);
+    long removed = repository.deleteByCreatedAtBeforeAndLegalHoldFalse(cutoff);
     if (removed > 0) {
       LOG.info("Retention: purged {} audit entries older than {}", removed, cutoff);
     }
