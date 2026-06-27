@@ -1,5 +1,6 @@
 package com.auvex.gateway.audit;
 
+import com.auvex.gateway.auth.TenantContext;
 import com.auvex.gateway.config.AuditTransportProperties;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -25,9 +26,12 @@ public class KafkaAuditSink implements AuditSink {
 
   @Override
   public void record(AuditEntry entry) {
+    // Stamp the principal before publishing — the consumer thread won't have it bound.
+    AuditEntry enriched = entry.withPrincipal(TenantContext.get());
     try {
       // Key by tenant so one tenant's entries land on the same partition, preserving order.
-      kafka.send(properties.topic(), entry.tenantId().toString(), json.writeValueAsString(entry));
+      kafka.send(
+          properties.topic(), enriched.tenantId().toString(), json.writeValueAsString(enriched));
     } catch (JsonProcessingException e) {
       throw new IllegalStateException("Failed to serialize audit entry", e);
     }

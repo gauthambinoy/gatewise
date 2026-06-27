@@ -20,7 +20,10 @@ public record AuditView(
     Integer promptTokens,
     Integer completionTokens,
     BigDecimal costUsd,
-    Map<String, Integer> redactionCounts) {
+    Map<String, Integer> redactionCounts,
+    String principalType,
+    UUID principalId,
+    String principalEmail) {
 
   /** Projects a stored audit row into its API view. */
   public static AuditView of(AuditLog row) {
@@ -37,6 +40,9 @@ public record AuditView(
         row.getPromptTokens(),
         row.getCompletionTokens(),
         row.getCostUsd(),
-        row.getRedactionCounts());
+        row.getRedactionCounts(),
+        row.getPrincipalType(),
+        row.getPrincipalId(),
+        row.getPrincipalEmail());
   }
 }

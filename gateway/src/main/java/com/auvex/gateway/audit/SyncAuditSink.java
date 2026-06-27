@@ -1,5 +1,6 @@
 package com.auvex.gateway.audit;
 
+import com.auvex.gateway.auth.TenantContext;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
@@ -16,6 +17,7 @@ public class SyncAuditSink implements AuditSink {
 
   @Override
   public void record(AuditEntry entry) {
-    audit.append(entry);
+    // Stamp the acting principal here, on the request thread, where it is still bound.
+    audit.append(entry.withPrincipal(TenantContext.get()));
   }
 }

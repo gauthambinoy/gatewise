@@ -77,7 +77,9 @@ public class ConsoleAuthFilter extends OncePerRequestFilter {
       return;
     }
 
-    TenantContext.set(new AuthenticatedTenant(session.get().tenantId(), null));
+    TenantContext.set(
+        new AuthenticatedTenant(
+            session.get().tenantId(), null, session.get().memberId(), session.get().email()));
     try {
       chain.doFilter(request, response);
     } finally {

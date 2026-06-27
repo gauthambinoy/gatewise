@@ -65,6 +65,16 @@ public class AuditLog {
   @Column(name = "redaction_counts", columnDefinition = "jsonb")
   private Map<String, Integer> redactionCounts;
 
+  // Who made the call: "api_key" or "member" (attribution metadata, not part of the hash chain).
+  @Column(name = "principal_type")
+  private String principalType;
+
+  @Column(name = "principal_id")
+  private UUID principalId;
+
+  @Column(name = "principal_email")
+  private String principalEmail;
+
   /** JPA requires a no-arg constructor; not for application use. */
   protected AuditLog() {}
 
@@ -83,7 +93,10 @@ public class AuditLog {
       Integer promptTokens,
       Integer completionTokens,
       BigDecimal costUsd,
-      Map<String, Integer> redactionCounts) {
+      Map<String, Integer> redactionCounts,
+      String principalType,
+      UUID principalId,
+      String principalEmail) {
     this.tenantId = tenantId;
     this.requestId = requestId;
     this.actor = actor;
@@ -98,6 +111,9 @@ public class AuditLog {
     this.completionTokens = completionTokens;
     this.costUsd = costUsd;
     this.redactionCounts = redactionCounts;
+    this.principalType = principalType;
+    this.principalId = principalId;
+    this.principalEmail = principalEmail;
   }
 
   public Long getId() {
@@ -158,5 +174,17 @@ public class AuditLog {
 
   public Map<String, Integer> getRedactionCounts() {
     return redactionCounts;
+  }
+
+  public String getPrincipalType() {
+    return principalType;
+  }
+
+  public UUID getPrincipalId() {
+    return principalId;
+  }
+
+  public String getPrincipalEmail() {
+    return principalEmail;
   }
 }
