@@ -1454,7 +1454,9 @@ const IT: Record<Key, string> = {
   'connect.snippetCopied': 'Snippet copiato',
 }
 
-const DICTS: Record<Locale, Record<Key, string>> = { en: EN, de: DE, fr: FR, es: ES, it: IT }
+// Exported so the test suite can assert every locale has exactly the same key set as English
+// (the source of truth) — catching any missing or stray translation at build time.
+export const DICTS: Record<Locale, Record<Key, string>> = { en: EN, de: DE, fr: FR, es: ES, it: IT }
 
 // Module-level active Intl locale, so plain formatters (money/dt) read the current language.
 let activeIntl = 'en-GB'
