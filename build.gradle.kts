@@ -5,6 +5,7 @@ import com.github.spotbugs.snom.SpotBugsExtension
 import com.github.spotbugs.snom.SpotBugsTask
 import org.gradle.api.plugins.quality.CheckstyleExtension
 import org.gradle.testing.jacoco.plugins.JacocoPluginExtension
+import org.gradle.testing.jacoco.tasks.JacocoCoverageVerification
 import org.gradle.testing.jacoco.tasks.JacocoReport
 
 plugins {
@@ -75,8 +76,9 @@ subprojects {
         reports.create("xml") { required.set(true) }
     }
 
-    // JaCoCo produces a coverage report on every test run. The fail-the-build
-    // coverage threshold is added once there is real logic to cover (Phase 1+).
+    // JaCoCo produces a coverage report on every test run and a coverage gate that fails the build
+    // if coverage regresses below the floors below (set comfortably under the current numbers so the
+    // gate catches real rot without flaking on small movements).
     extensions.configure<JacocoPluginExtension> { toolVersion = "0.8.12" }
 
     tasks.withType<Test>().configureEach {
@@ -89,5 +91,28 @@ subprojects {
             xml.required.set(true)
             html.required.set(true)
         }
+    }
+    tasks.withType<JacocoCoverageVerification>().configureEach {
+        dependsOn(tasks.named("test"))
+        violationRules {
+            rule {
+                limit {
+                    counter = "INSTRUCTION"
+                    minimum = "0.80".toBigDecimal()
+                }
+                limit {
+                    counter = "LINE"
+                    minimum = "0.80".toBigDecimal()
+                }
+                limit {
+                    counter = "BRANCH"
+                    minimum = "0.55".toBigDecimal()
+                }
+            }
+        }
+    }
+    // `check` (and therefore `build` and CI) now enforces the coverage gate.
+    tasks.named("check") {
+        dependsOn(tasks.named("jacocoTestCoverageVerification"))
     }
 }
