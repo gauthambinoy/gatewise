@@ -20,6 +20,8 @@ node_modules/
 dist/
 coverage/
 *.log
+# jqwik writes a local DB of failing samples for replay; it's a test artifact
+.jqwik-database
 
 # os / editor
 .DS_Store
