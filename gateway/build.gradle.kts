@@ -53,7 +53,7 @@ dependencies {
     // jqwik: property-based / fuzz testing on the JUnit 5 platform. Pinned explicitly —
     // it isn't in the Spring Boot BOM. Used for the pure-unit redaction, routing and
     // audit-chain invariant tests (no Spring context, no Docker).
-    testImplementation("net.jqwik:jqwik:1.9.2")
+    testImplementation("net.jqwik:jqwik:1.10.1")
 }
 
 // Dependency versions are governed by the Spring Boot BOM (3.5.15) via the
