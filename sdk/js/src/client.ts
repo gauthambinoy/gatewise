@@ -91,7 +91,9 @@ const DEFAULT_TIMEOUT = 60_000;
 /** Read an environment variable in Node without assuming `process` exists (browser-safe). */
 function readEnv(name: string): string | undefined {
   if (typeof process !== 'undefined' && process.env) {
-    return process.env[name];
+    // A set-but-empty variable means "not configured" — fall through to the default.
+    const value = process.env[name];
+    return value === undefined || value === '' ? undefined : value;
   }
   return undefined;
 }
