@@ -1,0 +1,10 @@
+# Gitleaks configuration — extends the stock ruleset.
+[extend]
+useDefault = true
+
+# The ONLY allowlisted value is the sandbox credential that the docs tell readers to
+# copy-paste against the public demo deployment. It is published on purpose and grants
+# access to nothing but the seeded demo tenant. Every other match still fails the scan.
+[allowlist]
+description = "gatewise_demo_key is the intentionally-public demo credential for the live sandbox"
+regexes = ['''gatewise_demo_key''']
