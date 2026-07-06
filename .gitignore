@@ -3,7 +3,7 @@
 *.env
 !.env.example
 
-# private working docs (CLAUDE.md §7b) — keep local, never push
+# private working docs — keep local, never push
 ROADMAP.md
 JOURNAL.md
 TECHNICAL_REPORT.md
