@@ -1,4 +1,4 @@
-rootProject.name = "auvex"
+rootProject.name = "gatewise"
 
 // Only the JVM (Spring Boot) backend is a Gradle subproject.
 //

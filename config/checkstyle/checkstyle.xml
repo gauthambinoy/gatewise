@@ -4,7 +4,7 @@
     "https://checkstyle.org/dtds/configuration_1_3.dtd">
 
 <!--
-  Auvex Checkstyle rules.
+  GateWise Checkstyle rules.
 
   Spotless (Google Java Format) already owns whitespace, indentation and import
   ordering, so this config deliberately avoids those and focuses on the things a

@@ -1,6 +1,6 @@
 spring:
   application:
-    name: auvex-gateway
+    name: gatewise-gateway
 
   # Serve each request on a Java 21 virtual thread. The gateway is I/O-bound — it
   # spends most of a request waiting on the upstream model provider — so a cheap
@@ -13,9 +13,9 @@ spring:
   # Hibernate only validates against it (ddl-auto: validate), so the running app
   # and the migrations can never silently drift apart.
   datasource:
-    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/auvex}
-    username: ${SPRING_DATASOURCE_USERNAME:auvex}
-    password: ${SPRING_DATASOURCE_PASSWORD:auvex}
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/gatewise}
+    username: ${SPRING_DATASOURCE_USERNAME:gatewise}
+    password: ${SPRING_DATASOURCE_PASSWORD:gatewise}
   jpa:
     hibernate:
       ddl-auto: validate
@@ -34,7 +34,7 @@ spring:
   kafka:
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
     consumer:
-      group-id: auvex-audit
+      group-id: gatewise-audit
       auto-offset-reset: earliest
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
@@ -66,7 +66,7 @@ management:
 # Upstream LLM provider (OpenRouter — an OpenAI-compatible endpoint). The API key
 # has NO default on purpose: the gateway must refuse to start without one rather
 # than boot into a silently broken state (enforced by OpenRouterProperties).
-auvex:
+gatewise:
   openrouter:
     base-url: ${OPENROUTER_BASE_URL:https://openrouter.ai/api/v1}
     model: ${OPENROUTER_MODEL:openai/gpt-oss-120b:free}
@@ -88,7 +88,7 @@ auvex:
   # (translated to/from the OpenAI shape). Off by default — anthropic/* still works via the
   # OpenAI-compatible primary (e.g. OpenRouter) until you switch this on with a direct key.
   anthropic:
-    enabled: ${AUVEX_ANTHROPIC_ENABLED:false}
+    enabled: ${GATEWISE_ANTHROPIC_ENABLED:false}
     base-url: ${ANTHROPIC_BASE_URL:https://api.anthropic.com}
     api-key: ${ANTHROPIC_API_KEY:}
     version: ${ANTHROPIC_VERSION:2023-06-01}
@@ -97,7 +97,7 @@ auvex:
   # Native Google Gemini: when enabled, google/* models go directly to Gemini's generateContent API
   # (translated to/from the OpenAI shape). Off by default.
   gemini:
-    enabled: ${AUVEX_GEMINI_ENABLED:false}
+    enabled: ${GATEWISE_GEMINI_ENABLED:false}
     base-url: ${GEMINI_BASE_URL:https://generativelanguage.googleapis.com}
     api-key: ${GEMINI_API_KEY:}
     max-tokens: ${GEMINI_MAX_TOKENS:1024}
@@ -105,7 +105,7 @@ auvex:
   # Native Azure OpenAI: when enabled, azure/* models go to your Azure deployment (OpenAI shape, so
   # no body translation — just the deployment URL + api-key auth). Off by default.
   azure:
-    enabled: ${AUVEX_AZURE_ENABLED:false}
+    enabled: ${GATEWISE_AZURE_ENABLED:false}
     endpoint: ${AZURE_OPENAI_ENDPOINT:}
     api-key: ${AZURE_OPENAI_API_KEY:}
     api-version: ${AZURE_OPENAI_API_VERSION:2024-06-01}
@@ -114,7 +114,7 @@ auvex:
   # Runtime InvokeModel API. The model id after the prefix is the Bedrock model id, e.g.
   # bedrock/anthropic.claude-3-5-sonnet-20240620-v1:0. Off by default — supply AWS credentials.
   bedrock:
-    enabled: ${AUVEX_BEDROCK_ENABLED:false}
+    enabled: ${GATEWISE_BEDROCK_ENABLED:false}
     region: ${AWS_REGION:us-east-1}
     access-key-id: ${AWS_ACCESS_KEY_ID:}
     secret-access-key: ${AWS_SECRET_ACCESS_KEY:}
@@ -125,57 +125,57 @@ auvex:
   # Response cache: a repeat non-streaming request returns the stored response and
   # skips the upstream call. Disable to send every call upstream.
   cache:
-    enabled: ${AUVEX_CACHE_ENABLED:true}
-    ttl: ${AUVEX_CACHE_TTL:5m}
+    enabled: ${GATEWISE_CACHE_ENABLED:true}
+    ttl: ${GATEWISE_CACHE_TTL:5m}
     # Semantic (near-duplicate) cache: serves a stored response when a new prompt is similar enough
     # to a recent one. Off by default; lexical similarity unless a model embedder is plugged in.
     semantic:
-      enabled: ${AUVEX_SEMANTIC_CACHE_ENABLED:false}
-      threshold: ${AUVEX_SEMANTIC_CACHE_THRESHOLD:0.95}
-      max-entries-per-tenant: ${AUVEX_SEMANTIC_CACHE_MAX:200}
+      enabled: ${GATEWISE_SEMANTIC_CACHE_ENABLED:false}
+      threshold: ${GATEWISE_SEMANTIC_CACHE_THRESHOLD:0.95}
+      max-entries-per-tenant: ${GATEWISE_SEMANTIC_CACHE_MAX:200}
 
   # Per-tenant call budget: forwarded calls beyond max-calls in the window get a 429.
   budget:
-    enabled: ${AUVEX_BUDGET_ENABLED:true}
-    max-calls: ${AUVEX_BUDGET_MAX_CALLS:100000}
-    window: ${AUVEX_BUDGET_WINDOW:1d}
+    enabled: ${GATEWISE_BUDGET_ENABLED:true}
+    max-calls: ${GATEWISE_BUDGET_MAX_CALLS:100000}
+    window: ${GATEWISE_BUDGET_WINDOW:1d}
 
   # Per-tenant rate limit: a per-minute burst cap (429 when exceeded), shared across instances via
   # Redis and fail-open. Distinct from the longer-window call budget above. Off by default.
   ratelimit:
-    enabled: ${AUVEX_RATELIMIT_ENABLED:false}
-    requests-per-minute: ${AUVEX_RATELIMIT_RPM:600}
+    enabled: ${GATEWISE_RATELIMIT_ENABLED:false}
+    requests-per-minute: ${GATEWISE_RATELIMIT_RPM:600}
 
   # Per-caller and per-model daily quotas (a longer window than the per-minute rate limit).
   # Off by default; set a positive number to cap. 0 = unlimited for that dimension.
   quota:
-    enabled: ${AUVEX_QUOTA_ENABLED:false}
-    per-user-per-day: ${AUVEX_QUOTA_PER_USER_PER_DAY:0}
-    per-model-per-day: ${AUVEX_QUOTA_PER_MODEL_PER_DAY:0}
+    enabled: ${GATEWISE_QUOTA_ENABLED:false}
+    per-user-per-day: ${GATEWISE_QUOTA_PER_USER_PER_DAY:0}
+    per-model-per-day: ${GATEWISE_QUOTA_PER_MODEL_PER_DAY:0}
 
   # Human-in-the-loop approval: hold high-risk calls for a reviewer before forwarding. Off by
   # default. review-data-types holds any call carrying one of those redacted types; review-injection
   # holds any call where prompt-injection is detected.
   approval:
-    enabled: ${AUVEX_APPROVAL_ENABLED:false}
-    review-injection: ${AUVEX_APPROVAL_REVIEW_INJECTION:false}
-    review-data-types: ${AUVEX_APPROVAL_REVIEW_DATA_TYPES:}
+    enabled: ${GATEWISE_APPROVAL_ENABLED:false}
+    review-injection: ${GATEWISE_APPROVAL_REVIEW_INJECTION:false}
+    review-data-types: ${GATEWISE_APPROVAL_REVIEW_DATA_TYPES:}
 
   # Role-based access control. When on, /v1 management endpoints (policies, members, keys, approvals,
   # audit, usage, discovery, compliance) require a console-session token with a sufficient role
   # instead of a machine API key; the AI/proxy endpoints always stay API-key authenticated.
   rbac:
-    enabled: ${AUVEX_RBAC_ENABLED:false}
+    enabled: ${GATEWISE_RBAC_ENABLED:false}
 
   # Multi-region HA: when replica.enabled, read-only transactions are routed to a read replica
   # and writes to the primary (see docs/HA.md). Off by default — the normal single datasource is
   # used unchanged.
   ha:
     replica:
-      enabled: ${AUVEX_HA_REPLICA_ENABLED:false}
-      url: ${AUVEX_HA_REPLICA_URL:}
-      username: ${AUVEX_HA_REPLICA_USERNAME:}
-      password: ${AUVEX_HA_REPLICA_PASSWORD:}
+      enabled: ${GATEWISE_HA_REPLICA_ENABLED:false}
+      url: ${GATEWISE_HA_REPLICA_URL:}
+      username: ${GATEWISE_HA_REPLICA_USERNAME:}
+      password: ${GATEWISE_HA_REPLICA_PASSWORD:}
 
   # Data residency / region pinning. When enabled, a tenant pinned to a region
   # (tenant.residency_region) may only reach models whose region is listed in model-regions — keyed
@@ -183,7 +183,7 @@ auvex:
   # no pinned region is never restricted, so this is drop-in safe. A pinned tenant calling a model
   # with no configured region is refused (fail closed).
   residency:
-    enabled: ${AUVEX_RESIDENCY_ENABLED:false}
+    enabled: ${GATEWISE_RESIDENCY_ENABLED:false}
     model-regions: {}
 
   # Field-level encryption of audit data at rest (bring-your-own-KMS). When on, the redacted prompt
@@ -191,29 +191,29 @@ auvex:
   # supplied when enabled. Off by default. The hash chain is computed over plaintext, so verification
   # is unaffected; note free-text prompt search can't match encrypted columns while this is on.
   encryption:
-    enabled: ${AUVEX_ENCRYPTION_ENABLED:false}
-    key: ${AUVEX_ENCRYPTION_KEY:}
+    enabled: ${GATEWISE_ENCRYPTION_ENABLED:false}
+    key: ${GATEWISE_ENCRYPTION_KEY:}
 
   # Compliance & data retention. retention-days is reported in the compliance report; when
   # retention-delete-enabled is on, a daily sweep hard-deletes audit entries older than that window.
   # notary-url, if set, is where GET /v1/compliance/notarization also POSTs the chain anchor.
   compliance:
-    retention-days: ${AUVEX_RETENTION_DAYS:365}
-    retention-delete-enabled: ${AUVEX_RETENTION_DELETE_ENABLED:false}
-    retention-cron: ${AUVEX_RETENTION_CRON:0 0 3 * * *}
-    notary-url: ${AUVEX_NOTARY_URL:}
+    retention-days: ${GATEWISE_RETENTION_DAYS:365}
+    retention-delete-enabled: ${GATEWISE_RETENTION_DELETE_ENABLED:false}
+    retention-cron: ${GATEWISE_RETENTION_CRON:0 0 3 * * *}
+    notary-url: ${GATEWISE_NOTARY_URL:}
 
   # Fallback provider, tried (non-streaming) when the primary can't be reached or 5xxs.
   failover:
-    enabled: ${AUVEX_FAILOVER_ENABLED:false}
-    base-url: ${AUVEX_FAILOVER_BASE_URL:}
-    api-key: ${AUVEX_FAILOVER_API_KEY:}
+    enabled: ${GATEWISE_FAILOVER_ENABLED:false}
+    base-url: ${GATEWISE_FAILOVER_BASE_URL:}
+    api-key: ${GATEWISE_FAILOVER_API_KEY:}
 
   # Audit transport: synchronous by default; async publishes to Kafka and a consumer persists,
   # so the audit write never blocks the live call.
   audit:
-    async: ${AUVEX_AUDIT_ASYNC:false}
-    topic: ${AUVEX_AUDIT_TOPIC:auvex.audit}
+    async: ${GATEWISE_AUDIT_ASYNC:false}
+    topic: ${GATEWISE_AUDIT_TOPIC:gatewise.audit}
 
   # Per-model pricing (USD per 1,000,000 tokens) for cost accounting; fallback covers the rest.
   pricing:
@@ -231,9 +231,9 @@ auvex:
   # Console auth. dev-login is off by default (a real OIDC sign-in replaces it); the SSO providers
   # are inert until their client id (and the OAuth wiring) is supplied.
   auth:
-    session-secret: ${AUVEX_SESSION_SECRET:dev-insecure-session-secret-change-me-please-0123456789}
-    session-ttl: ${AUVEX_SESSION_TTL:8h}
-    dev-login-enabled: ${AUVEX_DEV_LOGIN_ENABLED:false}
+    session-secret: ${GATEWISE_SESSION_SECRET:dev-insecure-session-secret-change-me-please-0123456789}
+    session-ttl: ${GATEWISE_SESSION_TTL:8h}
+    dev-login-enabled: ${GATEWISE_DEV_LOGIN_ENABLED:false}
     # Real OIDC sign-in (Authorization Code flow). A provider goes live once its client id/secret,
     # endpoints and target tenant are set. Google's endpoints are derived from the issuer; for other
     # providers supply authorization-uri/token-uri/jwks-uri. redirect-uri must be registered with the
@@ -288,46 +288,46 @@ auvex:
 
   # Demo seed for the console's "Try the live demo" button. Off by default; never enable in prod.
   demo:
-    enabled: ${AUVEX_DEMO_ENABLED:false}
-    key: ${AUVEX_DEMO_KEY:auvex_demo_key}
-    tenant-name: ${AUVEX_DEMO_TENANT:Demo Org}
+    enabled: ${GATEWISE_DEMO_ENABLED:false}
+    key: ${GATEWISE_DEMO_KEY:gatewise_demo_key}
+    tenant-name: ${GATEWISE_DEMO_TENANT:Demo Org}
 
   # Response redaction: mask PII the model returns, for the audit record. enforce=true also strips
   # it from what the caller receives (default off = audit-only). The prompt is always redacted.
   redaction:
     response:
-      enabled: ${AUVEX_REDACT_RESPONSE:true}
-      enforce: ${AUVEX_REDACT_RESPONSE_ENFORCE:false}
+      enabled: ${GATEWISE_REDACT_RESPONSE:true}
+      enforce: ${GATEWISE_REDACT_RESPONSE_ENFORCE:false}
 
   # Reversible tokenization: when on, the prompt's sensitive values are replaced with per-value
   # tokens (the provider never sees them) and restored in the non-streaming response for the caller.
   # Off by default — redaction is plain and one-way unless this is enabled.
   tokenization:
-    enabled: ${AUVEX_TOKENIZATION_ENABLED:false}
+    enabled: ${GATEWISE_TOKENIZATION_ENABLED:false}
 
   # Prompt-injection / jailbreak screening. enabled scans every prompt; block rejects a matching
   # request with 403 (default: detect-and-allow, so it's observed before it's enforced).
   injection:
-    enabled: ${AUVEX_INJECTION_ENABLED:true}
-    block: ${AUVEX_INJECTION_BLOCK:false}
+    enabled: ${GATEWISE_INJECTION_ENABLED:true}
+    block: ${GATEWISE_INJECTION_BLOCK:false}
 
   # Plugin marketplace: operator-registered custom regex redaction detectors + the /v1/plugins
   # catalog of installed governance plugins. Off/empty by default (no custom detectors).
   plugins:
-    enabled: ${AUVEX_PLUGINS_ENABLED:false}
+    enabled: ${GATEWISE_PLUGINS_ENABLED:false}
     detectors: []
 
   # Stream every audit event to a webhook / SIEM (Splunk, Datadog, …). Off by default; delivery is
   # asynchronous and fail-open, so it never blocks or breaks a gateway call.
   webhook:
-    enabled: ${AUVEX_WEBHOOK_ENABLED:false}
-    url: ${AUVEX_WEBHOOK_URL:}
+    enabled: ${GATEWISE_WEBHOOK_ENABLED:false}
+    url: ${GATEWISE_WEBHOOK_URL:}
 
-  # Cost-anomaly alerting: warn and notify the webhook (auvex.webhook.url) when a tenant's cumulative
+  # Cost-anomaly alerting: warn and notify the webhook (gatewise.webhook.url) when a tenant's cumulative
   # spend first crosses the threshold. Off by default; async and fail-open.
   cost-alert:
-    enabled: ${AUVEX_COST_ALERT_ENABLED:false}
-    threshold-usd: ${AUVEX_COST_ALERT_THRESHOLD:100}
+    enabled: ${GATEWISE_COST_ALERT_ENABLED:false}
+    threshold-usd: ${GATEWISE_COST_ALERT_THRESHOLD:100}
 
   # Egress / forward transparent-proxy (TLS MITM): catches AI-bound HTTPS from apps that don't point
   # at the gateway. OFF by default — when off, no extra listener is opened and the main app on 8080 is
@@ -335,13 +335,13 @@ auvex:
   # TLS-intercepted and run through the same redaction/injection/policy/audit pipeline, and any other
   # host is tunnelled opaquely. `block-uncovered` is the mandatory-routing switch: with it on, an
   # intercepted request that fails policy is refused, not forwarded. `tenant-id` must be an existing
-  # tenant (intercepted traffic carries the app's provider key, not an Auvex key, so the tenant can't
+  # tenant (intercepted traffic carries the app's provider key, not an GateWise key, so the tenant can't
   # be derived). `ca-file`, if set, also writes the root CA to that path on startup. Install the CA
   # (GET /v1/egress/ca.pem) on every client — see gateway/docs/EGRESS.md.
   egress:
-    enabled: ${AUVEX_EGRESS_ENABLED:false}
-    port: ${AUVEX_EGRESS_PORT:8888}
-    block-uncovered: ${AUVEX_EGRESS_BLOCK_UNCOVERED:false}
-    tenant-id: ${AUVEX_EGRESS_TENANT_ID:}
-    ca-file: ${AUVEX_EGRESS_CA_FILE:}
-    intercept-hosts: ${AUVEX_EGRESS_INTERCEPT_HOSTS:api.openai.com,api.anthropic.com,generativelanguage.googleapis.com}
+    enabled: ${GATEWISE_EGRESS_ENABLED:false}
+    port: ${GATEWISE_EGRESS_PORT:8888}
+    block-uncovered: ${GATEWISE_EGRESS_BLOCK_UNCOVERED:false}
+    tenant-id: ${GATEWISE_EGRESS_TENANT_ID:}
+    ca-file: ${GATEWISE_EGRESS_CA_FILE:}
+    intercept-hosts: ${GATEWISE_EGRESS_INTERCEPT_HOSTS:api.openai.com,api.anthropic.com,generativelanguage.googleapis.com}

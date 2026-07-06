@@ -1,6 +1,6 @@
 # Local-first single-binary mode (SQLite)
 
-Auvex normally runs against Postgres + Redis (+ optional Kafka). For an individual developer — a
+GateWise normally runs against Postgres + Redis (+ optional Kafka). For an individual developer — a
 "vibe coder" who just wants the gateway in front of their own LLM calls — that's heavy. The `sqlite`
 profile runs the **entire gateway from one jar against an embedded SQLite file**, with no external
 services to stand up.
@@ -12,8 +12,8 @@ services to stand up.
 java -jar gateway/build/libs/gateway.jar --spring.profiles.active=sqlite
 ```
 
-That's it — no `docker compose`, no database to provision. A file `./auvex.db` is created next to the
-jar on first start (override with `AUVEX_SQLITE_URL`, e.g. `jdbc:sqlite:/var/lib/auvex/auvex.db`).
+That's it — no `docker compose`, no database to provision. A file `./gatewise.db` is created next to the
+jar on first start (override with `GATEWISE_SQLITE_URL`, e.g. `jdbc:sqlite:/var/lib/gatewise/gatewise.db`).
 
 ## What changes under the `sqlite` profile
 

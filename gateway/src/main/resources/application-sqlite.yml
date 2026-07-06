@@ -4,7 +4,7 @@
 # default for every other profile; nothing here changes it.
 spring:
   datasource:
-    url: ${AUVEX_SQLITE_URL:jdbc:sqlite:./auvex.db}
+    url: ${GATEWISE_SQLITE_URL:jdbc:sqlite:./gatewise.db}
     driver-class-name: org.sqlite.JDBC
     hikari:
       # SQLite allows a single writer at a time; one pooled connection keeps writes serialised and

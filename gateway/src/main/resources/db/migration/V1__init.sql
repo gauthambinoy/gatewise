@@ -1,4 +1,4 @@
--- Auvex core schema (V1).
+-- GateWise core schema (V1).
 --
 -- Four tables the gateway is built around: tenants, the API keys that resolve to
 -- them, their allow/deny policies, and the immutable audit log. Everything is

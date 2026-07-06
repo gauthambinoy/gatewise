@@ -5,7 +5,7 @@ that don't cooperatively point at the gateway, and runs that traffic through the
 governance pipeline (redaction, prompt-injection screening, policy, audit) as the normal
 `/v1/chat/completions` path.
 
-It is **off by default**. With `auvex.egress.enabled=false` no extra listener is opened, no CA
+It is **off by default**. With `gatewise.egress.enabled=false` no extra listener is opened, no CA
 is generated, and the main app on `:8080` is completely untouched.
 
 ## How it works
@@ -31,23 +31,23 @@ socket for server-side MITM.
 ## Turning it on
 
 ```yaml
-auvex:
+gatewise:
   egress:
     enabled: true
     port: 8888
     tenant-id: <an existing tenant UUID>   # required: intercepted calls carry the app's
-                                           # provider key, not an Auvex key, so the tenant
+                                           # provider key, not an GateWise key, so the tenant
                                            # that owns the policy/audit can't be inferred
     block-uncovered: false                 # see "Mandatory routing" below
     intercept-hosts:
       - api.openai.com
       - api.anthropic.com
       - generativelanguage.googleapis.com
-    # ca-file: /etc/auvex/egress-ca.pem    # optional: also drop the CA here on startup
+    # ca-file: /etc/gatewise/egress-ca.pem    # optional: also drop the CA here on startup
 ```
 
-Or via environment variables: `AUVEX_EGRESS_ENABLED=true`,
-`AUVEX_EGRESS_TENANT_ID=...`, `AUVEX_EGRESS_BLOCK_UNCOVERED=true`, etc.
+Or via environment variables: `GATEWISE_EGRESS_ENABLED=true`,
+`GATEWISE_EGRESS_TENANT_ID=...`, `GATEWISE_EGRESS_BLOCK_UNCOVERED=true`, etc.
 
 ## Trusting the CA (8.4)
 
@@ -58,17 +58,17 @@ machine:
 1. Fetch it (no API key needed — it's a public certificate, never the private key):
 
    ```bash
-   curl -k http://<gateway-host>:8080/v1/egress/ca.pem -o auvex-egress-ca.pem
+   curl -k http://<gateway-host>:8080/v1/egress/ca.pem -o gatewise-egress-ca.pem
    ```
 
    (Or read it from the `ca-file` path if you configured one.)
 
 2. Install it into the OS / browser trust store:
 
-   - **Windows:** `certutil -addstore -f Root auvex-egress-ca.pem` (admin), or
-     `Import-Certificate -FilePath auvex-egress-ca.pem -CertStoreLocation Cert:\LocalMachine\Root`.
-   - **macOS:** `sudo security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain auvex-egress-ca.pem`.
-   - **Linux (Debian/Ubuntu):** copy to `/usr/local/share/ca-certificates/auvex-egress-ca.crt`
+   - **Windows:** `certutil -addstore -f Root gatewise-egress-ca.pem` (admin), or
+     `Import-Certificate -FilePath gatewise-egress-ca.pem -CertStoreLocation Cert:\LocalMachine\Root`.
+   - **macOS:** `sudo security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain gatewise-egress-ca.pem`.
+   - **Linux (Debian/Ubuntu):** copy to `/usr/local/share/ca-certificates/gatewise-egress-ca.crt`
      then `sudo update-ca-certificates`.
    - **Firefox / NSS:** import via `Settings → Privacy & Security → Certificates → Authorities`.
 
@@ -99,4 +99,4 @@ an environment job — the gateway cannot enforce an OS firewall from inside the
    it off (default), a policy failure is recorded and the call still goes through — detect-first,
    so you can observe before you enforce.
 
-Steps 1–2 are configured outside Auvex; step 3 is the gateway's half of the contract.
+Steps 1–2 are configured outside GateWise; step 3 is the gateway's half of the contract.

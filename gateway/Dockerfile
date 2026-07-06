@@ -29,8 +29,8 @@ WORKDIR /app
 
 # curl backs the container healthcheck; the user keeps the process off root.
 RUN apk add --no-cache curl \
- && adduser -D -u 10001 -s /sbin/nologin auvex
-USER auvex
+ && adduser -D -u 10001 -s /sbin/nologin gatewise
+USER gatewise
 
 COPY --from=build /workspace/gateway/build/libs/gateway.jar app.jar
 

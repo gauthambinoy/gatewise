@@ -5,7 +5,7 @@ plugins {
 }
 
 description =
-    "Auvex gateway — the proxy hot path that redacts, routes, governs and logs every LLM call."
+    "GateWise gateway — the proxy hot path that redacts, routes, governs and logs every LLM call."
 
 dependencies {
     // Web stack so the gateway runs as a real HTTP service, plus Actuator for a

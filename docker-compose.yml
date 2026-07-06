@@ -1,4 +1,4 @@
-name: auvex
+name: gatewise
 
 # One-command local stack: Postgres + Redis + the gateway, every service
 # health-gated so `docker compose up --wait` only returns once it's truly up.
@@ -9,16 +9,16 @@ services:
   postgres:
     image: postgres:17-alpine
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-auvex}
-      POSTGRES_USER: ${POSTGRES_USER:-auvex}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-auvex}
+      POSTGRES_DB: ${POSTGRES_DB:-gatewise}
+      POSTGRES_USER: ${POSTGRES_USER:-gatewise}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-gatewise}
     ports:
       - "${POSTGRES_PORT:-5432}:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
       # $$ escapes compose interpolation so the shell expands the container's env.
-      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-auvex} -d $${POSTGRES_DB:-auvex}"]
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-gatewise} -d $${POSTGRES_DB:-gatewise}"]
       interval: 5s
       timeout: 5s
       retries: 12
@@ -48,13 +48,13 @@ services:
       OPENROUTER_MODEL: ${OPENROUTER_MODEL:-openai/gpt-oss-120b:free}
       OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-local-dev-placeholder-key}
       # Point the gateway at the postgres service; Flyway migrates on startup.
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-auvex}
-      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-auvex}
-      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-auvex}
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-gatewise}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-gatewise}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-gatewise}
       REDIS_HOST: redis
       REDIS_PORT: 6379
       # Seed a sandbox demo tenant so the console's "Try the live demo" button works out of the box.
-      AUVEX_DEMO_ENABLED: "true"
+      GATEWISE_DEMO_ENABLED: "true"
     ports:
       - "${SERVER_PORT:-8080}:8080"
     depends_on:

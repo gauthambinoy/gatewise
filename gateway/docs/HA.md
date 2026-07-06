@@ -6,7 +6,7 @@ keys, usage, and the audit log). It splits into two halves: **what runs as code 
 replication, global load balancing, managed read replicas). Both are described honestly below —
 the gateway cannot replicate a database from inside the JVM, and this doc does not pretend it can.
 
-It is **off by default**. With `auvex.ha.replica.enabled=false` (the default) the gateway uses
+It is **off by default**. With `gatewise.ha.replica.enabled=false` (the default) the gateway uses
 Spring Boot's normal single-datasource auto-configuration unchanged, so every existing path and the
 live deployment behave exactly as before.
 
@@ -24,7 +24,7 @@ lever is to send read-only transactions to a read replica and keep writes on the
   true, and `"primary"` otherwise. That read-only flag is set by Spring whenever a method runs under
   `@Transactional(readOnly = true)`.
 - `HaDataSourceConfiguration` builds two real connection pools — the primary from the standard
-  `spring.datasource.*` properties, the replica from `auvex.ha.replica.*` — assembles them into a
+  `spring.datasource.*` properties, the replica from `gatewise.ha.replica.*` — assembles them into a
   `RoutingDataSource` (primary as the default target), and exposes it as the `@Primary DataSource`,
   wrapped in a `LazyConnectionDataSourceProxy`.
 - The lazy proxy matters: it defers acquiring the physical connection until the first statement, by
@@ -39,17 +39,17 @@ to by the application.
 ### Enabling it
 
 ```yaml
-auvex:
+gatewise:
   ha:
     replica:
       enabled: true
-      url: jdbc:postgresql://auvex-replica.eu-west-1.rds.amazonaws.com:5432/auvex
-      username: auvex_ro
+      url: jdbc:postgresql://gatewise-replica.eu-west-1.rds.amazonaws.com:5432/gatewise
+      username: gatewise_ro
       password: <secret>
 ```
 
-Or via environment variables: `AUVEX_HA_REPLICA_ENABLED=true`, `AUVEX_HA_REPLICA_URL=...`,
-`AUVEX_HA_REPLICA_USERNAME=...`, `AUVEX_HA_REPLICA_PASSWORD=...`. If `enabled` is true but no URL is
+Or via environment variables: `GATEWISE_HA_REPLICA_ENABLED=true`, `GATEWISE_HA_REPLICA_URL=...`,
+`GATEWISE_HA_REPLICA_USERNAME=...`, `GATEWISE_HA_REPLICA_PASSWORD=...`. If `enabled` is true but no URL is
 set, the gateway fails fast at boot rather than starting in a half-configured state.
 
 ### Replication-lag caveat
@@ -70,7 +70,7 @@ Only route a transaction read-only when stale-by-lag data is acceptable for it.
 ## Partitioned audit
 
 `audit_log` is the table that grows without bound — one row per governed call, retained for the
-compliance window (`auvex.compliance.retention-days`). At scale it should be partitioned so that
+compliance window (`gatewise.compliance.retention-days`). At scale it should be partitioned so that
 queries, retention deletes, and index maintenance stay cheap.
 
 ### Partition by tenant, then by time
@@ -111,11 +111,11 @@ The full picture for surviving a region failure and serving reads close to the c
 - **One primary region** owns the writable Postgres primary. All writes (audit appends, policy/key
   changes) go there, regardless of where the request lands.
 - **Read replicas per region.** Each region runs gateway instances pointed at the local read replica
-  via `auvex.ha.replica.*`, so read-heavy work is served locally and only writes cross regions.
-- **Region pinning** reuses the existing `auvex.residency` feature: a tenant pinned to a region may
+  via `gatewise.ha.replica.*`, so read-heavy work is served locally and only writes cross regions.
+- **Region pinning** reuses the existing `gatewise.residency` feature: a tenant pinned to a region may
   only reach provider models that run in that region. That governs where *model traffic* may go;
   combined with per-region gateway deployments it keeps a pinned tenant's data plane in-region.
-- **Async cross-region audit shipping.** With `auvex.audit.async=true`, audit entries are published
+- **Async cross-region audit shipping.** With `gatewise.audit.async=true`, audit entries are published
   to Kafka and persisted by a consumer rather than written inline. The same seam lets a region ship
   its audit stream to the primary region's audit store asynchronously, so a remote write never blocks
   a live call and a regional outage does not lose in-flight audit (it drains from the log on
@@ -124,7 +124,7 @@ The full picture for surviving a region failure and serving reads close to the c
 ### Failover
 
 - **Replica loss:** the replica is only used for read-only transactions; if it is unreachable, route
-  those flows to the primary (operationally, point `auvex.ha.replica.url` at the primary or disable
+  those flows to the primary (operationally, point `gatewise.ha.replica.url` at the primary or disable
   the feature) until the replica is restored. No data is at risk — the replica is never authoritative.
 - **Primary-region loss:** promote a regional replica to primary (a managed-database failover) and
   repoint the surviving gateways' `spring.datasource.*` at the new primary. The audit hash chain
@@ -138,9 +138,9 @@ The full picture for surviving a region failure and serving reads close to the c
 **In this repo (works today):**
 
 - `RoutingDataSource` + `HaDataSourceConfiguration`: read-only-transaction → replica routing, behind
-  `auvex.ha.replica.enabled`, inert by default.
-- The `auvex.residency` region-pinning feature used for region affinity.
-- The `auvex.audit.async` Kafka transport used as the cross-region audit-shipping seam.
+  `gatewise.ha.replica.enabled`, inert by default.
+- The `gatewise.residency` region-pinning feature used for region affinity.
+- The `gatewise.audit.async` Kafka transport used as the cross-region audit-shipping seam.
 - The per-tenant audit hash chain that makes replica promotion and partitioning safe.
 
 **Cloud-infrastructure jobs (outside the JVM — you provision these):**
