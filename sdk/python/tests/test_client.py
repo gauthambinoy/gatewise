@@ -15,7 +15,7 @@ from gatewise import (
 )
 from gatewise._errors import error_from_response
 
-from .conftest import API_KEY, BASE_URL
+from conftest import API_KEY, BASE_URL
 
 CHAT_REPLY = {"id": "cmpl-1", "choices": [{"message": {"content": "hi"}}]}
 
