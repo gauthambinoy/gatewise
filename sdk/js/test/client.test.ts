@@ -37,7 +37,8 @@ function stubFetch(
     const u = String(url);
     const i = init ?? {};
     calls.push({ url: u, init: i });
-    return typeof responder === 'function' ? responder(u, i) : responder;
+    // Clone fixed responses so each call gets a readable body — a Response body is one-shot.
+    return typeof responder === 'function' ? responder(u, i) : responder.clone();
   });
   return { fetch: fetchImpl as unknown as typeof fetch, calls };
 }
