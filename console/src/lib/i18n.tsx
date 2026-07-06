@@ -179,7 +179,7 @@ const EN = {
   'pol.andValue': 'And value is',
   'pol.thenAction': 'Then take action',
   'pol.enabled': 'Enabled',
-  'pol.defaultDeny': 'If no rule matches, Auvex defaults to the safest option (deny unknown).',
+  'pol.defaultDeny': 'If no rule matches, GateWise defaults to the safest option (deny unknown).',
 
   // Models & routing
   'models.subtitle': 'Give each model a friendly name. Switch providers by changing one line.',
@@ -190,7 +190,7 @@ const EN = {
   'models.emptyTitle': 'No routes configured',
   'models.emptyMsg': 'Add a route to give a model a friendly name and point it at a provider.',
   'models.failover':
-    'If a provider becomes unreachable, Auvex automatically fails over to a configured backup provider.',
+    'If a provider becomes unreachable, GateWise automatically fails over to a configured backup provider.',
 
   // Usage & cost
   'usage.subtitle': 'Cost and traffic across the gateway',
@@ -299,7 +299,7 @@ const EN = {
   // Connect
   'connect.title': 'Connect your app',
   'connect.subtitle':
-    'Auvex is OpenAI-compatible — point any client at one URL and every call is governed.',
+    'GateWise is OpenAI-compatible — point any client at one URL and every call is governed.',
   'connect.credentials': 'Your credentials',
   'connect.credentialsSub': 'Use these as the base URL and API key in any SDK.',
   'connect.baseUrl': 'Base URL',
@@ -309,7 +309,7 @@ const EN = {
   'connect.dropInSub': 'Same one-URL change in every ecosystem.',
   'connect.test': 'Test the connection',
   'connect.testSub':
-    'Send a sample with PII + an injection attempt — watch Auvex catch it live.',
+    'Send a sample with PII + an injection attempt — watch GateWise catch it live.',
   'connect.runTest': 'Run test',
   'connect.errTitle': 'Couldn’t reach the gateway',
   'connect.resultGoverning': 'Connected — and governing your traffic ✓',
@@ -475,7 +475,7 @@ const DE: Record<Key, string> = {
   'pol.thenAction': 'Dann diese Aktion',
   'pol.enabled': 'Aktiviert',
   'pol.defaultDeny':
-    'Wenn keine Regel zutrifft, wählt Auvex die sicherste Option (Unbekanntes verweigern).',
+    'Wenn keine Regel zutrifft, wählt GateWise die sicherste Option (Unbekanntes verweigern).',
   'models.subtitle':
     'Geben Sie jedem Modell einen einprägsamen Namen. Wechseln Sie den Anbieter mit einer einzigen Zeile.',
   'models.colAlias': 'Alias',
@@ -486,7 +486,7 @@ const DE: Record<Key, string> = {
   'models.emptyMsg':
     'Fügen Sie eine Route hinzu, um einem Modell einen Namen zu geben und es an einen Anbieter zu richten.',
   'models.failover':
-    'Wird ein Anbieter nicht erreichbar, wechselt Auvex automatisch zu einem konfigurierten Ersatzanbieter.',
+    'Wird ein Anbieter nicht erreichbar, wechselt GateWise automatisch zu einem konfigurierten Ersatzanbieter.',
   'usage.subtitle': 'Kosten und Verkehr über das Gateway',
   'usage.emptyTitle': 'Noch keine Nutzung',
   'usage.emptyMsg': 'Senden Sie Verkehr durch das Gateway, um Kosten und Nutzung hier zu sehen.',
@@ -582,7 +582,7 @@ const DE: Record<Key, string> = {
   'monitor.goConnect': 'Zu „Verbinden“',
   'connect.title': 'App verbinden',
   'connect.subtitle':
-    'Auvex ist OpenAI-kompatibel — richten Sie jeden Client auf eine URL und jeder Aufruf wird kontrolliert.',
+    'GateWise ist OpenAI-kompatibel — richten Sie jeden Client auf eine URL und jeder Aufruf wird kontrolliert.',
   'connect.credentials': 'Ihre Zugangsdaten',
   'connect.credentialsSub': 'Verwenden Sie diese als Basis-URL und API-Schlüssel in jedem SDK.',
   'connect.baseUrl': 'Basis-URL',
@@ -592,7 +592,7 @@ const DE: Record<Key, string> = {
   'connect.dropInSub': 'Dieselbe Ein-URL-Änderung in jedem Ökosystem.',
   'connect.test': 'Verbindung testen',
   'connect.testSub':
-    'Senden Sie ein Beispiel mit PII und einem Injektionsversuch — sehen Sie, wie Auvex es live abfängt.',
+    'Senden Sie ein Beispiel mit PII und einem Injektionsversuch — sehen Sie, wie GateWise es live abfängt.',
   'connect.runTest': 'Test ausführen',
   'connect.errTitle': 'Gateway nicht erreichbar',
   'connect.resultGoverning': 'Verbunden — und Ihr Verkehr wird kontrolliert ✓',
@@ -758,7 +758,7 @@ const FR: Record<Key, string> = {
   'pol.thenAction': "Alors appliquer l'action",
   'pol.enabled': 'Activée',
   'pol.defaultDeny':
-    "Si aucune règle ne correspond, Auvex choisit l'option la plus sûre (refuser l'inconnu).",
+    "Si aucune règle ne correspond, GateWise choisit l'option la plus sûre (refuser l'inconnu).",
   'models.subtitle':
     'Donnez à chaque modèle un nom convivial. Changez de fournisseur en modifiant une seule ligne.',
   'models.colAlias': 'Alias',
@@ -769,7 +769,7 @@ const FR: Record<Key, string> = {
   'models.emptyMsg':
     'Ajoutez une route pour donner un nom convivial à un modèle et le pointer vers un fournisseur.',
   'models.failover':
-    "Si un fournisseur devient injoignable, Auvex bascule automatiquement vers un fournisseur de secours configuré.",
+    "Si un fournisseur devient injoignable, GateWise bascule automatiquement vers un fournisseur de secours configuré.",
   'usage.subtitle': 'Coût et trafic sur la passerelle',
   'usage.emptyTitle': "Aucun usage pour le moment",
   'usage.emptyMsg':
@@ -865,7 +865,7 @@ const FR: Record<Key, string> = {
   'monitor.goConnect': 'Aller à Connecter',
   'connect.title': 'Connectez votre application',
   'connect.subtitle':
-    'Auvex est compatible OpenAI — pointez n’importe quel client vers une seule URL et chaque appel est gouverné.',
+    'GateWise est compatible OpenAI — pointez n’importe quel client vers une seule URL et chaque appel est gouverné.',
   'connect.credentials': 'Vos identifiants',
   'connect.credentialsSub': "Utilisez-les comme URL de base et clé API dans n'importe quel SDK.",
   'connect.baseUrl': 'URL de base',
@@ -875,7 +875,7 @@ const FR: Record<Key, string> = {
   'connect.dropInSub': 'Le même changement d’une URL dans chaque écosystème.',
   'connect.test': 'Tester la connexion',
   'connect.testSub':
-    "Envoyez un échantillon avec des PII et une tentative d'injection — regardez Auvex l'intercepter en direct.",
+    "Envoyez un échantillon avec des PII et une tentative d'injection — regardez GateWise l'intercepter en direct.",
   'connect.runTest': 'Lancer le test',
   'connect.errTitle': "Impossible de joindre la passerelle",
   'connect.resultGoverning': 'Connecté — et votre trafic est gouverné ✓',
@@ -1041,7 +1041,7 @@ const ES: Record<Key, string> = {
   'pol.thenAction': 'Entonces aplicar la acción',
   'pol.enabled': 'Activada',
   'pol.defaultDeny':
-    'Si ninguna regla coincide, Auvex elige la opción más segura (denegar lo desconocido).',
+    'Si ninguna regla coincide, GateWise elige la opción más segura (denegar lo desconocido).',
   'models.subtitle':
     'Dé a cada modelo un nombre fácil. Cambie de proveedor modificando una sola línea.',
   'models.colAlias': 'Alias',
@@ -1052,7 +1052,7 @@ const ES: Record<Key, string> = {
   'models.emptyMsg':
     'Añada una ruta para dar un nombre fácil a un modelo y apuntarlo a un proveedor.',
   'models.failover':
-    'Si un proveedor deja de estar disponible, Auvex conmuta automáticamente a un proveedor de respaldo configurado.',
+    'Si un proveedor deja de estar disponible, GateWise conmuta automáticamente a un proveedor de respaldo configurado.',
   'usage.subtitle': 'Coste y tráfico a través de la pasarela',
   'usage.emptyTitle': 'Aún no hay uso',
   'usage.emptyMsg': 'Envíe tráfico a través de la pasarela para ver el coste y el uso aquí.',
@@ -1147,7 +1147,7 @@ const ES: Record<Key, string> = {
   'monitor.goConnect': 'Ir a Conectar',
   'connect.title': 'Conecte su aplicación',
   'connect.subtitle':
-    'Auvex es compatible con OpenAI — apunte cualquier cliente a una sola URL y cada llamada queda gobernada.',
+    'GateWise es compatible con OpenAI — apunte cualquier cliente a una sola URL y cada llamada queda gobernada.',
   'connect.credentials': 'Sus credenciales',
   'connect.credentialsSub': 'Úselas como URL base y clave API en cualquier SDK.',
   'connect.baseUrl': 'URL base',
@@ -1157,7 +1157,7 @@ const ES: Record<Key, string> = {
   'connect.dropInSub': 'El mismo cambio de una URL en cada ecosistema.',
   'connect.test': 'Probar la conexión',
   'connect.testSub':
-    'Envíe una muestra con PII y un intento de inyección — vea cómo Auvex lo detecta en vivo.',
+    'Envíe una muestra con PII y un intento de inyección — vea cómo GateWise lo detecta en vivo.',
   'connect.runTest': 'Ejecutar prueba',
   'connect.errTitle': 'No se pudo contactar con la pasarela',
   'connect.resultGoverning': 'Conectado — y gobernando su tráfico ✓',
@@ -1322,7 +1322,7 @@ const IT: Record<Key, string> = {
   'pol.thenAction': "Allora applica l'azione",
   'pol.enabled': 'Attivo',
   'pol.defaultDeny':
-    "Se nessuna regola corrisponde, Auvex sceglie l'opzione più sicura (nega l'ignoto).",
+    "Se nessuna regola corrisponde, GateWise sceglie l'opzione più sicura (nega l'ignoto).",
   'models.subtitle':
     'Assegna a ogni modello un nome semplice. Cambia provider modificando una sola riga.',
   'models.colAlias': 'Alias',
@@ -1333,7 +1333,7 @@ const IT: Record<Key, string> = {
   'models.emptyMsg':
     'Aggiungi una rotta per dare a un modello un nome semplice e puntarlo a un provider.',
   'models.failover':
-    'Se un provider diventa irraggiungibile, Auvex passa automaticamente a un provider di riserva configurato.',
+    'Se un provider diventa irraggiungibile, GateWise passa automaticamente a un provider di riserva configurato.',
   'usage.subtitle': 'Costi e traffico attraverso il gateway',
   'usage.emptyTitle': 'Ancora nessun utilizzo',
   'usage.emptyMsg': 'Invia traffico attraverso il gateway per vedere qui costi e utilizzo.',
@@ -1428,7 +1428,7 @@ const IT: Record<Key, string> = {
   'monitor.goConnect': 'Vai a Connetti',
   'connect.title': 'Connetti la tua app',
   'connect.subtitle':
-    'Auvex è compatibile con OpenAI — punta qualsiasi client a un solo URL e ogni chiamata è governata.',
+    'GateWise è compatibile con OpenAI — punta qualsiasi client a un solo URL e ogni chiamata è governata.',
   'connect.credentials': 'Le tue credenziali',
   'connect.credentialsSub': 'Usale come URL di base e chiave API in qualsiasi SDK.',
   'connect.baseUrl': 'URL di base',
@@ -1438,7 +1438,7 @@ const IT: Record<Key, string> = {
   'connect.dropInSub': 'La stessa modifica di un URL in ogni ecosistema.',
   'connect.test': 'Testa la connessione',
   'connect.testSub':
-    "Invia un campione con PII e un tentativo di injection — guarda Auvex intercettarlo in tempo reale.",
+    "Invia un campione con PII e un tentativo di injection — guarda GateWise intercettarlo in tempo reale.",
   'connect.runTest': 'Esegui test',
   'connect.errTitle': 'Impossibile raggiungere il gateway',
   'connect.resultGoverning': 'Connesso — e il tuo traffico è governato ✓',
@@ -1476,7 +1476,7 @@ const Ctx = createContext<I18n | null>(null)
 
 export function I18nProvider({ children }: { children: ReactNode }) {
   const [locale, setLocaleState] = useState<Locale>(
-    () => (localStorage.getItem('auvex.locale') as Locale) || 'en',
+    () => (localStorage.getItem('gatewise.locale') as Locale) || 'en',
   )
   activeIntl = LOCALES.find((l) => l.code === locale)?.intl ?? 'en-GB'
 
@@ -1489,7 +1489,7 @@ export function I18nProvider({ children }: { children: ReactNode }) {
     return {
       locale,
       setLocale: (l) => {
-        localStorage.setItem('auvex.locale', l)
+        localStorage.setItem('gatewise.locale', l)
         activeIntl = LOCALES.find((x) => x.code === l)?.intl ?? 'en-GB'
         setLocaleState(l)
       },

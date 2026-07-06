@@ -57,7 +57,7 @@ export function AppShell() {
     const next = !dark
     setDark(next)
     document.body.className = next ? 'dark' : 'light'
-    localStorage.setItem('auvex.theme', next ? 'dark' : 'light')
+    localStorage.setItem('gatewise.theme', next ? 'dark' : 'light')
   }
 
   const tr = t as (k: string) => string
@@ -69,7 +69,7 @@ export function AppShell() {
       ? tr('app.requestDetail')
       : loc.pathname.startsWith('/policies')
         ? tr('app.policyEditor')
-        : 'Auvex'
+        : 'GateWise'
 
   return (
     <div className="app">
@@ -81,7 +81,7 @@ export function AppShell() {
           <div className="logo">
             <i className="ti ti-shield-lock" aria-hidden />
           </div>
-          <span style={{ fontSize: 17, fontWeight: 600 }}>Auvex</span>
+          <span style={{ fontSize: 17, fontWeight: 600 }}>GateWise</span>
         </div>
         {NAV.map((group) => (
           <div key={group.section}>

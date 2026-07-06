@@ -21,7 +21,7 @@ import type {
 } from './types'
 
 const BASE = (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? ''
-const KEY_STORAGE = 'auvex.apiKey'
+const KEY_STORAGE = 'gatewise.apiKey'
 
 export function getApiKey(): string | null {
   return localStorage.getItem(KEY_STORAGE)

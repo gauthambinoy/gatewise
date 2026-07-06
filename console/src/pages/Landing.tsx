@@ -2,8 +2,8 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
 
-const DEMO_KEY = 'auvex_demo_key'
-const GITHUB = 'https://github.com/gauthambinoy/auvex'
+const DEMO_KEY = 'gatewise_demo_key'
+const GITHUB = 'https://github.com/gauthambinoy/gatewise'
 
 const FEATURES = [
   { icon: 'ti-eye-off', title: 'Redact', text: '23 detectors mask PII, secrets and gov-IDs — in the prompt and the response — before anything leaves.' },
@@ -25,7 +25,7 @@ const CODE = `from openai import OpenAI
 
 client = OpenAI(
     base_url="https://your-gateway/v1",   # ← the only change
-    api_key="auvex_sk_...",
+    api_key="gatewise_sk_...",
 )
 # every call is now redacted, governed and audited.`
 
@@ -86,7 +86,7 @@ export function Landing() {
           >
             <i className="ti ti-shield-lock" style={{ color: '#fff', fontSize: 18 }} aria-hidden />
           </div>
-          <span style={{ fontSize: 19, fontWeight: 700, letterSpacing: '-0.02em' }}>Auvex</span>
+          <span style={{ fontSize: 19, fontWeight: 700, letterSpacing: '-0.02em' }}>GateWise</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <a href={GITHUB} target="_blank" rel="noreferrer" className="lp-btn lp-btn-ghost">
@@ -126,7 +126,7 @@ export function Landing() {
             lineHeight: 1.6,
           }}
         >
-          Auvex is a drop-in gateway that redacts secrets, blocks prompt injections, enforces policy
+          GateWise is a drop-in gateway that redacts secrets, blocks prompt injections, enforces policy
           and keeps a tamper-proof audit of every LLM request — across OpenAI, Anthropic, Gemini and
           Azure. Change one URL.
         </p>
@@ -178,7 +178,7 @@ export function Landing() {
           One URL change. Total control.
         </h2>
         <p style={{ color: 'var(--color-text-secondary)', maxWidth: 560, margin: '0 auto 28px', lineHeight: 1.6 }}>
-          Auvex is OpenAI-compatible, so every app, SDK and tool already works — just point it at your
+          GateWise is OpenAI-compatible, so every app, SDK and tool already works — just point it at your
           gateway. No rewrites, no SDK lock-in.
         </p>
         <pre className="card mono lp-code">{CODE}</pre>
@@ -208,7 +208,7 @@ export function Landing() {
           fontSize: 13,
         }}
       >
-        Auvex — enterprise AI gateway ·{' '}
+        GateWise — enterprise AI gateway ·{' '}
         <a href={GITHUB} target="_blank" rel="noreferrer" style={{ color: 'var(--color-text-info)' }}>
           GitHub
         </a>{' '}

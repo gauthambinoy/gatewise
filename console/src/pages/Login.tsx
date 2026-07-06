@@ -6,7 +6,7 @@ import type { SsoProvider } from '../lib/types'
 import { Alert, Button, Card, Divider, TextField } from '../components/ui'
 
 const PROVIDER_ICON: Record<string, string> = { google: 'ti-brand-google', okta: 'ti-key' }
-const DEMO_KEY = 'auvex_demo_key'
+const DEMO_KEY = 'gatewise_demo_key'
 
 export function Login() {
   const { login } = useAuth()
@@ -76,7 +76,7 @@ export function Login() {
           <div className="logo" style={{ width: 32, height: 32, borderRadius: 9 }}>
             <i className="ti ti-shield-lock" style={{ color: '#fff', fontSize: 19 }} aria-hidden />
           </div>
-          <span style={{ fontSize: 21, fontWeight: 600 }}>Auvex</span>
+          <span style={{ fontSize: 21, fontWeight: 600 }}>GateWise</span>
         </div>
         <div className="sub" style={{ textAlign: 'center', fontSize: 13, marginBottom: 22 }}>
           {tr('login.subtitle')}
@@ -126,7 +126,7 @@ export function Login() {
             label={tr('login.apiKeyLabel')}
             type="password"
             icon="ti-key"
-            placeholder="auvex_sk_…"
+            placeholder="gatewise_sk_…"
             value={key}
             onChange={setKey}
             fullWidth

@@ -76,10 +76,10 @@ print(llm.invoke("Hello from my app").content)`
       return `import { createOpenAI } from "@ai-sdk/openai";
 import { generateText } from "ai";
 
-const auvex = createOpenAI({ baseURL: "${base}", apiKey: "${key}" });
+const gatewise = createOpenAI({ baseURL: "${base}", apiKey: "${key}" });
 
 const { text } = await generateText({
-  model: auvex("smart"),
+  model: gatewise("smart"),
   prompt: "Hello from my app",
 });`
     case 'go':
@@ -176,7 +176,7 @@ function CodeBlock({ code }: { code: string }) {
 
 function ConnectInner() {
   const { t } = useT()
-  const key = getApiKey() ?? 'YOUR_AUVEX_KEY'
+  const key = getApiKey() ?? 'YOUR_GATEWISE_KEY'
   const [tab, setTab] = useState('curl')
   const [testing, setTesting] = useState(false)
   const [result, setResult] = useState<ModerationResult | null>(null)

@@ -99,7 +99,7 @@ export function Dialog({
     background: 'rgba(0, 0, 0, 0.5)',
     backdropFilter: 'blur(3px)',
     WebkitBackdropFilter: 'blur(3px)',
-    animation: reduce ? undefined : 'auvexFade 0.2s var(--ease-out)',
+    animation: reduce ? undefined : 'gatewiseFade 0.2s var(--ease-out)',
   }
 
   const panel: CSSProperties = {
@@ -114,7 +114,7 @@ export function Dialog({
     borderRadius: 'var(--border-radius-xl)',
     boxShadow: 'var(--shadow-xl)',
     outline: 'none',
-    animation: reduce ? undefined : 'auvexDialogIn 0.32s var(--ease-spring) both',
+    animation: reduce ? undefined : 'gatewiseDialogIn 0.32s var(--ease-spring) both',
   }
 
   return createPortal(
@@ -240,7 +240,7 @@ export function Tooltip({
               background: 'var(--color-text-primary)',
               borderRadius: 'var(--border-radius-md)',
               boxShadow: 'var(--shadow-md)',
-              animation: reduce ? undefined : 'auvexFade 0.14s var(--ease-out)',
+              animation: reduce ? undefined : 'gatewiseFade 0.14s var(--ease-out)',
             }}
           >
             {label}
@@ -347,7 +347,7 @@ export function Menu({
             border: '0.5px solid var(--color-border-tertiary)',
             borderRadius: 'var(--border-radius-lg)',
             boxShadow: 'var(--shadow-lg)',
-            animation: reduce ? undefined : 'auvexMenuIn 0.16s var(--ease-out)',
+            animation: reduce ? undefined : 'gatewiseMenuIn 0.16s var(--ease-out)',
           }}
         >
           {items.map((item, i) => (
@@ -474,8 +474,8 @@ export function ToastProvider({ children }: { children: ReactNode }) {
                   animation: reduce
                     ? undefined
                     : t.leaving
-                      ? `auvexToastOut ${TOAST_EXIT}ms var(--ease-out) both`
-                      : 'auvexToastIn 0.34s var(--ease-spring) both',
+                      ? `gatewiseToastOut ${TOAST_EXIT}ms var(--ease-out) both`
+                      : 'gatewiseToastIn 0.34s var(--ease-spring) both',
                 }}
               >
                 <i
@@ -509,20 +509,20 @@ export function useToast(): ToastApi {
 function OverlayKeyframes() {
   return (
     <style>{`
-      @keyframes auvexFade { from { opacity: 0 } to { opacity: 1 } }
-      @keyframes auvexDialogIn {
+      @keyframes gatewiseFade { from { opacity: 0 } to { opacity: 1 } }
+      @keyframes gatewiseDialogIn {
         from { opacity: 0; transform: translateY(8px) scale(0.96) }
         to { opacity: 1; transform: translateY(0) scale(1) }
       }
-      @keyframes auvexMenuIn {
+      @keyframes gatewiseMenuIn {
         from { opacity: 0; transform: translateY(-6px) scale(0.98) }
         to { opacity: 1; transform: translateY(0) scale(1) }
       }
-      @keyframes auvexToastIn {
+      @keyframes gatewiseToastIn {
         from { opacity: 0; transform: translateX(24px) scale(0.96) }
         to { opacity: 1; transform: translateX(0) scale(1) }
       }
-      @keyframes auvexToastOut {
+      @keyframes gatewiseToastOut {
         from { opacity: 1; transform: translateX(0) scale(1) }
         to { opacity: 0; transform: translateX(24px) scale(0.96) }
       }

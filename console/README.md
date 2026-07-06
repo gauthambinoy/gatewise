@@ -1,6 +1,6 @@
-# Auvex Console
+# GateWise Console
 
-The React admin console for Auvex — a Vite + React 18 + TypeScript SPA that binds
+The React admin console for GateWise — a Vite + React 18 + TypeScript SPA that binds
 to the gateway's REST API. It carries the dashboard, audit-log explorer (with
 search and hash-chain verification), policy editor, model routing, usage & cost,
 per-user metrics, members & roles, and API-key management.
@@ -12,7 +12,7 @@ npm install
 npm run dev        # http://localhost:5173 — proxies /v1 and /auth to the gateway on :8080
 ```
 
-Sign in with an Auvex API key; it's stored only in the browser and sent as a bearer
+Sign in with an GateWise API key; it's stored only in the browser and sent as a bearer
 token. Point the gateway at `:8080` first (see the repo root README).
 
 ## Build & ship

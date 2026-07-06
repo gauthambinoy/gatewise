@@ -2,7 +2,7 @@ import { useId, useState } from 'react'
 import type { CSSProperties, ReactNode } from 'react'
 import { useT } from '../../lib/i18n'
 
-// Form-control primitives for the Auvex console. Pure React 18 + TypeScript — no MUI or any
+// Form-control primitives for the GateWise console. Pure React 18 + TypeScript — no MUI or any
 // external UI library. Styling is inline + the shared className tokens from tokens.css /
 // animations.css; colours come exclusively from CSS variables so light/dark themes just work.
 //

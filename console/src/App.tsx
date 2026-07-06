@@ -33,7 +33,7 @@ export function App() {
           color: 'var(--color-text-tertiary)',
         }}
       >
-        <Spinner /> &nbsp;Loading Auvex…
+        <Spinner /> &nbsp;Loading GateWise…
       </div>
     )
   }

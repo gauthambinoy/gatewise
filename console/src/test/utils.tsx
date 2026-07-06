@@ -21,7 +21,7 @@ export function renderWithI18n(
  * same way the app does and mounts the provider, whose render syncs the active `Intl` locale.
  */
 export function applyLocale(locale: Locale): void {
-  localStorage.setItem('auvex.locale', locale)
+  localStorage.setItem('gatewise.locale', locale)
   render(<I18nProvider>{null}</I18nProvider>)
 }
 

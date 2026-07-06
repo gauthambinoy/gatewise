@@ -3,7 +3,7 @@ import type { CSSProperties, KeyboardEvent, ReactNode } from 'react'
 import { intlLocale, useT } from '../../lib/i18n'
 
 /* ------------------------------------------------------------------------------------------------
- * Data-display primitives for the Auvex console.
+ * Data-display primitives for the GateWise console.
  *
  * Pure React 18 + TypeScript — no MUI, no external UI library. Everything is themed exclusively
  * through the design tokens in styles/tokens.css + styles/animations.css (never hardcoded colours)
