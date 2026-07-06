@@ -1,8 +1,8 @@
-Auvex has been deployed as release "{{ .Release.Name }}" in namespace "{{ .Release.Namespace }}".
+GateWise has been deployed as release "{{ .Release.Name }}" in namespace "{{ .Release.Namespace }}".
 
 Components:
-  - gateway : {{ include "auvex.gateway.fullname" . }}  (Spring Boot, port {{ .Values.gateway.containerPort }})
-  - console : {{ include "auvex.console.fullname" . }}  (nginx SPA, port {{ .Values.console.containerPort }})
+  - gateway : {{ include "gatewise.gateway.fullname" . }}  (Spring Boot, port {{ .Values.gateway.containerPort }})
+  - console : {{ include "gatewise.console.fullname" . }}  (nginx SPA, port {{ .Values.console.containerPort }})
 
 {{- if .Values.ingress.enabled }}
 
@@ -14,17 +14,17 @@ Components:
 {{- else }}
 
 1. Ingress is disabled. Reach the console by port-forwarding:
-   kubectl --namespace {{ .Release.Namespace }} port-forward svc/{{ include "auvex.console.fullname" . }} 8080:{{ .Values.console.service.port }}
+   kubectl --namespace {{ .Release.Namespace }} port-forward svc/{{ include "gatewise.console.fullname" . }} 8080:{{ .Values.console.service.port }}
    then open http://127.0.0.1:8080/
 {{- end }}
 
 2. Check the gateway health:
-   kubectl --namespace {{ .Release.Namespace }} port-forward svc/{{ include "auvex.gateway.fullname" . }} 8081:{{ .Values.gateway.service.port }}
+   kubectl --namespace {{ .Release.Namespace }} port-forward svc/{{ include "gatewise.gateway.fullname" . }} 8081:{{ .Values.gateway.service.port }}
    curl http://127.0.0.1:8081/actuator/health
 
 {{- if not .Values.secrets.existingSecret }}
 
-3. Secrets: this release uses a chart-managed Secret ({{ include "auvex.fullname" . }}).
+3. Secrets: this release uses a chart-managed Secret ({{ include "gatewise.fullname" . }}).
    Make sure you supplied real values at install/upgrade time, e.g.:
      helm upgrade {{ .Release.Name }} . \
        --set secrets.openrouterApiKey=sk-or-... \

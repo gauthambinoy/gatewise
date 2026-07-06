@@ -86,13 +86,13 @@ jobs:
           key: ${{ secrets.DEPLOY_SSH_KEY }}
           script: |
             set -euo pipefail
-            cd /opt/auvex/src
+            cd /opt/gatewise/src
             git pull --ff-only
-            cd /opt/auvex/deploy
+            cd /opt/gatewise/deploy
             export GATEWAY_IMAGE="ghcr.io/${{ needs.build-and-push.outputs.repo }}/gateway:${{ github.sha }}"
             export CONSOLE_IMAGE="ghcr.io/${{ needs.build-and-push.outputs.repo }}/console:${{ github.sha }}"
-            docker compose --env-file /opt/auvex/.env -f docker-compose.prod.yml pull gateway console
-            docker compose --env-file /opt/auvex/.env -f docker-compose.prod.yml up -d
+            docker compose --env-file /opt/gatewise/.env -f docker-compose.prod.yml pull gateway console
+            docker compose --env-file /opt/gatewise/.env -f docker-compose.prod.yml up -d
             docker image prune -f
 
       - name: Smoke-test the live URL

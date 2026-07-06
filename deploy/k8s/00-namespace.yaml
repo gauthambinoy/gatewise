@@ -1,8 +1,8 @@
-# Namespace for all Auvex objects. `kustomization.yaml` also sets this as the
+# Namespace for all GateWise objects. `kustomization.yaml` also sets this as the
 # target namespace, so every resource lands here on `kubectl apply -k`.
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: auvex
+  name: gatewise
   labels:
-    app.kubernetes.io/part-of: auvex
+    app.kubernetes.io/part-of: gatewise

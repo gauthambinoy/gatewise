@@ -14,8 +14,8 @@ terraform {
   # migrate state to S3.
   #
   # backend "s3" {
-  #   bucket       = "auvex-tfstate"
-  #   key          = "auvex/terraform.tfstate"
+  #   bucket       = "gatewise-tfstate"
+  #   key          = "gatewise/terraform.tfstate"
   #   region       = "eu-west-1"
   #   encrypt      = true
   #   use_lockfile = true

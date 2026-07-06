@@ -1,22 +1,22 @@
-# Auvex
+# GateWise
 
-**A drop-in AI gateway that redacts, routes, governs, and logs every LLM call an enterprise makes.** Point one URL at Auvex and every prompt flows through a single controlled, audited passage.
+**A drop-in AI gateway that redacts, routes, governs, and logs every LLM call an enterprise makes.** Point one URL at GateWise and every prompt flows through a single controlled, audited passage.
 
-[![CI](https://github.com/gauthambinoy/auvex/actions/workflows/ci.yml/badge.svg)](https://github.com/gauthambinoy/auvex/actions/workflows/ci.yml)
-[![CodeQL](https://github.com/gauthambinoy/auvex/actions/workflows/codeql.yml/badge.svg)](https://github.com/gauthambinoy/auvex/actions/workflows/codeql.yml)
-[![Security](https://github.com/gauthambinoy/auvex/actions/workflows/security.yml/badge.svg)](https://github.com/gauthambinoy/auvex/actions/workflows/security.yml)
+[![CI](https://github.com/gauthambinoy/gatewise/actions/workflows/ci.yml/badge.svg)](https://github.com/gauthambinoy/gatewise/actions/workflows/ci.yml)
+[![CodeQL](https://github.com/gauthambinoy/gatewise/actions/workflows/codeql.yml/badge.svg)](https://github.com/gauthambinoy/gatewise/actions/workflows/codeql.yml)
+[![Security](https://github.com/gauthambinoy/gatewise/actions/workflows/security.yml/badge.svg)](https://github.com/gauthambinoy/gatewise/actions/workflows/security.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Java 21](https://img.shields.io/badge/Java-21-orange.svg)](https://adoptium.net/temurin/releases/?version=21)
 
 ## What it does
 
-Auvex sits between an enterprise's apps and the model providers they use. Because it speaks the **OpenAI-compatible API**, any app, SDK, or tool that already talks to OpenAI switches to Auvex by changing **one line** — the base URL and key. From then on, every call is authenticated to a tenant, has its **PII and secrets masked before it leaves the network**, is checked against **per-tenant allow/deny policy**, is recorded in an **immutable, hash-chained audit log**, and is forwarded to the chosen model.
+GateWise sits between an enterprise's apps and the model providers they use. Because it speaks the **OpenAI-compatible API**, any app, SDK, or tool that already talks to OpenAI switches to GateWise by changing **one line** — the base URL and key. From then on, every call is authenticated to a tenant, has its **PII and secrets masked before it leaves the network**, is checked against **per-tenant allow/deny policy**, is recorded in an **immutable, hash-chained audit log**, and is forwarded to the chosen model.
 
 **Ask `X` → get `Y`:**
 
 ```bash
-curl https://your-auvex/v1/chat/completions \
-  -H "Authorization: Bearer auvex_<your-key>" \
+curl https://your-gatewise/v1/chat/completions \
+  -H "Authorization: Bearer gatewise_<your-key>" \
   -H "Content-Type: application/json" \
   -d '{"model":"smart","messages":[{"role":"user","content":"email jane@acme.com about card 4012888888881881"}]}'
 # → the provider receives: "email ‹EMAIL_REDACTED› about card ‹CARD_REDACTED›"
@@ -25,31 +25,31 @@ curl https://your-auvex/v1/chat/completions \
 
 ## Integrate your app — any platform
 
-Auvex is **OpenAI-compatible**, so every SDK, framework and tool works by changing one line — the base URL and key. The in-console **Connect** page generates these pre-filled with your URL + key.
+GateWise is **OpenAI-compatible**, so every SDK, framework and tool works by changing one line — the base URL and key. The in-console **Connect** page generates these pre-filled with your URL + key.
 
 ```python
 # Python (openai)
 from openai import OpenAI
-client = OpenAI(base_url="https://your-gateway/v1", api_key="auvex_sk_...")
+client = OpenAI(base_url="https://your-gateway/v1", api_key="gatewise_sk_...")
 client.chat.completions.create(model="smart", messages=[{"role": "user", "content": "Hello"}])
 ```
 ```javascript
 // Node / TypeScript (openai)
 import OpenAI from "openai";
-const client = new OpenAI({ baseURL: "https://your-gateway/v1", apiKey: "auvex_sk_..." });
+const client = new OpenAI({ baseURL: "https://your-gateway/v1", apiKey: "gatewise_sk_..." });
 await client.chat.completions.create({ model: "smart", messages: [{ role: "user", content: "Hello" }] });
 ```
 ```python
 # LangChain
 from langchain_openai import ChatOpenAI
-llm = ChatOpenAI(base_url="https://your-gateway/v1", api_key="auvex_sk_...", model="smart")
+llm = ChatOpenAI(base_url="https://your-gateway/v1", api_key="gatewise_sk_...", model="smart")
 ```
 
-**No-code / existing tools** — set the OpenAI endpoint to your Base URL: **Cursor · Continue.dev · n8n · Open WebUI · LibreChat · Flowise / Dify · Vercel AI SDK**. Full API in [`docs/openapi.yaml`](docs/openapi.yaml) (+ a [Postman collection](docs/auvex.postman_collection.json)).
+**No-code / existing tools** — set the OpenAI endpoint to your Base URL: **Cursor · Continue.dev · n8n · Open WebUI · LibreChat · Flowise / Dify · Vercel AI SDK**. Full API in [`docs/openapi.yaml`](docs/openapi.yaml) (+ a [Postman collection](docs/gatewise.postman_collection.json)).
 
 ## Live demo
 
-**🔗 Live (hosted): https://auvex.54.170.218.176.nip.io** — open it and click **"Try the live demo"** for a sandbox org pre-seeded with real governed traffic (no key, no sign-up). Or run the whole stack locally in one command — `docker compose up -d --build` — and open **http://localhost:3000**.
+**🔗 Live (hosted): https://gatewise.54.170.218.176.nip.io** — open it and click **"Try the live demo"** for a sandbox org pre-seeded with real governed traffic (no key, no sign-up). Or run the whole stack locally in one command — `docker compose up -d --build` — and open **http://localhost:3000**.
 
 ![Login](docs/screenshots/login.png)
 

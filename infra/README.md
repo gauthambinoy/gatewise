@@ -1,6 +1,6 @@
-# Auvex Infrastructure (Terraform)
+# GateWise Infrastructure (Terraform)
 
-Infrastructure-as-code for the Auvex production deploy. This is the *only* path
+Infrastructure-as-code for the GateWise production deploy. This is the *only* path
 to the box — no click-ops (ROADMAP / CLAUDE.md §6c).
 
 ## What it provisions

@@ -1,7 +1,7 @@
 {{/*
 Expand the name of the chart.
 */}}
-{{- define "auvex.name" -}}
+{{- define "gatewise.name" -}}
 {{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
@@ -9,7 +9,7 @@ Expand the name of the chart.
 Fully qualified app name. Truncated at 63 chars for the DNS-name limit on some
 Kubernetes resources/labels.
 */}}
-{{- define "auvex.fullname" -}}
+{{- define "gatewise.fullname" -}}
 {{- if .Values.fullnameOverride }}
 {{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" }}
 {{- else }}
@@ -25,21 +25,21 @@ Kubernetes resources/labels.
 {{/*
 Chart name and version, for the helm.sh/chart label.
 */}}
-{{- define "auvex.chart" -}}
+{{- define "gatewise.chart" -}}
 {{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
 {{/*
 Common labels applied to every object.
 */}}
-{{- define "auvex.labels" -}}
-helm.sh/chart: {{ include "auvex.chart" . }}
-{{ include "auvex.selectorLabels" . }}
+{{- define "gatewise.labels" -}}
+helm.sh/chart: {{ include "gatewise.chart" . }}
+{{ include "gatewise.selectorLabels" . }}
 {{- if .Chart.AppVersion }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 {{- end }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
-app.kubernetes.io/part-of: auvex
+app.kubernetes.io/part-of: gatewise
 {{- with .Values.commonLabels }}
 {{ toYaml . }}
 {{- end }}
@@ -48,44 +48,44 @@ app.kubernetes.io/part-of: auvex
 {{/*
 Base selector labels (release-wide; component is added per-workload).
 */}}
-{{- define "auvex.selectorLabels" -}}
-app.kubernetes.io/name: {{ include "auvex.name" . }}
+{{- define "gatewise.selectorLabels" -}}
+app.kubernetes.io/name: {{ include "gatewise.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
 {{/*
-Per-component labels. Pass a dict: {{ include "auvex.componentLabels" (dict "ctx" . "component" "gateway") }}
+Per-component labels. Pass a dict: {{ include "gatewise.componentLabels" (dict "ctx" . "component" "gateway") }}
 */}}
-{{- define "auvex.componentLabels" -}}
-{{ include "auvex.labels" .ctx }}
+{{- define "gatewise.componentLabels" -}}
+{{ include "gatewise.labels" .ctx }}
 app.kubernetes.io/component: {{ .component }}
 {{- end }}
 
 {{/*
 Per-component selector labels.
 */}}
-{{- define "auvex.componentSelectorLabels" -}}
-{{ include "auvex.selectorLabels" .ctx }}
+{{- define "gatewise.componentSelectorLabels" -}}
+{{ include "gatewise.selectorLabels" .ctx }}
 app.kubernetes.io/component: {{ .component }}
 {{- end }}
 
 {{/*
 Component-scoped resource names.
 */}}
-{{- define "auvex.gateway.fullname" -}}
-{{- printf "%s-gateway" (include "auvex.fullname" .) | trunc 63 | trimSuffix "-" }}
+{{- define "gatewise.gateway.fullname" -}}
+{{- printf "%s-gateway" (include "gatewise.fullname" .) | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
-{{- define "auvex.console.fullname" -}}
-{{- printf "%s-console" (include "auvex.fullname" .) | trunc 63 | trimSuffix "-" }}
+{{- define "gatewise.console.fullname" -}}
+{{- printf "%s-console" (include "gatewise.fullname" .) | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
 {{/*
 ServiceAccount name to use.
 */}}
-{{- define "auvex.serviceAccountName" -}}
+{{- define "gatewise.serviceAccountName" -}}
 {{- if .Values.serviceAccount.create }}
-{{- default (include "auvex.fullname" .) .Values.serviceAccount.name }}
+{{- default (include "gatewise.fullname" .) .Values.serviceAccount.name }}
 {{- else }}
 {{- default "default" .Values.serviceAccount.name }}
 {{- end }}
@@ -95,18 +95,18 @@ ServiceAccount name to use.
 Name of the Secret the gateway should read credentials from: either the
 user-provided existing Secret or the chart-managed one.
 */}}
-{{- define "auvex.secretName" -}}
+{{- define "gatewise.secretName" -}}
 {{- if .Values.secrets.existingSecret }}
 {{- .Values.secrets.existingSecret }}
 {{- else }}
-{{- include "auvex.fullname" . }}
+{{- include "gatewise.fullname" . }}
 {{- end }}
 {{- end }}
 
 {{/*
 Resolve the gateway image, defaulting the tag to the chart appVersion.
 */}}
-{{- define "auvex.gateway.image" -}}
+{{- define "gatewise.gateway.image" -}}
 {{- $tag := .Values.gateway.image.tag | default .Chart.AppVersion -}}
 {{- printf "%s:%s" .Values.gateway.image.repository $tag }}
 {{- end }}
@@ -114,7 +114,7 @@ Resolve the gateway image, defaulting the tag to the chart appVersion.
 {{/*
 Resolve the console image, defaulting the tag to the chart appVersion.
 */}}
-{{- define "auvex.console.image" -}}
+{{- define "gatewise.console.image" -}}
 {{- $tag := .Values.console.image.tag | default .Chart.AppVersion -}}
 {{- printf "%s:%s" .Values.console.image.repository $tag }}
 {{- end }}
@@ -122,8 +122,8 @@ Resolve the console image, defaulting the tag to the chart appVersion.
 {{/*
 The DNS name of the gateway Service, used by the console nginx upstream.
 */}}
-{{- define "auvex.gateway.serviceHost" -}}
-{{- include "auvex.gateway.fullname" . }}
+{{- define "gatewise.gateway.serviceHost" -}}
+{{- include "gatewise.gateway.fullname" . }}
 {{- end }}
 
 {{/*
@@ -132,7 +132,7 @@ JDBC URL for the gateway datasource. Prefers, in order:
   2. the bundled Postgres subchart service (when postgresql.enabled)
   3. externalDatabase host/port/database
 */}}
-{{- define "auvex.datasourceUrl" -}}
+{{- define "gatewise.datasourceUrl" -}}
 {{- if .Values.externalDatabase.jdbcUrl -}}
 {{- .Values.externalDatabase.jdbcUrl -}}
 {{- else if .Values.postgresql.enabled -}}
@@ -145,7 +145,7 @@ JDBC URL for the gateway datasource. Prefers, in order:
 {{/*
 Datasource username (bundled subchart username, else external username).
 */}}
-{{- define "auvex.datasourceUsername" -}}
+{{- define "gatewise.datasourceUsername" -}}
 {{- if .Values.postgresql.enabled -}}
 {{- .Values.postgresql.auth.username -}}
 {{- else -}}
@@ -156,7 +156,7 @@ Datasource username (bundled subchart username, else external username).
 {{/*
 Redis host. Bundled subchart master service, else external host.
 */}}
-{{- define "auvex.redisHost" -}}
+{{- define "gatewise.redisHost" -}}
 {{- if .Values.redis.enabled -}}
 {{- printf "%s-redis-master" .Release.Name -}}
 {{- else -}}
@@ -167,7 +167,7 @@ Redis host. Bundled subchart master service, else external host.
 {{/*
 Redis port.
 */}}
-{{- define "auvex.redisPort" -}}
+{{- define "gatewise.redisPort" -}}
 {{- if .Values.redis.enabled -}}
 6379
 {{- else -}}

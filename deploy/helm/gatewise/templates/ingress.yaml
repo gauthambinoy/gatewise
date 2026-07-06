@@ -1,11 +1,11 @@
 {{- if .Values.ingress.enabled -}}
-{{- $fullName := include "auvex.fullname" . -}}
+{{- $fullName := include "gatewise.fullname" . -}}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: {{ $fullName }}
   labels:
-    {{- include "auvex.labels" . | nindent 4 }}
+    {{- include "gatewise.labels" . | nindent 4 }}
   {{- $ingAnnotations := merge (dict) .Values.ingress.annotations .Values.commonAnnotations }}
   {{- with $ingAnnotations }}
   annotations:
@@ -36,11 +36,11 @@ spec:
             backend:
               service:
                 {{- if eq (default "console" .service) "gateway" }}
-                name: {{ include "auvex.gateway.fullname" $ }}
+                name: {{ include "gatewise.gateway.fullname" $ }}
                 port:
                   number: {{ $.Values.gateway.service.port }}
                 {{- else }}
-                name: {{ include "auvex.console.fullname" $ }}
+                name: {{ include "gatewise.console.fullname" $ }}
                 port:
                   number: {{ $.Values.console.service.port }}
                 {{- end }}

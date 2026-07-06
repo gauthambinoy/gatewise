@@ -1,45 +1,45 @@
 # Non-secret runtime configuration.
 #
 # Two ConfigMaps:
-#   auvex-gateway-config : env vars for the Spring Boot gateway (names mirror the
+#   gatewise-gateway-config : env vars for the Spring Boot gateway (names mirror the
 #                          app's application.yml / docker-compose.yml exactly).
-#   auvex-console-nginx  : nginx config for the console, with the proxy upstream
+#   gatewise-console-nginx  : nginx config for the console, with the proxy upstream
 #                          pointed at the in-cluster gateway Service. The image
 #                          bakes in the host "gateway", which only resolves under
 #                          docker-compose; here it must be the Service name.
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: auvex-gateway-config
-  namespace: auvex
+  name: gatewise-gateway-config
+  namespace: gatewise
   labels:
-    app.kubernetes.io/part-of: auvex
+    app.kubernetes.io/part-of: gatewise
     app.kubernetes.io/component: gateway
 data:
   OPENROUTER_BASE_URL: "https://openrouter.ai/api/v1"
   OPENROUTER_MODEL: "openai/gpt-oss-120b:free"
   # Points at the in-cluster postgres Service defined in 60-postgres.yaml. For a
   # managed DB, change this to your JDBC URL (and update the username/password).
-  SPRING_DATASOURCE_URL: "jdbc:postgresql://auvex-postgres:5432/auvex"
-  SPRING_DATASOURCE_USERNAME: "auvex"
-  REDIS_HOST: "auvex-redis"
+  SPRING_DATASOURCE_URL: "jdbc:postgresql://gatewise-postgres:5432/gatewise"
+  SPRING_DATASOURCE_USERNAME: "gatewise"
+  REDIS_HOST: "gatewise-redis"
   REDIS_PORT: "6379"
   SERVER_PORT: "8080"
-  AUVEX_REDACT_RESPONSE: "true"
-  AUVEX_INJECTION_ENABLED: "true"
-  AUVEX_INJECTION_BLOCK: "false"
-  AUVEX_CACHE_ENABLED: "true"
+  GATEWISE_REDACT_RESPONSE: "true"
+  GATEWISE_INJECTION_ENABLED: "true"
+  GATEWISE_INJECTION_BLOCK: "false"
+  GATEWISE_CACHE_ENABLED: "true"
   # Never enable the demo seed or dev login in a real environment.
-  AUVEX_DEMO_ENABLED: "false"
-  AUVEX_DEV_LOGIN_ENABLED: "false"
+  GATEWISE_DEMO_ENABLED: "false"
+  GATEWISE_DEV_LOGIN_ENABLED: "false"
 ---
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: auvex-console-nginx
-  namespace: auvex
+  name: gatewise-console-nginx
+  namespace: gatewise
   labels:
-    app.kubernetes.io/part-of: auvex
+    app.kubernetes.io/part-of: gatewise
     app.kubernetes.io/component: console
 data:
   default.conf: |
@@ -50,12 +50,12 @@ data:
         index index.html;
 
         location /v1/ {
-            proxy_pass http://auvex-gateway:8080;
+            proxy_pass http://gatewise-gateway:8080;
             proxy_set_header Host $host;
             proxy_set_header X-Real-IP $remote_addr;
         }
         location /auth/ {
-            proxy_pass http://auvex-gateway:8080;
+            proxy_pass http://gatewise-gateway:8080;
             proxy_set_header Host $host;
             proxy_set_header X-Real-IP $remote_addr;
         }

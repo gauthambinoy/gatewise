@@ -1,6 +1,6 @@
 {
   "info": {
-    "name": "Auvex Gateway",
+    "name": "GateWise Gateway",
     "description": "Drop-in, OpenAI-compatible AI gateway — redact, govern and audit every LLM call. Set the `baseUrl` and `apiKey` collection variables, then run any request. Every call inherits Bearer auth from `{{apiKey}}`.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
@@ -10,7 +10,7 @@
   },
   "variable": [
     { "key": "baseUrl", "value": "https://your-gateway", "type": "string" },
-    { "key": "apiKey", "value": "auvex_demo_key", "type": "string" }
+    { "key": "apiKey", "value": "gatewise_demo_key", "type": "string" }
   ],
   "event": [
     {
@@ -89,7 +89,7 @@
           "name": "GDPR DSAR export",
           "request": {
             "method": "GET",
-            "url": { "raw": "{{baseUrl}}/v1/audit/dsar?subject=maya@demo.auvex.io", "host": ["{{baseUrl}}"], "path": ["v1", "audit", "dsar"], "query": [{ "key": "subject", "value": "maya@demo.auvex.io" }] }
+            "url": { "raw": "{{baseUrl}}/v1/audit/dsar?subject=maya@demo.gatewise.io", "host": ["{{baseUrl}}"], "path": ["v1", "audit", "dsar"], "query": [{ "key": "subject", "value": "maya@demo.gatewise.io" }] }
           }
         }
       ]

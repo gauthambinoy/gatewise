@@ -3,21 +3,21 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: auvex-gateway
-  namespace: auvex
+  name: gatewise-gateway
+  namespace: gatewise
   labels:
-    app.kubernetes.io/part-of: auvex
+    app.kubernetes.io/part-of: gatewise
     app.kubernetes.io/component: gateway
 spec:
   replicas: 2
   selector:
     matchLabels:
-      app.kubernetes.io/part-of: auvex
+      app.kubernetes.io/part-of: gatewise
       app.kubernetes.io/component: gateway
   template:
     metadata:
       labels:
-        app.kubernetes.io/part-of: auvex
+        app.kubernetes.io/part-of: gatewise
         app.kubernetes.io/component: gateway
     spec:
       automountServiceAccountToken: false
@@ -31,7 +31,7 @@ spec:
       containers:
         - name: gateway
           # Pin to a real release tag in production instead of latest.
-          image: ghcr.io/gauthambinoy/auvex-gateway:latest
+          image: ghcr.io/gauthambinoy/gatewise-gateway:latest
           imagePullPolicy: IfNotPresent
           securityContext:
             allowPrivilegeEscalation: false
@@ -43,22 +43,22 @@ spec:
               containerPort: 8080
           envFrom:
             - configMapRef:
-                name: auvex-gateway-config
+                name: gatewise-gateway-config
           env:
             - name: OPENROUTER_API_KEY
               valueFrom:
                 secretKeyRef:
-                  name: auvex-secrets
+                  name: gatewise-secrets
                   key: openrouter-api-key
-            - name: AUVEX_SESSION_SECRET
+            - name: GATEWISE_SESSION_SECRET
               valueFrom:
                 secretKeyRef:
-                  name: auvex-secrets
+                  name: gatewise-secrets
                   key: session-secret
             - name: SPRING_DATASOURCE_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: auvex-secrets
+                  name: gatewise-secrets
                   key: postgres-password
           startupProbe:
             httpGet:
@@ -100,15 +100,15 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: auvex-gateway
-  namespace: auvex
+  name: gatewise-gateway
+  namespace: gatewise
   labels:
-    app.kubernetes.io/part-of: auvex
+    app.kubernetes.io/part-of: gatewise
     app.kubernetes.io/component: gateway
 spec:
   type: ClusterIP
   selector:
-    app.kubernetes.io/part-of: auvex
+    app.kubernetes.io/part-of: gatewise
     app.kubernetes.io/component: gateway
   ports:
     - name: http

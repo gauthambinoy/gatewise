@@ -1,21 +1,21 @@
 openapi: 3.1.0
 info:
-  title: Auvex Gateway API
+  title: GateWise Gateway API
   version: "0.1.0"
   description: >
-    Auvex is a drop-in, **OpenAI-compatible** AI gateway that redacts secrets, blocks prompt
+    GateWise is a drop-in, **OpenAI-compatible** AI gateway that redacts secrets, blocks prompt
     injections, enforces per-tenant policy, and keeps a tamper-proof, hash-chained audit of every
     LLM call — across OpenAI, Anthropic, Gemini and Azure.
 
 
-    **Integrate:** point any OpenAI client at `{baseUrl}/v1` with your Auvex API key as a Bearer
+    **Integrate:** point any OpenAI client at `{baseUrl}/v1` with your GateWise API key as a Bearer
     token. The model field accepts aliases (`fast`, `smart`, `claude`, `gemini`, `azure-gpt4`) which
     the routing table resolves — and which also act as the allow-list (anything else is refused).
   license:
     name: MIT
 servers:
   - url: "{baseUrl}"
-    description: Your Auvex gateway
+    description: Your GateWise gateway
     variables:
       baseUrl:
         default: https://your-gateway
@@ -401,7 +401,7 @@ components:
     bearerAuth:
       type: http
       scheme: bearer
-      description: Your Auvex API key (e.g. `auvex_sk_...`).
+      description: Your GateWise API key (e.g. `gatewise_sk_...`).
   responses:
     Unauthorized:
       description: Missing, malformed, unknown, revoked or expired key.

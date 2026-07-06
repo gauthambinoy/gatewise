@@ -1,6 +1,6 @@
-# Auvex raw Kubernetes manifests
+# GateWise raw Kubernetes manifests
 
-**Helm is the recommended way to deploy Auvex** (see `../helm/auvex`). These raw
+**Helm is the recommended way to deploy GateWise** (see `../helm/gatewise`). These raw
 manifests are a no-Helm alternative — plain `kubectl apply`-able YAML for the same
 topology: gateway, console, ingress, config, a secret template, and an optional
 in-cluster Postgres + Redis for a quick non-prod spin-up.
@@ -9,7 +9,7 @@ in-cluster Postgres + Redis for a quick non-prod spin-up.
 
 | File | What it is |
 |------|------------|
-| `00-namespace.yaml` | `auvex` namespace |
+| `00-namespace.yaml` | `gatewise` namespace |
 | `10-configmap.yaml` | Gateway env (non-secret) + console nginx upstream config |
 | `20-secret.yaml` | **Secret TEMPLATE** — replace placeholders or manage externally |
 | `30-gateway.yaml` | Gateway Deployment + Service (port 8080) |
@@ -27,8 +27,8 @@ in-cluster Postgres + Redis for a quick non-prod spin-up.
    `kustomization.yaml`:
 
    ```
-   kubectl create namespace auvex
-   kubectl -n auvex create secret generic auvex-secrets \
+   kubectl create namespace gatewise
+   kubectl -n gatewise create secret generic gatewise-secrets \
      --from-literal=openrouter-api-key='sk-or-...' \
      --from-literal=session-secret="$(openssl rand -hex 32)" \
      --from-literal=postgres-password="$(openssl rand -hex 16)"
@@ -36,10 +36,10 @@ in-cluster Postgres + Redis for a quick non-prod spin-up.
 
    Keys consumed by the gateway:
    `openrouter-api-key` → `OPENROUTER_API_KEY`,
-   `session-secret` → `AUVEX_SESSION_SECRET`,
+   `session-secret` → `GATEWISE_SESSION_SECRET`,
    `postgres-password` → `SPRING_DATASOURCE_PASSWORD`.
 
-2. **DNS / TLS.** Replace `auvex.example.com` in `50-ingress.yaml` (rule and tls)
+2. **DNS / TLS.** Replace `gatewise.example.com` in `50-ingress.yaml` (rule and tls)
    and set the `cert-manager.io/cluster-issuer` to your issuer.
 
 3. **Databases (production).** Comment out `60-postgres.yaml` and `61-redis.yaml`
@@ -61,8 +61,8 @@ kubectl apply -f deploy/k8s/
 ## Verify
 
 ```
-kubectl -n auvex get pods
-kubectl -n auvex port-forward svc/auvex-gateway 8081:8080
+kubectl -n gatewise get pods
+kubectl -n gatewise port-forward svc/gatewise-gateway 8081:8080
 curl http://127.0.0.1:8081/actuator/health
 ```
 
@@ -72,6 +72,6 @@ curl http://127.0.0.1:8081/actuator/health
   dropped. The gateway uses a read-only root filesystem with a `/tmp` `emptyDir`.
 - These manifests deliberately omit the NetworkPolicy set the Helm chart ships;
   add one (or use Helm) if you need DB/Redis isolation.
-- The console nginx upstream is set to the in-cluster `auvex-gateway` Service via
+- The console nginx upstream is set to the in-cluster `gatewise-gateway` Service via
   the mounted `10-configmap.yaml` config (the image bakes in `gateway:8080`,
   which only resolves under docker-compose).

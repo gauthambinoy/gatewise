@@ -1,7 +1,7 @@
 apiVersion: v2
-name: auvex
+name: gatewise
 description: >-
-  Auvex AI governance gateway — a Spring Boot policy/observability gateway in
+  GateWise AI governance gateway — a Spring Boot policy/observability gateway in
   front of OpenAI-compatible LLM providers, plus its React admin console served
   by nginx. Ships with optional bundled Postgres and Redis, or point the gateway
   at your own managed databases.
@@ -10,18 +10,18 @@ type: application
 # Chart version follows the chart's own lifecycle (bump on any template change).
 version: 0.1.0
 
-# appVersion tracks the Auvex application release the default image tags target.
+# appVersion tracks the GateWise application release the default image tags target.
 # Keep this in step with image.tag in values.yaml.
 appVersion: "1.0.0"
 
-home: https://github.com/gauthambinoy/auvex
+home: https://github.com/gauthambinoy/gatewise
 sources:
-  - https://github.com/gauthambinoy/auvex
+  - https://github.com/gauthambinoy/gatewise
 
 kubeVersion: ">=1.23.0-0"
 
 maintainers:
-  - name: Auvex maintainers
+  - name: GateWise maintainers
 
 keywords:
   - ai
@@ -37,7 +37,7 @@ keywords:
 # externalDatabase / externalRedis blocks to use managed services instead.
 #
 # Before `helm install`, fetch these once with:
-#   helm dependency update deploy/helm/auvex
+#   helm dependency update deploy/helm/gatewise
 dependencies:
   - name: postgresql
     version: "~15.5.0"

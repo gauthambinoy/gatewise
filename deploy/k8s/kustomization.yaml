@@ -1,12 +1,12 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
-# All resources land in the auvex namespace (also created by 00-namespace.yaml).
-namespace: auvex
+# All resources land in the gatewise namespace (also created by 00-namespace.yaml).
+namespace: gatewise
 
 # Labels added to every resource for easy selection / cleanup.
 commonLabels:
-  app.kubernetes.io/part-of: auvex
+  app.kubernetes.io/part-of: gatewise
 
 resources:
   - 00-namespace.yaml

@@ -1,9 +1,9 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "auvex.console.fullname" . }}
+  name: {{ include "gatewise.console.fullname" . }}
   labels:
-    {{- include "auvex.componentLabels" (dict "ctx" . "component" "console") | nindent 4 }}
+    {{- include "gatewise.componentLabels" (dict "ctx" . "component" "console") | nindent 4 }}
   {{- with .Values.commonAnnotations }}
   annotations:
     {{- toYaml . | nindent 4 }}
@@ -14,11 +14,11 @@ spec:
   {{- end }}
   selector:
     matchLabels:
-      {{- include "auvex.componentSelectorLabels" (dict "ctx" . "component" "console") | nindent 6 }}
+      {{- include "gatewise.componentSelectorLabels" (dict "ctx" . "component" "console") | nindent 6 }}
   template:
     metadata:
       labels:
-        {{- include "auvex.componentLabels" (dict "ctx" . "component" "console") | nindent 8 }}
+        {{- include "gatewise.componentLabels" (dict "ctx" . "component" "console") | nindent 8 }}
         {{- with .Values.console.podLabels }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
@@ -29,7 +29,7 @@ spec:
         {{- toYaml . | nindent 8 }}
         {{- end }}
     spec:
-      serviceAccountName: {{ include "auvex.serviceAccountName" . }}
+      serviceAccountName: {{ include "gatewise.serviceAccountName" . }}
       automountServiceAccountToken: {{ .Values.serviceAccount.automountServiceAccountToken }}
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
@@ -39,7 +39,7 @@ spec:
         {{- toYaml .Values.console.podSecurityContext | nindent 8 }}
       containers:
         - name: console
-          image: {{ include "auvex.console.image" . | quote }}
+          image: {{ include "gatewise.console.image" . | quote }}
           imagePullPolicy: {{ .Values.console.image.pullPolicy }}
           securityContext:
             {{- toYaml .Values.console.securityContext | nindent 12 }}
@@ -71,7 +71,7 @@ spec:
         {{- if .Values.console.overrideNginxConf }}
         - name: nginx-conf
           configMap:
-            name: {{ include "auvex.console.fullname" . }}-nginx
+            name: {{ include "gatewise.console.fullname" . }}-nginx
         {{- end }}
         - name: nginx-cache
           emptyDir: {}

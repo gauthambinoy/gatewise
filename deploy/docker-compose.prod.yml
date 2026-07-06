@@ -6,7 +6,7 @@
 #
 # Image tags, the public domain and all secrets come from the host .env (written
 # by Terraform's user-data / managed by CD) — nothing sensitive lives in here.
-name: auvex
+name: gatewise
 
 services:
   caddy:
@@ -18,7 +18,7 @@ services:
       - "80:80"
       - "443:443"
     environment:
-      AUVEX_DOMAIN: ${AUVEX_DOMAIN:?set AUVEX_DOMAIN in .env}
+      GATEWISE_DOMAIN: ${GATEWISE_DOMAIN:?set GATEWISE_DOMAIN in .env}
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data
@@ -28,7 +28,7 @@ services:
         condition: service_healthy
 
   console:
-    image: ${CONSOLE_IMAGE:-ghcr.io/gauthambinoy/auvex/console:latest}
+    image: ${CONSOLE_IMAGE:-ghcr.io/gauthambinoy/gatewise/console:latest}
     restart: unless-stopped
     depends_on:
       gateway:
@@ -41,19 +41,19 @@ services:
       retries: 6
 
   gateway:
-    image: ${GATEWAY_IMAGE:-ghcr.io/gauthambinoy/auvex/gateway:latest}
+    image: ${GATEWAY_IMAGE:-ghcr.io/gauthambinoy/gatewise/gateway:latest}
     restart: unless-stopped
     environment:
       SERVER_PORT: 8080
       OPENROUTER_BASE_URL: ${OPENROUTER_BASE_URL:-https://openrouter.ai/api/v1}
       OPENROUTER_MODEL: ${OPENROUTER_MODEL:-openai/gpt-oss-120b:free}
       OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:?set OPENROUTER_API_KEY in .env}
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-auvex}
-      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-auvex}
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-gatewise}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-gatewise}
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
       REDIS_HOST: redis
       REDIS_PORT: 6379
-      AUVEX_DEMO_ENABLED: "true"
+      GATEWISE_DEMO_ENABLED: "true"
     depends_on:
       postgres:
         condition: service_healthy
@@ -70,14 +70,14 @@ services:
     image: postgres:17-alpine
     restart: unless-stopped
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-auvex}
-      POSTGRES_USER: ${POSTGRES_USER:-auvex}
+      POSTGRES_DB: ${POSTGRES_DB:-gatewise}
+      POSTGRES_USER: ${POSTGRES_USER:-gatewise}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
       # $$ escapes compose interpolation so the shell expands the container's env.
-      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-auvex} -d $${POSTGRES_DB:-auvex}"]
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-gatewise} -d $${POSTGRES_DB:-gatewise}"]
       interval: 5s
       timeout: 5s
       retries: 12

@@ -16,13 +16,13 @@ by contrast, accept connections solely from the gateway.
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: {{ include "auvex.console.fullname" . }}
+  name: {{ include "gatewise.console.fullname" . }}
   labels:
-    {{- include "auvex.componentLabels" (dict "ctx" . "component" "console") | nindent 4 }}
+    {{- include "gatewise.componentLabels" (dict "ctx" . "component" "console") | nindent 4 }}
 spec:
   podSelector:
     matchLabels:
-      {{- include "auvex.componentSelectorLabels" (dict "ctx" . "component" "console") | nindent 6 }}
+      {{- include "gatewise.componentSelectorLabels" (dict "ctx" . "component" "console") | nindent 6 }}
   policyTypes:
     - Ingress
     - Egress
@@ -38,7 +38,7 @@ spec:
     - to:
         - podSelector:
             matchLabels:
-              {{- include "auvex.componentSelectorLabels" (dict "ctx" . "component" "gateway") | nindent 14 }}
+              {{- include "gatewise.componentSelectorLabels" (dict "ctx" . "component" "gateway") | nindent 14 }}
       ports:
         - protocol: TCP
           port: {{ .Values.gateway.containerPort }}
@@ -56,13 +56,13 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: {{ include "auvex.gateway.fullname" . }}
+  name: {{ include "gatewise.gateway.fullname" . }}
   labels:
-    {{- include "auvex.componentLabels" (dict "ctx" . "component" "gateway") | nindent 4 }}
+    {{- include "gatewise.componentLabels" (dict "ctx" . "component" "gateway") | nindent 4 }}
 spec:
   podSelector:
     matchLabels:
-      {{- include "auvex.componentSelectorLabels" (dict "ctx" . "component" "gateway") | nindent 6 }}
+      {{- include "gatewise.componentSelectorLabels" (dict "ctx" . "component" "gateway") | nindent 6 }}
   policyTypes:
     - Ingress
     - Egress
@@ -74,7 +74,7 @@ spec:
         # and the console pods
         - podSelector:
             matchLabels:
-              {{- include "auvex.componentSelectorLabels" (dict "ctx" . "component" "console") | nindent 14 }}
+              {{- include "gatewise.componentSelectorLabels" (dict "ctx" . "component" "console") | nindent 14 }}
       ports:
         - protocol: TCP
           port: {{ .Values.gateway.containerPort }}
@@ -130,9 +130,9 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: {{ include "auvex.fullname" . }}-postgresql
+  name: {{ include "gatewise.fullname" . }}-postgresql
   labels:
-    {{- include "auvex.labels" . | nindent 4 }}
+    {{- include "gatewise.labels" . | nindent 4 }}
 spec:
   podSelector:
     matchLabels:
@@ -143,7 +143,7 @@ spec:
     - from:
         - podSelector:
             matchLabels:
-              {{- include "auvex.componentSelectorLabels" (dict "ctx" . "component" "gateway") | nindent 14 }}
+              {{- include "gatewise.componentSelectorLabels" (dict "ctx" . "component" "gateway") | nindent 14 }}
       ports:
         - protocol: TCP
           port: 5432
@@ -154,9 +154,9 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: {{ include "auvex.fullname" . }}-redis
+  name: {{ include "gatewise.fullname" . }}-redis
   labels:
-    {{- include "auvex.labels" . | nindent 4 }}
+    {{- include "gatewise.labels" . | nindent 4 }}
 spec:
   podSelector:
     matchLabels:
@@ -167,7 +167,7 @@ spec:
     - from:
         - podSelector:
             matchLabels:
-              {{- include "auvex.componentSelectorLabels" (dict "ctx" . "component" "gateway") | nindent 14 }}
+              {{- include "gatewise.componentSelectorLabels" (dict "ctx" . "component" "gateway") | nindent 14 }}
       ports:
         - protocol: TCP
           port: 6379

@@ -1,13 +1,13 @@
-# Caddy reverse proxy for the Auvex single-box deploy. It terminates TLS for the
+# Caddy reverse proxy for the GateWise single-box deploy. It terminates TLS for the
 # nip.io host (auto-provisioning a Let's Encrypt cert) and forwards to the
 # console container, whose nginx serves the SPA and already proxies /v1 and /auth
 # to the gateway — so the browser sees one origin and there's no CORS to manage.
 #
-# AUVEX_DOMAIN is injected from the host .env, so the same file works on any IP.
+# GATEWISE_DOMAIN is injected from the host .env, so the same file works on any IP.
 # Add a global `{ email you@example.com }` block if you want renewal-failure
 # notices; it's optional — auto-HTTPS works without an account email.
 
-{$AUVEX_DOMAIN} {
+{$GATEWISE_DOMAIN} {
 	encode zstd gzip
 
 	reverse_proxy console:80

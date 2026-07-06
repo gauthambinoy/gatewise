@@ -6,14 +6,14 @@ its autoscaling block is enabled. autoscaling/v2 is required (>=1.23).
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: {{ include "auvex.gateway.fullname" . }}
+  name: {{ include "gatewise.gateway.fullname" . }}
   labels:
-    {{- include "auvex.componentLabels" (dict "ctx" . "component" "gateway") | nindent 4 }}
+    {{- include "gatewise.componentLabels" (dict "ctx" . "component" "gateway") | nindent 4 }}
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: {{ include "auvex.gateway.fullname" . }}
+    name: {{ include "gatewise.gateway.fullname" . }}
   minReplicas: {{ .Values.gateway.autoscaling.minReplicas }}
   maxReplicas: {{ .Values.gateway.autoscaling.maxReplicas }}
   metrics:
@@ -39,14 +39,14 @@ spec:
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: {{ include "auvex.console.fullname" . }}
+  name: {{ include "gatewise.console.fullname" . }}
   labels:
-    {{- include "auvex.componentLabels" (dict "ctx" . "component" "console") | nindent 4 }}
+    {{- include "gatewise.componentLabels" (dict "ctx" . "component" "console") | nindent 4 }}
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: {{ include "auvex.console.fullname" . }}
+    name: {{ include "gatewise.console.fullname" . }}
   minReplicas: {{ .Values.console.autoscaling.minReplicas }}
   maxReplicas: {{ .Values.console.autoscaling.maxReplicas }}
   metrics:

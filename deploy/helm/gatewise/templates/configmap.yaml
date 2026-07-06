@@ -6,9 +6,9 @@ gateway Service. Secrets are kept out of here — see templates/secret.yaml.
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ include "auvex.fullname" . }}-config
+  name: {{ include "gatewise.fullname" . }}-config
   labels:
-    {{- include "auvex.labels" . | nindent 4 }}
+    {{- include "gatewise.labels" . | nindent 4 }}
   {{- with .Values.commonAnnotations }}
   annotations:
     {{- toYaml . | nindent 4 }}
@@ -17,25 +17,25 @@ data:
   # ---- Gateway non-secret env (mirrors application.yml env var names) ----
   OPENROUTER_BASE_URL: {{ .Values.config.openrouterBaseUrl | quote }}
   OPENROUTER_MODEL: {{ .Values.config.openrouterModel | quote }}
-  SPRING_DATASOURCE_URL: {{ include "auvex.datasourceUrl" . | quote }}
-  SPRING_DATASOURCE_USERNAME: {{ include "auvex.datasourceUsername" . | quote }}
-  REDIS_HOST: {{ include "auvex.redisHost" . | quote }}
-  REDIS_PORT: {{ include "auvex.redisPort" . | quote }}
+  SPRING_DATASOURCE_URL: {{ include "gatewise.datasourceUrl" . | quote }}
+  SPRING_DATASOURCE_USERNAME: {{ include "gatewise.datasourceUsername" . | quote }}
+  REDIS_HOST: {{ include "gatewise.redisHost" . | quote }}
+  REDIS_PORT: {{ include "gatewise.redisPort" . | quote }}
   SERVER_PORT: {{ .Values.gateway.containerPort | quote }}
-  AUVEX_REDACT_RESPONSE: {{ .Values.config.redactResponse | quote }}
-  AUVEX_INJECTION_ENABLED: {{ .Values.config.injectionEnabled | quote }}
-  AUVEX_INJECTION_BLOCK: {{ .Values.config.injectionBlock | quote }}
-  AUVEX_CACHE_ENABLED: {{ .Values.config.cacheEnabled | quote }}
-  AUVEX_DEMO_ENABLED: {{ .Values.config.demoEnabled | quote }}
-  AUVEX_DEV_LOGIN_ENABLED: {{ .Values.config.devLoginEnabled | quote }}
+  GATEWISE_REDACT_RESPONSE: {{ .Values.config.redactResponse | quote }}
+  GATEWISE_INJECTION_ENABLED: {{ .Values.config.injectionEnabled | quote }}
+  GATEWISE_INJECTION_BLOCK: {{ .Values.config.injectionBlock | quote }}
+  GATEWISE_CACHE_ENABLED: {{ .Values.config.cacheEnabled | quote }}
+  GATEWISE_DEMO_ENABLED: {{ .Values.config.demoEnabled | quote }}
+  GATEWISE_DEV_LOGIN_ENABLED: {{ .Values.config.devLoginEnabled | quote }}
 {{- if .Values.console.overrideNginxConf }}
 ---
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ include "auvex.console.fullname" . }}-nginx
+  name: {{ include "gatewise.console.fullname" . }}-nginx
   labels:
-    {{- include "auvex.componentLabels" (dict "ctx" . "component" "console") | nindent 4 }}
+    {{- include "gatewise.componentLabels" (dict "ctx" . "component" "console") | nindent 4 }}
 data:
   # Rendered nginx config: identical to console/nginx.conf in the repo, but the
   # proxy upstream is the real gateway Service DNS name (the baked-in image uses
@@ -49,12 +49,12 @@ data:
         index index.html;
 
         location /v1/ {
-            proxy_pass http://{{ include "auvex.gateway.serviceHost" . }}:{{ .Values.gateway.service.port }};
+            proxy_pass http://{{ include "gatewise.gateway.serviceHost" . }}:{{ .Values.gateway.service.port }};
             proxy_set_header Host $host;
             proxy_set_header X-Real-IP $remote_addr;
         }
         location /auth/ {
-            proxy_pass http://{{ include "auvex.gateway.serviceHost" . }}:{{ .Values.gateway.service.port }};
+            proxy_pass http://{{ include "gatewise.gateway.serviceHost" . }}:{{ .Values.gateway.service.port }};
             proxy_set_header Host $host;
             proxy_set_header X-Real-IP $remote_addr;
         }

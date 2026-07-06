@@ -2,15 +2,15 @@
 # For production, delete this file from the kustomization and point
 # SPRING_DATASOURCE_URL (in 10-configmap.yaml) at a managed database instead.
 #
-# It reuses postgres-password from auvex-secrets so the gateway and DB agree on
+# It reuses postgres-password from gatewise-secrets so the gateway and DB agree on
 # the password from a single source.
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: auvex-postgres-data
-  namespace: auvex
+  name: gatewise-postgres-data
+  namespace: gatewise
   labels:
-    app.kubernetes.io/part-of: auvex
+    app.kubernetes.io/part-of: gatewise
     app.kubernetes.io/component: postgres
 spec:
   accessModes:
@@ -22,10 +22,10 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: auvex-postgres
-  namespace: auvex
+  name: gatewise-postgres
+  namespace: gatewise
   labels:
-    app.kubernetes.io/part-of: auvex
+    app.kubernetes.io/part-of: gatewise
     app.kubernetes.io/component: postgres
 spec:
   replicas: 1
@@ -34,12 +34,12 @@ spec:
     type: Recreate
   selector:
     matchLabels:
-      app.kubernetes.io/part-of: auvex
+      app.kubernetes.io/part-of: gatewise
       app.kubernetes.io/component: postgres
   template:
     metadata:
       labels:
-        app.kubernetes.io/part-of: auvex
+        app.kubernetes.io/part-of: gatewise
         app.kubernetes.io/component: postgres
     spec:
       automountServiceAccountToken: false
@@ -63,25 +63,25 @@ spec:
               containerPort: 5432
           env:
             - name: POSTGRES_DB
-              value: auvex
+              value: gatewise
             - name: POSTGRES_USER
-              value: auvex
+              value: gatewise
             - name: POSTGRES_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: auvex-secrets
+                  name: gatewise-secrets
                   key: postgres-password
             # The official image needs a writable subdir under the mount.
             - name: PGDATA
               value: /var/lib/postgresql/data/pgdata
           readinessProbe:
             exec:
-              command: ["pg_isready", "-U", "auvex", "-d", "auvex"]
+              command: ["pg_isready", "-U", "gatewise", "-d", "gatewise"]
             initialDelaySeconds: 5
             periodSeconds: 10
           livenessProbe:
             exec:
-              command: ["pg_isready", "-U", "auvex", "-d", "auvex"]
+              command: ["pg_isready", "-U", "gatewise", "-d", "gatewise"]
             initialDelaySeconds: 20
             periodSeconds: 15
           resources:
@@ -97,20 +97,20 @@ spec:
       volumes:
         - name: data
           persistentVolumeClaim:
-            claimName: auvex-postgres-data
+            claimName: gatewise-postgres-data
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: auvex-postgres
-  namespace: auvex
+  name: gatewise-postgres
+  namespace: gatewise
   labels:
-    app.kubernetes.io/part-of: auvex
+    app.kubernetes.io/part-of: gatewise
     app.kubernetes.io/component: postgres
 spec:
   type: ClusterIP
   selector:
-    app.kubernetes.io/part-of: auvex
+    app.kubernetes.io/part-of: gatewise
     app.kubernetes.io/component: postgres
   ports:
     - name: postgres

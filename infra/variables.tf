@@ -17,9 +17,9 @@ variable "ssh_ingress_cidrs" {
 }
 
 variable "domain_prefix" {
-  description = "Sub-domain label placed in front of the host IP, e.g. 'auvex' gives auvex.<ip>.nip.io."
+  description = "Sub-domain label placed in front of the host IP, e.g. 'gatewise' gives gatewise.<ip>.nip.io."
   type        = string
-  default     = "auvex"
+  default     = "gatewise"
 }
 
 variable "nip_io_base" {
@@ -37,7 +37,7 @@ variable "key_name" {
 variable "project" {
   description = "Project tag applied to every resource and used to derive default names."
   type        = string
-  default     = "auvex"
+  default     = "gatewise"
 }
 
 variable "allocate_eip" {
@@ -49,7 +49,7 @@ variable "allocate_eip" {
 variable "repo_url" {
   description = "Git URL the box clones at first boot to get the deploy files (deploy/docker-compose.prod.yml + deploy/Caddyfile)."
   type        = string
-  default     = "https://github.com/gauthambinoy/auvex.git"
+  default     = "https://github.com/gauthambinoy/gatewise.git"
 }
 
 variable "root_volume_gb" {

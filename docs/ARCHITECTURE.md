@@ -1,11 +1,11 @@
-# Auvex — Architecture
+# GateWise — Architecture
 
 Diagrams are **Mermaid** (they render natively on GitHub) and are derived from the
 real code, not invented. Every node maps to a real module, route, table, or
 container. If the code changes, the affected diagram changes with it.
 
-Auvex is a drop-in, OpenAI-compatible **AI gateway**: an app points its base URL at
-Auvex instead of the provider, and every LLM call then flows through one controlled
+GateWise is a drop-in, OpenAI-compatible **AI gateway**: an app points its base URL at
+GateWise instead of the provider, and every LLM call then flows through one controlled
 passage that **authenticates**, **routes**, **redacts**, **governs**, **logs**, and
 forwards it.
 
@@ -18,7 +18,7 @@ All components and how they connect.
 ```mermaid
 flowchart LR
     app["Enterprise app / SDK<br/>(OpenAI-compatible client)"]
-    subgraph gw["Auvex gateway (Spring Boot, Java 21)"]
+    subgraph gw["GateWise gateway (Spring Boot, Java 21)"]
       filter["API-key auth filter"]
       pipe["Chat-completions pipeline<br/>route · redact · policy · budget · audit"]
       mgmt["Management & metrics APIs<br/>/v1/policies · /v1/audit · /v1/usage"]
@@ -227,7 +227,7 @@ flowchart LR
     subgraph untrusted["Untrusted"]
       client["Client request<br/>(raw prompt, may contain PII/secrets)"]
     end
-    subgraph gw["Trust boundary — Auvex"]
+    subgraph gw["Trust boundary — GateWise"]
       authb["Authenticate (API key → tenant)"]
       validate["Validate payload shape"]
       redact["Redact PII/secrets"]

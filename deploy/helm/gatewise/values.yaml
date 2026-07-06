@@ -1,5 +1,5 @@
 # ---------------------------------------------------------------------------
-# Auvex Helm chart — default values.
+# GateWise Helm chart — default values.
 #
 # Everything below is a sane production-leaning default. The two things you MUST
 # review before a real install are:
@@ -26,7 +26,7 @@ imagePullSecrets: []
 # ---------------------------------------------------------------------------
 gateway:
   image:
-    repository: ghcr.io/gauthambinoy/auvex-gateway
+    repository: ghcr.io/gauthambinoy/gatewise-gateway
     # Pin to a real release tag in production; "latest" is convenient but not
     # reproducible. appVersion in Chart.yaml is the intended default.
     tag: ""            # falls back to .Chart.AppVersion when empty
@@ -103,7 +103,7 @@ gateway:
   podLabels: {}
 
   # Extra raw env vars (list of {name,value} / {name,valueFrom}) merged into the
-  # gateway container — handy for toggling the optional auvex.* feature flags.
+  # gateway container — handy for toggling the optional gatewise.* feature flags.
   extraEnv: []
 
   # Horizontal Pod Autoscaler for the gateway.
@@ -120,7 +120,7 @@ gateway:
 # ---------------------------------------------------------------------------
 console:
   image:
-    repository: ghcr.io/gauthambinoy/auvex-console
+    repository: ghcr.io/gauthambinoy/gatewise-console
     tag: ""            # falls back to .Chart.AppVersion when empty
     pullPolicy: IfNotPresent
 
@@ -222,16 +222,16 @@ ingress:
     # Reasonable body size for proxied chat payloads.
     nginx.ingress.kubernetes.io/proxy-body-size: "8m"
   hosts:
-    - host: auvex.example.com   # <-- REPLACE with your DNS name
+    - host: gatewise.example.com   # <-- REPLACE with your DNS name
       paths:
         - path: /
           pathType: Prefix
           # Which service serves this path: "console" (default) or "gateway".
           service: console
   tls:
-    - secretName: auvex-tls
+    - secretName: gatewise-tls
       hosts:
-        - auvex.example.com      # <-- must match the host above
+        - gatewise.example.com      # <-- must match the host above
 
 # ---------------------------------------------------------------------------
 # NetworkPolicy — default-deny posture for the workloads.
@@ -276,8 +276,8 @@ config:
 postgresql:
   enabled: true
   auth:
-    username: auvex
-    database: auvex
+    username: gatewise
+    database: gatewise
     # The password is taken from the chart Secret so it lives in exactly one
     # place. Supply secrets.postgresPassword; it is wired through below.
     existingSecret: ""        # set automatically by the chart when empty
@@ -307,11 +307,11 @@ redis:
 externalDatabase:
   # Full JDBC URL OR host/port/database (host/port build the JDBC URL if jdbcUrl
   # is empty). Username goes here; the password comes from secrets.postgresPassword.
-  jdbcUrl: ""               # e.g. jdbc:postgresql://my-rds.example.com:5432/auvex
+  jdbcUrl: ""               # e.g. jdbc:postgresql://my-rds.example.com:5432/gatewise
   host: ""                  # used only when jdbcUrl is empty
   port: 5432
-  database: auvex
-  username: auvex
+  database: gatewise
+  username: gatewise
 
 externalRedis:
   host: ""                  # e.g. my-elasticache.example.com
@@ -323,7 +323,7 @@ externalRedis:
 # These are placeholders and are EMPTY on purpose. NEVER commit real values
 # here. Provide them at install time, e.g.:
 #
-#   helm install auvex deploy/helm/auvex \
+#   helm install gatewise deploy/helm/gatewise \
 #     --set secrets.openrouterApiKey=sk-or-... \
 #     --set secrets.sessionSecret="$(openssl rand -hex 32)" \
 #     --set secrets.postgresPassword="$(openssl rand -hex 16)"
@@ -347,7 +347,7 @@ secrets:
   # ---- Placeholder values (leave empty; set via --set / CI) ----
   # OpenRouter / upstream provider API key  -> OPENROUTER_API_KEY
   openrouterApiKey: ""
-  # Console session signing secret          -> AUVEX_SESSION_SECRET
+  # Console session signing secret          -> GATEWISE_SESSION_SECRET
   # Generate with: openssl rand -hex 32
   sessionSecret: ""
   # Database password (used by the gateway AND, when bundled, the Postgres

@@ -33,7 +33,7 @@ locals {
 # compose network and are never published.
 resource "aws_security_group" "this" {
   name_prefix = "${var.project}-"
-  description = "Auvex single-box: SSH from allowed CIDRs, HTTP/HTTPS public, all else closed."
+  description = "GateWise single-box: SSH from allowed CIDRs, HTTP/HTTPS public, all else closed."
   vpc_id      = data.aws_vpc.default.id
 
   dynamic "ingress" {

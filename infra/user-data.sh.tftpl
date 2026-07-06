@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # cloud-init runs this once on first boot. It installs Docker + the compose
-# plugin, fetches the Auvex deploy files, works out the box's nip.io hostname
+# plugin, fetches the GateWise deploy files, works out the box's nip.io hostname
 # from its own public IP, and brings the stack up behind Caddy (auto-HTTPS).
 set -euxo pipefail
 
@@ -20,9 +20,9 @@ systemctl enable --now docker
 usermod -aG docker ubuntu || true
 
 # --- Fetch the deploy files (compose + Caddyfile) ----------------------------
-install -d -o ubuntu -g ubuntu /opt/auvex
-git clone --depth 1 ${repo_url} /opt/auvex/src
-ln -sfn /opt/auvex/src/deploy /opt/auvex/deploy
+install -d -o ubuntu -g ubuntu /opt/gatewise
+git clone --depth 1 ${repo_url} /opt/gatewise/src
+ln -sfn /opt/gatewise/src/deploy /opt/gatewise/deploy
 
 # --- Derive the public hostname from this box's own IP (IMDSv2) --------------
 TOKEN=$(curl -fsS -X PUT "http://169.254.169.254/latest/api/token" \
@@ -33,16 +33,16 @@ PUBLIC_IP=$(curl -fsS -H "X-aws-ec2-metadata-token: $TOKEN" \
 # --- Runtime env consumed by docker-compose.prod.yml + Caddy -----------------
 # NOTE: real secrets (OPENROUTER_API_KEY, DB/JWT passwords) are deliberately NOT
 # baked into user-data. They're provisioned out of band (creds-gated): drop a
-# complete /opt/auvex/.env onto the box, or let the CD pipeline manage it, before
+# complete /opt/gatewise/.env onto the box, or let the CD pipeline manage it, before
 # the first real LLM call. This only writes the non-secret bits needed to boot.
-cat >/opt/auvex/.env <<EOF
-AUVEX_DOMAIN=${domain_prefix}.$${PUBLIC_IP}.${nip_io_base}
+cat >/opt/gatewise/.env <<EOF
+GATEWISE_DOMAIN=${domain_prefix}.$${PUBLIC_IP}.${nip_io_base}
 EOF
-chown ubuntu:ubuntu /opt/auvex/.env
+chown ubuntu:ubuntu /opt/gatewise/.env
 
 # --- Boot the stack ----------------------------------------------------------
 # Images come from GHCR. If they're private, run `docker login ghcr.io` here (or
 # bake a token in) before the pull; the public repo's packages can also be made
 # public so no login is needed.
-cd /opt/auvex/deploy
-docker compose --env-file /opt/auvex/.env -f docker-compose.prod.yml up -d
+cd /opt/gatewise/deploy
+docker compose --env-file /opt/gatewise/.env -f docker-compose.prod.yml up -d

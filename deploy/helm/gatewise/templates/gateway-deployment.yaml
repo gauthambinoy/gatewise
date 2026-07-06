@@ -1,9 +1,9 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "auvex.gateway.fullname" . }}
+  name: {{ include "gatewise.gateway.fullname" . }}
   labels:
-    {{- include "auvex.componentLabels" (dict "ctx" . "component" "gateway") | nindent 4 }}
+    {{- include "gatewise.componentLabels" (dict "ctx" . "component" "gateway") | nindent 4 }}
   {{- with .Values.commonAnnotations }}
   annotations:
     {{- toYaml . | nindent 4 }}
@@ -14,11 +14,11 @@ spec:
   {{- end }}
   selector:
     matchLabels:
-      {{- include "auvex.componentSelectorLabels" (dict "ctx" . "component" "gateway") | nindent 6 }}
+      {{- include "gatewise.componentSelectorLabels" (dict "ctx" . "component" "gateway") | nindent 6 }}
   template:
     metadata:
       labels:
-        {{- include "auvex.componentLabels" (dict "ctx" . "component" "gateway") | nindent 8 }}
+        {{- include "gatewise.componentLabels" (dict "ctx" . "component" "gateway") | nindent 8 }}
         {{- with .Values.gateway.podLabels }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
@@ -31,7 +31,7 @@ spec:
         {{- toYaml . | nindent 8 }}
         {{- end }}
     spec:
-      serviceAccountName: {{ include "auvex.serviceAccountName" . }}
+      serviceAccountName: {{ include "gatewise.serviceAccountName" . }}
       automountServiceAccountToken: {{ .Values.serviceAccount.automountServiceAccountToken }}
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
@@ -41,7 +41,7 @@ spec:
         {{- toYaml .Values.gateway.podSecurityContext | nindent 8 }}
       containers:
         - name: gateway
-          image: {{ include "auvex.gateway.image" . | quote }}
+          image: {{ include "gatewise.gateway.image" . | quote }}
           imagePullPolicy: {{ .Values.gateway.image.pullPolicy }}
           securityContext:
             {{- toYaml .Values.gateway.securityContext | nindent 12 }}
@@ -52,24 +52,24 @@ spec:
           envFrom:
             # Non-secret config (datasource URL/username, redis host, feature flags).
             - configMapRef:
-                name: {{ include "auvex.fullname" . }}-config
+                name: {{ include "gatewise.fullname" . }}-config
           env:
             # Secrets are referenced individually so the app's exact env var names
             # map onto whatever key names the (possibly external) Secret uses.
             - name: OPENROUTER_API_KEY
               valueFrom:
                 secretKeyRef:
-                  name: {{ include "auvex.secretName" . }}
+                  name: {{ include "gatewise.secretName" . }}
                   key: {{ .Values.secrets.keys.openrouterApiKey }}
-            - name: AUVEX_SESSION_SECRET
+            - name: GATEWISE_SESSION_SECRET
               valueFrom:
                 secretKeyRef:
-                  name: {{ include "auvex.secretName" . }}
+                  name: {{ include "gatewise.secretName" . }}
                   key: {{ .Values.secrets.keys.sessionSecret }}
             - name: SPRING_DATASOURCE_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: {{ include "auvex.secretName" . }}
+                  name: {{ include "gatewise.secretName" . }}
                   key: {{ .Values.secrets.keys.postgresPassword }}
             {{- with .Values.gateway.extraEnv }}
             {{- toYaml . | nindent 12 }}
