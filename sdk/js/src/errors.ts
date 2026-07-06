@@ -1,12 +1,12 @@
 /**
- * Typed error classes raised by the Auvex client.
+ * Typed error classes raised by the GateWise client.
  *
  * The gateway emits an OpenAI-style error envelope:
  *
  *     { "error": { "message": "...", "type": "...", "code": "..." } }
  *
- * so the human-readable reason is always on `AuvexError.message` and the raw envelope on
- * `AuvexError.body`.
+ * so the human-readable reason is always on `GateWiseError.message` and the raw envelope on
+ * `GateWiseError.body`.
  *
  * Mapping is driven primarily by the HTTP status code, because a couple of distinct
  * conditions share the same `type` (e.g. a 401 bad key and a 400 bad request both report
@@ -15,7 +15,7 @@
  */
 
 /** Shape of the gateway's OpenAI-style error envelope. */
-export interface AuvexErrorBody {
+export interface GateWiseErrorBody {
   error?: {
     message?: string;
     type?: string;
@@ -26,8 +26,8 @@ export interface AuvexErrorBody {
   [key: string]: unknown;
 }
 
-/** Fields shared by every Auvex error. */
-export interface AuvexErrorOptions {
+/** Fields shared by every GateWise error. */
+export interface GateWiseErrorOptions {
   statusCode?: number;
   type?: string;
   code?: string;
@@ -35,8 +35,8 @@ export interface AuvexErrorOptions {
   cause?: unknown;
 }
 
-/** Base class for every error raised by the Auvex client. */
-export class AuvexError extends Error {
+/** Base class for every error raised by the GateWise client. */
+export class GateWiseError extends Error {
   /** The HTTP status code, or `undefined` for transport-level failures. */
   readonly statusCode?: number;
   /** The gateway's `error.type` discriminator, when present. */
@@ -46,7 +46,7 @@ export class AuvexError extends Error {
   /** The full decoded response body, when one was returned. */
   readonly body?: unknown;
 
-  constructor(message: string, options: AuvexErrorOptions = {}) {
+  constructor(message: string, options: GateWiseErrorOptions = {}) {
     super(message, options.cause !== undefined ? { cause: options.cause } : undefined);
     this.name = new.target.name;
     this.statusCode = options.statusCode;
@@ -59,30 +59,30 @@ export class AuvexError extends Error {
 }
 
 /** The request never reached the gateway (DNS, refused connection, TLS, etc.). */
-export class APIConnectionError extends AuvexError {}
+export class APIConnectionError extends GateWiseError {}
 
 /** The request timed out before the gateway responded. */
 export class APITimeoutError extends APIConnectionError {}
 
 /** 400 — the request was malformed or failed validation. */
-export class BadRequestError extends AuvexError {}
+export class BadRequestError extends GateWiseError {}
 
 /** 401 — the API key is missing, malformed, unknown, revoked or expired. */
-export class AuthenticationError extends AuvexError {}
+export class AuthenticationError extends GateWiseError {}
 
 /** 403 — the call was blocked by tenant policy or flagged as a prompt injection. */
-export class PolicyDeniedError extends AuvexError {}
+export class PolicyDeniedError extends GateWiseError {}
 
 /** 404 — the requested resource does not exist for this tenant. */
-export class NotFoundError extends AuvexError {}
+export class NotFoundError extends GateWiseError {}
 
 /** 429 — the tenant's rate limit or call budget was exceeded. */
-export class RateLimitError extends AuvexError {}
+export class RateLimitError extends GateWiseError {}
 
 /** 502/503/504 — the upstream model provider was unavailable or timed out. */
-export class UpstreamError extends AuvexError {}
+export class UpstreamError extends GateWiseError {}
 
-type ErrorCtor = new (message: string, options?: AuvexErrorOptions) => AuvexError;
+type ErrorCtor = new (message: string, options?: GateWiseErrorOptions) => GateWiseError;
 
 /** Status codes that map to a dedicated exception class. Checked before `type`. */
 const STATUS_TO_ERROR: Record<number, ErrorCtor> = {
@@ -107,25 +107,25 @@ const TYPE_TO_ERROR: Record<string, ErrorCtor> = {
 };
 
 /**
- * Build the most specific `AuvexError` for a non-2xx response.
+ * Build the most specific `GateWiseError` for a non-2xx response.
  *
  * @param statusCode The HTTP status code of the response.
  * @param body The decoded response body. Expected to be the OpenAI-style envelope, but any
  *   shape (including a non-object, e.g. a plain-text 5xx) is handled gracefully.
  */
-export function errorFromResponse(statusCode: number, body: unknown): AuvexError {
+export function errorFromResponse(statusCode: number, body: unknown): GateWiseError {
   let message = `HTTP ${statusCode}`;
   let type: string | undefined;
   let code: string | undefined;
 
   if (body && typeof body === 'object') {
-    const envelope = (body as AuvexErrorBody).error;
+    const envelope = (body as GateWiseErrorBody).error;
     if (envelope && typeof envelope === 'object') {
       if (envelope.message) message = String(envelope.message);
       if (envelope.type != null) type = String(envelope.type);
       if (envelope.code != null) code = String(envelope.code);
-    } else if (typeof (body as AuvexErrorBody).message === 'string') {
-      message = String((body as AuvexErrorBody).message);
+    } else if (typeof (body as GateWiseErrorBody).message === 'string') {
+      message = String((body as GateWiseErrorBody).message);
     }
   }
 
@@ -133,7 +133,7 @@ export function errorFromResponse(statusCode: number, body: unknown): AuvexError
   if (!Ctor && type) Ctor = TYPE_TO_ERROR[type];
   if (!Ctor) {
     // Unknown 4xx -> generic client error; everything else -> base error.
-    Ctor = statusCode >= 400 && statusCode < 500 ? BadRequestError : AuvexError;
+    Ctor = statusCode >= 400 && statusCode < 500 ? BadRequestError : GateWiseError;
   }
 
   return new Ctor(message, { statusCode, type, code, body });

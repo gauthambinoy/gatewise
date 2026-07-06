@@ -1,11 +1,11 @@
-# Auvex — UI walkthrough (captured from the live, running stack)
+# GateWise — UI walkthrough (captured from the live, running stack)
 
 Captured with Playwright against the running console (`http://localhost:3000`), logged in
 via the **"Try the live demo"** sandbox, which is seeded with a week of realistic governed
 traffic (24 requests across 4 model families: OpenAI, Anthropic, Gemini).
 
 - **Screenshots:** `demo-capture/screenshots/` (11 PNGs, every page, full-page)
-- **Video walkthrough:** `demo-capture/videos/auvex-walkthrough.webm` (plays in any browser or VLC)
+- **Video walkthrough:** `demo-capture/videos/gatewise-walkthrough.webm` (plays in any browser or VLC)
 
 ## The 3 headline features (what to look at)
 

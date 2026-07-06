@@ -1,19 +1,19 @@
-"""Tests for the Auvex synchronous client. No network access — all mocked with respx."""
+"""Tests for the GateWise synchronous client. No network access — all mocked with respx."""
 
 import httpx
 import pytest
 import respx
 
-from auvex import (
+from gatewise import (
     AuthenticationError,
-    AuvexClient,
+    GateWiseClient,
     BadRequestError,
     NotFoundError,
     PolicyDeniedError,
     RateLimitError,
     UpstreamError,
 )
-from auvex._errors import error_from_response
+from gatewise._errors import error_from_response
 
 from .conftest import API_KEY, BASE_URL
 
@@ -24,33 +24,33 @@ CHAT_REPLY = {"id": "cmpl-1", "choices": [{"message": {"content": "hi"}}]}
 
 
 def test_env_var_defaults(monkeypatch):
-    """base_url and api_key fall back to AUVEX_* environment variables."""
-    monkeypatch.setenv("AUVEX_BASE_URL", "http://env-host:9000")
-    monkeypatch.setenv("AUVEX_API_KEY", "auvex_sk_env")
-    client = AuvexClient()
+    """base_url and api_key fall back to GATEWISE_* environment variables."""
+    monkeypatch.setenv("GATEWISE_BASE_URL", "http://env-host:9000")
+    monkeypatch.setenv("GATEWISE_API_KEY", "gatewise_sk_env")
+    client = GateWiseClient()
     assert client.base_url == "http://env-host:9000"
-    assert client.api_key == "auvex_sk_env"
+    assert client.api_key == "gatewise_sk_env"
     client.close()
 
 
 def test_default_base_url(monkeypatch):
     """With nothing configured, the base URL defaults to localhost:8080."""
-    monkeypatch.delenv("AUVEX_BASE_URL", raising=False)
-    client = AuvexClient(api_key="auvex_sk_x")
+    monkeypatch.delenv("GATEWISE_BASE_URL", raising=False)
+    client = GateWiseClient(api_key="gatewise_sk_x")
     assert client.base_url == "http://localhost:8080"
     client.close()
 
 
 def test_missing_api_key_raises(monkeypatch):
     """A missing key is a clear ValueError, not a confusing 401 later."""
-    monkeypatch.delenv("AUVEX_API_KEY", raising=False)
+    monkeypatch.delenv("GATEWISE_API_KEY", raising=False)
     with pytest.raises(ValueError):
-        AuvexClient(base_url=BASE_URL)
+        GateWiseClient(base_url=BASE_URL)
 
 
 def test_trailing_slash_stripped():
     """A trailing slash on base_url does not produce a double slash in the path."""
-    client = AuvexClient(base_url=BASE_URL + "/", api_key=API_KEY)
+    client = GateWiseClient(base_url=BASE_URL + "/", api_key=API_KEY)
     assert client._url("usage") == f"{BASE_URL}/v1/usage"
     client.close()
 

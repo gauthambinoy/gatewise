@@ -1,5 +1,5 @@
 import { chromium } from 'playwright';
-const BASE = 'https://auvex.54.170.218.176.nip.io';
+const BASE = 'https://gatewise.54.170.218.176.nip.io';
 const b = await chromium.launch();
 const ctx = await b.newContext({ viewport: { width: 1440, height: 980 }, deviceScaleFactor: 2, ignoreHTTPSErrors: true });
 const p = await ctx.newPage(); const wait = (m) => p.waitForTimeout(m);

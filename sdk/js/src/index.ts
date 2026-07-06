@@ -1,15 +1,15 @@
 /**
- * @auvex/sdk — TypeScript/JavaScript client for the Auvex AI governance gateway.
+ * @gatewise/sdk — TypeScript/JavaScript client for the GateWise AI governance gateway.
  *
  * The gateway is OpenAI-compatible, so existing OpenAI code works by pointing it at your
- * gateway. This package adds typed errors and first-class access to Auvex's governance
+ * gateway. This package adds typed errors and first-class access to GateWise's governance
  * endpoints (moderations, usage, audit, models, policies).
  *
  * @example
  * ```ts
- * import { AuvexClient } from '@auvex/sdk';
+ * import { GateWiseClient } from '@gatewise/sdk';
  *
- * const client = new AuvexClient({ baseUrl: 'http://localhost:8080', apiKey: 'auvex_sk_...' });
+ * const client = new GateWiseClient({ baseUrl: 'http://localhost:8080', apiKey: 'gatewise_sk_...' });
  * const reply = await client.chat.completions.create({
  *   model: 'smart',
  *   messages: [{ role: 'user', content: 'Hello' }],
@@ -17,9 +17,9 @@
  * ```
  */
 
-export { AuvexClient } from './client.js';
+export { GateWiseClient } from './client.js';
 export type {
-  AuvexClientOptions,
+  GateWiseClientOptions,
   ChatCompletionParams,
   ChatMessage,
   EmbeddingParams,
@@ -30,7 +30,7 @@ export type {
 } from './client.js';
 
 export {
-  AuvexError,
+  GateWiseError,
   APIConnectionError,
   APITimeoutError,
   AuthenticationError,
@@ -41,4 +41,4 @@ export {
   UpstreamError,
   errorFromResponse,
 } from './errors.js';
-export type { AuvexErrorBody, AuvexErrorOptions } from './errors.js';
+export type { GateWiseErrorBody, GateWiseErrorOptions } from './errors.js';

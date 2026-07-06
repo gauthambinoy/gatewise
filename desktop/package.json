@@ -1,8 +1,8 @@
 {
-  "name": "auvex-desktop",
+  "name": "gatewise-desktop",
   "version": "0.1.0",
   "private": true,
-  "description": "Tray app that brings Auvex governance to a whole machine.",
+  "description": "Tray app that brings GateWise governance to a whole machine.",
   "scripts": {
     "tauri": "tauri",
     "dev": "tauri dev",

@@ -1,9 +1,9 @@
 //! Persisted connection settings.
 //!
 //! Settings live as a single JSON file in the platform app-config directory
-//! (e.g. `%APPDATA%\com.auvex.desktop\config.json` on Windows,
-//! `~/Library/Application Support/com.auvex.desktop/config.json` on macOS,
-//! `~/.config/com.auvex.desktop/config.json` on Linux). Tauri resolves that path for
+//! (e.g. `%APPDATA%\com.gatewise.desktop\config.json` on Windows,
+//! `~/Library/Application Support/com.gatewise.desktop/config.json` on macOS,
+//! `~/.config/com.gatewise.desktop/config.json` on Linux). Tauri resolves that path for
 //! us via `path().app_config_dir()`, so we never hard-code OS layout.
 
 use std::fs;

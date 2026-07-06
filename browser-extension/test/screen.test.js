@@ -55,7 +55,7 @@ const ARGS = { baseUrl: 'http://localhost:8080', apiKey: 'test-key' };
 test('normalizeBaseUrl strips a trailing slash and keeps the origin', () => {
   assert.equal(normalizeBaseUrl('http://localhost:8080/'), 'http://localhost:8080');
   assert.equal(normalizeBaseUrl('http://localhost:8080'), 'http://localhost:8080');
-  assert.equal(normalizeBaseUrl('https://gw.example.com/auvex/'), 'https://gw.example.com/auvex');
+  assert.equal(normalizeBaseUrl('https://gw.example.com/gatewise/'), 'https://gw.example.com/gatewise');
 });
 
 test('normalizeBaseUrl rejects empty and non-http(s) URLs', () => {

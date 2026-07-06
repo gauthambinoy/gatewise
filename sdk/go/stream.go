@@ -1,4 +1,4 @@
-package auvex
+package gatewise
 
 import (
 	"bufio"

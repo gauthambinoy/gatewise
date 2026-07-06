@@ -1,3 +1,3 @@
-module github.com/gauthambinoy/auvex/sdk/go
+module github.com/gauthambinoy/gatewise/sdk/go
 
 go 1.21

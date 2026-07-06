@@ -3,14 +3,14 @@ requires = ["hatchling>=1.21"]
 build-backend = "hatchling.build"
 
 [project]
-name = "auvex"
+name = "gatewise"
 version = "0.1.0"
-description = "Official Python client for the Auvex AI governance gateway (OpenAI-compatible)."
+description = "Official Python client for the GateWise AI governance gateway (OpenAI-compatible)."
 readme = "README.md"
 requires-python = ">=3.8"
 license = { file = "LICENSE" }
-authors = [{ name = "Auvex" }]
-keywords = ["auvex", "llm", "gateway", "openai", "governance", "ai", "compliance"]
+authors = [{ name = "GateWise" }]
+keywords = ["gatewise", "llm", "gateway", "openai", "governance", "ai", "compliance"]
 classifiers = [
   "Programming Language :: Python :: 3",
   "Programming Language :: Python :: 3 :: Only",
@@ -31,11 +31,11 @@ test = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/gauthambinoy/auvex"
-Source = "https://github.com/gauthambinoy/auvex"
+Homepage = "https://github.com/gauthambinoy/gatewise"
+Source = "https://github.com/gauthambinoy/gatewise"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/auvex"]
+packages = ["src/gatewise"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

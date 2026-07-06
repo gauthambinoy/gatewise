@@ -1,4 +1,4 @@
-package auvex
+package gatewise
 
 import (
 	"errors"
@@ -8,32 +8,32 @@ import (
 // Category sentinels for the gateway's error responses. Match against them with
 // errors.Is, for example:
 //
-//	if errors.Is(err, auvex.ErrPolicyDenied) { ... }
+//	if errors.Is(err, gatewise.ErrPolicyDenied) { ... }
 //
 // They classify a failure without forcing you to inspect status codes by hand. The
 // transport sentinels (ErrTimeout, ErrConnection) cover failures where the request
 // never produced an HTTP response.
 var (
 	// ErrBadRequest indicates a 400 — the request was malformed or failed validation.
-	ErrBadRequest = errors.New("auvex: bad request")
+	ErrBadRequest = errors.New("gatewise: bad request")
 	// ErrAuthentication indicates a 401 — the API key is missing, malformed, unknown,
 	// revoked or expired.
-	ErrAuthentication = errors.New("auvex: authentication failed")
+	ErrAuthentication = errors.New("gatewise: authentication failed")
 	// ErrPolicyDenied indicates a 403 — the call was blocked by tenant policy or flagged
 	// as a prompt injection.
-	ErrPolicyDenied = errors.New("auvex: policy denied")
+	ErrPolicyDenied = errors.New("gatewise: policy denied")
 	// ErrNotFound indicates a 404 — the requested resource does not exist for this tenant.
-	ErrNotFound = errors.New("auvex: not found")
+	ErrNotFound = errors.New("gatewise: not found")
 	// ErrRateLimit indicates a 429 — the tenant's rate limit or call budget was exceeded.
-	ErrRateLimit = errors.New("auvex: rate limited")
+	ErrRateLimit = errors.New("gatewise: rate limited")
 	// ErrUpstream indicates a 502/503/504 — the upstream model provider was unavailable
 	// or timed out.
-	ErrUpstream = errors.New("auvex: upstream error")
+	ErrUpstream = errors.New("gatewise: upstream error")
 	// ErrTimeout indicates the request timed out before the gateway responded.
-	ErrTimeout = errors.New("auvex: request timed out")
+	ErrTimeout = errors.New("gatewise: request timed out")
 	// ErrConnection indicates the request never reached the gateway (DNS, refused
 	// connection, TLS, etc.).
-	ErrConnection = errors.New("auvex: connection error")
+	ErrConnection = errors.New("gatewise: connection error")
 )
 
 // APIError is the typed error returned for any non-2xx response from the gateway.
@@ -45,7 +45,7 @@ var (
 // so the human-readable reason is always on Message, with the discriminators on Type
 // and Code and the full decoded envelope on Body. Recover it with errors.As:
 //
-//	var apiErr *auvex.APIError
+//	var apiErr *gatewise.APIError
 //	if errors.As(err, &apiErr) {
 //		log.Printf("gateway said %d: %s", apiErr.StatusCode, apiErr.Message)
 //	}
@@ -72,9 +72,9 @@ type APIError struct {
 // Error returns a concise, human-readable description of the failure.
 func (e *APIError) Error() string {
 	if e.Code != "" {
-		return fmt.Sprintf("auvex: HTTP %d (%s): %s", e.StatusCode, e.Code, e.Message)
+		return fmt.Sprintf("gatewise: HTTP %d (%s): %s", e.StatusCode, e.Code, e.Message)
 	}
-	return fmt.Sprintf("auvex: HTTP %d: %s", e.StatusCode, e.Message)
+	return fmt.Sprintf("gatewise: HTTP %d: %s", e.StatusCode, e.Message)
 }
 
 // Is reports whether this error belongs to the given category sentinel, letting

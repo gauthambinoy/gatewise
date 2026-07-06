@@ -1,9 +1,9 @@
 {
-  "name": "auvex-perf",
+  "name": "gatewise-perf",
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Load-testing harness and OpenAPI<->SDK contract tests for the Auvex gateway.",
+  "description": "Load-testing harness and OpenAPI<->SDK contract tests for the GateWise gateway.",
   "scripts": {
     "load": "node load.mjs",
     "contract": "node --test contract.test.mjs",

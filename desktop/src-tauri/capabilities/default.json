@@ -1,7 +1,7 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "Core permissions the Auvex Desktop main window needs. The app's own network and OS-proxy work happens in Rust commands (always allowed), so the webview itself needs very little.",
+  "description": "Core permissions the GateWise Desktop main window needs. The app's own network and OS-proxy work happens in Rust commands (always allowed), so the webview itself needs very little.",
   "windows": ["main"],
   "permissions": [
     "core:default",

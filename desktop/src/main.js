@@ -1,4 +1,4 @@
-// Auvex Desktop — frontend logic.
+// GateWise Desktop — frontend logic.
 //
 // Wires the plain-HTML UI to the Rust `#[tauri::command]` functions through
 // `@tauri-apps/api`'s `invoke`. No framework and no bundler: we use the Tauri global

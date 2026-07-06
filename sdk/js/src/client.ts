@@ -1,7 +1,7 @@
 /**
- * Client for the Auvex AI governance gateway.
+ * Client for the GateWise AI governance gateway.
  *
- * Auvex is an OpenAI-compatible HTTP gateway. This client speaks its `/v1` API directly,
+ * GateWise is an OpenAI-compatible HTTP gateway. This client speaks its `/v1` API directly,
  * adds typed errors, and exposes the gateway's native governance endpoints (moderations,
  * usage, audit, models, policies) alongside the familiar chat / embeddings / images calls.
  *
@@ -15,7 +15,7 @@
 import {
   APIConnectionError,
   APITimeoutError,
-  AuvexError,
+  GateWiseError,
   errorFromResponse,
 } from './errors.js';
 
@@ -30,11 +30,11 @@ export interface ChatMessage {
   [key: string]: unknown;
 }
 
-/** Options accepted by the `AuvexClient` constructor. */
-export interface AuvexClientOptions {
-  /** Gateway host. Falls back to `AUVEX_BASE_URL`, then `http://localhost:8080`. */
+/** Options accepted by the `GateWiseClient` constructor. */
+export interface GateWiseClientOptions {
+  /** Gateway host. Falls back to `GATEWISE_BASE_URL`, then `http://localhost:8080`. */
   baseUrl?: string;
-  /** Auvex API key (`auvex_sk_...`). Falls back to `AUVEX_API_KEY`. */
+  /** GateWise API key (`gatewise_sk_...`). Falls back to `GATEWISE_API_KEY`. */
   apiKey?: string;
   /** Per-request timeout in milliseconds. Defaults to 60000. */
   timeout?: number;
@@ -97,21 +97,21 @@ function readEnv(name: string): string | undefined {
 }
 
 /**
- * A thin, typed client over the Auvex gateway's `/v1` HTTP API.
+ * A thin, typed client over the GateWise gateway's `/v1` HTTP API.
  *
  * The `baseUrl` is the gateway **host** — the `/v1` prefix is added for you. It defaults to
  * `http://localhost:8080`.
  *
  * @example
  * ```ts
- * const client = new AuvexClient({ apiKey: 'auvex_sk_...' });
+ * const client = new GateWiseClient({ apiKey: 'gatewise_sk_...' });
  * const reply = await client.chat.completions.create({
  *   model: 'smart',
  *   messages: [{ role: 'user', content: 'Hello' }],
  * });
  * ```
  */
-export class AuvexClient {
+export class GateWiseClient {
   readonly baseUrl: string;
   readonly apiKey: string;
   readonly timeout: number;
@@ -124,18 +124,18 @@ export class AuvexClient {
   readonly embeddings: Embeddings;
   /** The OpenAI-compatible image-generation endpoint. */
   readonly images: Images;
-  /** Auvex's native, provider-free content screen. */
+  /** GateWise's native, provider-free content screen. */
   readonly moderations: Moderations;
 
-  constructor(options: AuvexClientOptions = {}) {
-    const baseUrl = (options.baseUrl ?? readEnv('AUVEX_BASE_URL') ?? DEFAULT_BASE_URL).replace(
+  constructor(options: GateWiseClientOptions = {}) {
+    const baseUrl = (options.baseUrl ?? readEnv('GATEWISE_BASE_URL') ?? DEFAULT_BASE_URL).replace(
       /\/+$/,
       '',
     );
-    const apiKey = options.apiKey ?? readEnv('AUVEX_API_KEY');
+    const apiKey = options.apiKey ?? readEnv('GATEWISE_API_KEY');
     if (!apiKey) {
       throw new Error(
-        'An Auvex API key is required. Pass { apiKey } or set the AUVEX_API_KEY environment variable.',
+        'An GateWise API key is required. Pass { apiKey } or set the GATEWISE_API_KEY environment variable.',
       );
     }
 
@@ -168,7 +168,7 @@ export class AuvexClient {
       Authorization: `Bearer ${this.apiKey}`,
       'Content-Type': 'application/json',
       Accept: 'application/json',
-      'User-Agent': 'auvex-js/0.1.0',
+      'User-Agent': 'gatewise-js/0.1.0',
     };
   }
 
@@ -191,12 +191,12 @@ export class AuvexClient {
       return await this.fetchImpl(url.toString(), { ...rest, signal: controller.signal });
     } catch (err) {
       if (err instanceof Error && err.name === 'AbortError') {
-        throw new APITimeoutError(`Request to Auvex timed out after ${this.timeout}ms`, {
+        throw new APITimeoutError(`Request to GateWise timed out after ${this.timeout}ms`, {
           cause: err,
         });
       }
       throw new APIConnectionError(
-        `Could not reach the Auvex gateway: ${(err as Error).message}`,
+        `Could not reach the GateWise gateway: ${(err as Error).message}`,
         { cause: err },
       );
     } finally {
@@ -219,7 +219,7 @@ export class AuvexClient {
     return (await this.handle(response)) as T;
   }
 
-  /** Decode a response, raising a typed `AuvexError` for any non-2xx status. */
+  /** Decode a response, raising a typed `GateWiseError` for any non-2xx status. */
   private async handle(response: Response): Promise<unknown> {
     const body = await readBody(response);
     if (response.ok) return body;
@@ -245,7 +245,7 @@ export class AuvexClient {
       throw errorFromResponse(response.status, errorBody);
     }
     if (!response.body) {
-      throw new AuvexError('The streaming response had no body.', {
+      throw new GateWiseError('The streaming response had no body.', {
         statusCode: response.status,
       });
     }
@@ -307,7 +307,7 @@ export class AuvexClient {
 
 /** `client.chat.completions` — the OpenAI-compatible chat endpoint. */
 export class ChatCompletions {
-  constructor(private readonly client: AuvexClient) {}
+  constructor(private readonly client: GateWiseClient) {}
 
   /** Create a chat completion. Returns a parsed completion object. */
   create(params: ChatCompletionParams & { stream?: false }): Promise<Json>;
@@ -328,7 +328,7 @@ export class ChatCompletions {
 
 /** `client.embeddings` — the OpenAI-compatible embeddings endpoint. */
 export class Embeddings {
-  constructor(private readonly client: AuvexClient) {}
+  constructor(private readonly client: GateWiseClient) {}
 
   /** Create embeddings (`POST /v1/embeddings`). */
   create(params: EmbeddingParams): Promise<Json> {
@@ -338,7 +338,7 @@ export class Embeddings {
 
 /** `client.images` — the OpenAI-compatible image-generation endpoint. */
 export class Images {
-  constructor(private readonly client: AuvexClient) {}
+  constructor(private readonly client: GateWiseClient) {}
 
   /** Generate images (`POST /v1/images/generations`). */
   generate(params: ImageParams): Promise<Json> {
@@ -346,9 +346,9 @@ export class Images {
   }
 }
 
-/** `client.moderations` — Auvex's native, provider-free content screen. */
+/** `client.moderations` — GateWise's native, provider-free content screen. */
 export class Moderations {
-  constructor(private readonly client: AuvexClient) {}
+  constructor(private readonly client: GateWiseClient) {}
 
   /**
    * Screen text locally for sensitive data and prompt injection (`POST /v1/moderations`).
@@ -364,7 +364,7 @@ export class Moderations {
 // -- module-level helpers ---------------------------------------------------------------
 
 /** Sentinel signalling the SSE stream's terminal `[DONE]` marker. */
-const DONE = Symbol('auvex.sse.done');
+const DONE = Symbol('gatewise.sse.done');
 
 /** Read a response body as JSON, falling back to raw text (or null) for non-JSON bodies. */
 async function readBody(response: Response): Promise<unknown> {

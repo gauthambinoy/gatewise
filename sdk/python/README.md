@@ -1,42 +1,42 @@
-# auvex (Python)
+# gatewise (Python)
 
-The official Python client for **Auvex** — a drop-in, OpenAI-compatible AI governance
+The official Python client for **GateWise** — a drop-in, OpenAI-compatible AI governance
 gateway. It speaks the gateway's `/v1` API directly, raises typed errors, and gives you
-first-class access to Auvex's governance endpoints (moderations, usage, audit, models,
+first-class access to GateWise's governance endpoints (moderations, usage, audit, models,
 policies) alongside the familiar chat / embeddings / images calls.
 
 ## Install
 
 ```bash
-pip install auvex
+pip install gatewise
 ```
 
 Requires Python 3.8+. The only runtime dependency is [`httpx`](https://www.python-httpx.org/).
 
 ## Already using the OpenAI Python SDK?
 
-You don't even need this package. Auvex is OpenAI-compatible, so just point the OpenAI
+You don't even need this package. GateWise is OpenAI-compatible, so just point the OpenAI
 client at your gateway and your code is unchanged:
 
 ```python
 from openai import OpenAI
 
-client = OpenAI(base_url="http://localhost:8080/v1", api_key="auvex_sk_...")
+client = OpenAI(base_url="http://localhost:8080/v1", api_key="gatewise_sk_...")
 client.chat.completions.create(
     model="smart",
     messages=[{"role": "user", "content": "Hello"}],
 )
 ```
 
-Reach for **this** client when you want the typed Auvex errors and the native governance
+Reach for **this** client when you want the typed GateWise errors and the native governance
 helpers below without pulling in the OpenAI SDK.
 
 ## Quickstart
 
 ```python
-from auvex import AuvexClient
+from gatewise import GateWiseClient
 
-client = AuvexClient(base_url="http://localhost:8080", api_key="auvex_sk_...")
+client = GateWiseClient(base_url="http://localhost:8080", api_key="gatewise_sk_...")
 
 reply = client.chat.completions.create(
     model="smart",
@@ -54,13 +54,13 @@ Both arguments fall back to environment variables, so you can omit them entirely
 
 | Variable          | Default                  | Maps to          |
 | ----------------- | ------------------------ | ---------------- |
-| `AUVEX_BASE_URL`  | `http://localhost:8080`  | `base_url`       |
-| `AUVEX_API_KEY`   | _(required)_             | `api_key`        |
+| `GATEWISE_BASE_URL`  | `http://localhost:8080`  | `base_url`       |
+| `GATEWISE_API_KEY`   | _(required)_             | `api_key`        |
 
 ```python
-from auvex import AuvexClient
+from gatewise import GateWiseClient
 
-client = AuvexClient()  # reads AUVEX_BASE_URL and AUVEX_API_KEY
+client = GateWiseClient()  # reads GATEWISE_BASE_URL and GATEWISE_API_KEY
 ```
 
 ## Streaming
@@ -91,7 +91,7 @@ client.images.generate(model="image", prompt="an isometric data center, blueprin
 
 ## Governance helpers
 
-These are what make Auvex more than a passthrough.
+These are what make GateWise more than a passthrough.
 
 ```python
 # Native moderation — runs entirely inside the gateway, no provider call. Use it to
@@ -114,21 +114,21 @@ client.policies()
 
 ## Error handling
 
-Every non-2xx response is raised as a typed exception. They all subclass `AuvexError`, and
+Every non-2xx response is raised as a typed exception. They all subclass `GateWiseError`, and
 each carries `message`, `status_code`, `type`, `code` and the raw `body`.
 
 ```python
-from auvex import (
-    AuvexClient,
+from gatewise import (
+    GateWiseClient,
     AuthenticationError,
     BadRequestError,
     PolicyDeniedError,
     RateLimitError,
     UpstreamError,
-    AuvexError,
+    GateWiseError,
 )
 
-client = AuvexClient(api_key="auvex_sk_...")
+client = GateWiseClient(api_key="gatewise_sk_...")
 
 try:
     client.chat.completions.create(
@@ -146,7 +146,7 @@ except BadRequestError as e:
     print("bad request:", e.message) # 400
 except UpstreamError:
     print("the model provider is unavailable")  # 502 / 503 / 504
-except AuvexError as e:
+except GateWiseError as e:
     print("unexpected gateway error:", e.status_code, e.message)
 ```
 
@@ -163,11 +163,11 @@ except AuvexError as e:
 
 ## Closing the client
 
-`AuvexClient` holds an HTTP connection pool. Use it as a context manager, or call
+`GateWiseClient` holds an HTTP connection pool. Use it as a context manager, or call
 `close()` when you're done:
 
 ```python
-with AuvexClient(api_key="auvex_sk_...") as client:
+with GateWiseClient(api_key="gatewise_sk_...") as client:
     client.usage()
 ```
 

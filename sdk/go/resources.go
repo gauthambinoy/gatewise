@@ -1,4 +1,4 @@
-package auvex
+package gatewise
 
 import (
 	"context"
@@ -111,7 +111,7 @@ func (s *ModerationsService) Create(ctx context.Context, input string) (*Moderat
 	}
 	var result ModerationResult
 	if err := json.Unmarshal(raw, &result); err != nil {
-		return nil, fmt.Errorf("auvex: decoding moderation response: %w", err)
+		return nil, fmt.Errorf("gatewise: decoding moderation response: %w", err)
 	}
 	return &result, nil
 }

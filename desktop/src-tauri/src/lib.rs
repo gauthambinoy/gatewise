@@ -1,6 +1,6 @@
-//! Auvex Desktop — backend.
+//! GateWise Desktop — backend.
 //!
-//! A small tray application that brings an Auvex governance gateway to a whole machine:
+//! A small tray application that brings an GateWise governance gateway to a whole machine:
 //!
 //!   * connects to a gateway (base URL + API key) and reports live status,
 //!   * toggles the OS system proxy to route traffic through the gateway's egress port,
@@ -60,7 +60,7 @@ type CommandResult<T> = Result<T, AppError>;
 fn http_client() -> Result<reqwest::Client, reqwest::Error> {
     reqwest::Client::builder()
         .timeout(HTTP_TIMEOUT)
-        .user_agent(concat!("auvex-desktop/", env!("CARGO_PKG_VERSION")))
+        .user_agent(concat!("gatewise-desktop/", env!("CARGO_PKG_VERSION")))
         .build()
 }
 
@@ -310,7 +310,7 @@ async fn get_ca_pem(base: String) -> CommandResult<String> {
 
     Err(AppError::Message(
         "This gateway does not expose a CA download endpoint yet. \
-         Export the Auvex Egress CA from the gateway operator and install it manually \
+         Export the GateWise Egress CA from the gateway operator and install it manually \
          (see the CA Trust section in the app)."
             .into(),
     ))
@@ -363,7 +363,7 @@ pub fn run() {
             save_config,
         ])
         .run(tauri::generate_context!())
-        .expect("error while running the Auvex desktop application");
+        .expect("error while running the GateWise desktop application");
 }
 
 mod tray {
@@ -378,12 +378,12 @@ mod tray {
     /// Creates the tray icon and its menu. Left-clicking the tray (or "Show") reveals
     /// the main window; "Quit" exits the app.
     pub fn build<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<()> {
-        let show = MenuItem::with_id(app, "show", "Show Auvex", true, None::<&str>)?;
+        let show = MenuItem::with_id(app, "show", "Show GateWise", true, None::<&str>)?;
         let quit = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
         let menu = Menu::with_items(app, &[&show, &quit])?;
 
-        TrayIconBuilder::with_id("auvex-tray")
-            .tooltip("Auvex Desktop")
+        TrayIconBuilder::with_id("gatewise-tray")
+            .tooltip("GateWise Desktop")
             .icon(app.default_window_icon().unwrap().clone())
             .menu(&menu)
             .show_menu_on_left_click(false)

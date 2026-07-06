@@ -1,5 +1,5 @@
 import { chromium } from 'playwright';
-const BASE = 'https://auvex.54.170.218.176.nip.io';
+const BASE = 'https://gatewise.54.170.218.176.nip.io';
 const b = await chromium.launch();
 const ctx = await b.newContext({ viewport: { width: 1440, height: 900 }, deviceScaleFactor: 2, ignoreHTTPSErrors: true, recordVideo: { dir: 'video-v3', size: { width: 1440, height: 900 } } });
 const p = await ctx.newPage(); const wait = (m) => p.waitForTimeout(m);
@@ -20,5 +20,5 @@ await p.getByRole('button', { name: /light/i }).click(); await wait(2600);
 await p.screenshot({ path: 'shots-v3/06-dashboard-light.png', fullPage: true });
 await wait(800); await ctx.close(); await b.close();
 const fs = await import('node:fs');
-const v = fs.readdirSync('video-v3').filter(f=>f.endsWith('.webm')); if(v.length) fs.renameSync('video-v3/'+v[0],'video-v3/auvex-redesign.webm');
+const v = fs.readdirSync('video-v3').filter(f=>f.endsWith('.webm')); if(v.length) fs.renameSync('video-v3/'+v[0],'video-v3/gatewise-redesign.webm');
 console.log('done');

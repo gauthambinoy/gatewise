@@ -1,4 +1,4 @@
-package auvex
+package gatewise
 
 import (
 	"context"
@@ -15,7 +15,7 @@ import (
 
 const (
 	testBaseURL = "http://gateway.test"
-	testAPIKey  = "auvex_sk_test_123"
+	testAPIKey  = "gatewise_sk_test_123"
 )
 
 // captured records the details of the request the handler received so a test can assert
@@ -64,8 +64,8 @@ func (f roundTripperFunc) RoundTrip(r *http.Request) (*http.Response, error) { r
 // -- configuration / env --------------------------------------------------------------
 
 func TestEnvVarDefaults(t *testing.T) {
-	t.Setenv("AUVEX_BASE_URL", "http://env-host:9000")
-	t.Setenv("AUVEX_API_KEY", "auvex_sk_env")
+	t.Setenv("GATEWISE_BASE_URL", "http://env-host:9000")
+	t.Setenv("GATEWISE_API_KEY", "gatewise_sk_env")
 	client, err := New()
 	if err != nil {
 		t.Fatalf("New: %v", err)
@@ -73,29 +73,29 @@ func TestEnvVarDefaults(t *testing.T) {
 	if client.baseURL != "http://env-host:9000" {
 		t.Errorf("baseURL = %q, want http://env-host:9000", client.baseURL)
 	}
-	if client.apiKey != "auvex_sk_env" {
-		t.Errorf("apiKey = %q, want auvex_sk_env", client.apiKey)
+	if client.apiKey != "gatewise_sk_env" {
+		t.Errorf("apiKey = %q, want gatewise_sk_env", client.apiKey)
 	}
 }
 
 func TestExplicitOptionsBeatEnv(t *testing.T) {
-	t.Setenv("AUVEX_BASE_URL", "http://env-host:9000")
-	t.Setenv("AUVEX_API_KEY", "auvex_sk_env")
-	client, err := New(WithBaseURL("http://explicit:1234"), WithAPIKey("auvex_sk_explicit"))
+	t.Setenv("GATEWISE_BASE_URL", "http://env-host:9000")
+	t.Setenv("GATEWISE_API_KEY", "gatewise_sk_env")
+	client, err := New(WithBaseURL("http://explicit:1234"), WithAPIKey("gatewise_sk_explicit"))
 	if err != nil {
 		t.Fatalf("New: %v", err)
 	}
 	if client.baseURL != "http://explicit:1234" {
 		t.Errorf("baseURL = %q, want the explicit value", client.baseURL)
 	}
-	if client.apiKey != "auvex_sk_explicit" {
+	if client.apiKey != "gatewise_sk_explicit" {
 		t.Errorf("apiKey = %q, want the explicit value", client.apiKey)
 	}
 }
 
 func TestDefaultBaseURL(t *testing.T) {
-	t.Setenv("AUVEX_BASE_URL", "")
-	client, err := New(WithAPIKey("auvex_sk_x"))
+	t.Setenv("GATEWISE_BASE_URL", "")
+	client, err := New(WithAPIKey("gatewise_sk_x"))
 	if err != nil {
 		t.Fatalf("New: %v", err)
 	}
@@ -105,7 +105,7 @@ func TestDefaultBaseURL(t *testing.T) {
 }
 
 func TestMissingAPIKeyIsAnError(t *testing.T) {
-	t.Setenv("AUVEX_API_KEY", "")
+	t.Setenv("GATEWISE_API_KEY", "")
 	if _, err := New(WithBaseURL(testBaseURL)); err == nil {
 		t.Fatal("expected an error when no API key is configured, got nil")
 	}

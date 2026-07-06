@@ -1,7 +1,7 @@
-# Auvex Guard
+# GateWise Guard
 
-A Manifest V3 browser extension that brings Auvex governance to **web-based AI tools**. When you are
-about to send a prompt on a supported site, Auvex Guard screens the prompt text through your Auvex
+A Manifest V3 browser extension that brings GateWise governance to **web-based AI tools**. When you are
+about to send a prompt on a supported site, GateWise Guard screens the prompt text through your GateWise
 gateway's native moderation endpoint and **warns or blocks** before the text leaves your machine if it
 contains sensitive data (PII, secrets) or a prompt-injection pattern. It keeps a small local log of
 findings so you can see what the guard caught.
@@ -11,7 +11,7 @@ The goal is simple: stop people from pasting confidential data into public AI to
 ## What it does
 
 - Detects the prompt input and send action on supported AI sites.
-- On send, it grabs the prompt text and asks your Auvex gateway to screen it
+- On send, it grabs the prompt text and asks your GateWise gateway to screen it
   (`POST /v1/moderations`).
 - If the gateway flags the prompt, an in-page modal shows **what was found** and offers
   **Send anyway / Cancel** (fail-open), or **blocks the send outright** (fail-closed).
@@ -32,7 +32,7 @@ Each site can be toggled on or off independently on the options page.
 1. Open `chrome://extensions` (Chrome) or `edge://extensions` (Edge).
 2. Enable **Developer mode** (top-right).
 3. Click **Load unpacked** and select this `browser-extension` folder.
-4. Pin **Auvex Guard** to the toolbar if you want quick access to the status popup.
+4. Pin **GateWise Guard** to the toolbar if you want quick access to the status popup.
 
 The extension is plain TypeScript-flavoured JavaScript with no build step — the folder loads as-is.
 
@@ -43,9 +43,9 @@ background service worker, and the gateway URL is configurable, so its host is n
 hard-coded in the manifest. Two cases:
 
 - **`http://localhost:8080`** (the default) works out of the box from the worker.
-- A **remote gateway** (e.g. `https://auvex.example.com`) needs host access. The manifest declares
+- A **remote gateway** (e.g. `https://gatewise.example.com`) needs host access. The manifest declares
   `optional_host_permissions` for `http://*/*` and `https://*/*`; grant access when prompted, or in
-  `chrome://extensions` → Auvex Guard → **Details** → **Site access**, add your gateway origin. This
+  `chrome://extensions` → GateWise Guard → **Details** → **Site access**, add your gateway origin. This
   keeps the always-on permission set narrow (just the AI sites) while still letting you point at any
   gateway you control.
 
@@ -54,7 +54,7 @@ hard-coded in the manifest. Two cases:
 Open the options page (popup → **Options**, or the extensions page → **Details** → **Extension
 options**) and set:
 
-- **Gateway base URL** — your Auvex gateway origin (default `http://localhost:8080`). Validated as an
+- **Gateway base URL** — your GateWise gateway origin (default `http://localhost:8080`). Validated as an
   `http`/`https` URL.
 - **API key** — sent as `Authorization: Bearer <key>`. Stored only in `chrome.storage.local` on this
   device.
@@ -104,7 +104,7 @@ to send, the original action is faithfully re-dispatched.
 
 ## Privacy
 
-Your prompt text is sent **only** to the Auvex gateway you configure — nowhere else. There is no
+Your prompt text is sent **only** to the GateWise gateway you configure — nowhere else. There is no
 telemetry, no analytics, and no third-party endpoint. The findings log is stored locally in
 `chrome.storage.local` and never leaves the browser. Clearing it (popup → **Clear log**) removes it.
 

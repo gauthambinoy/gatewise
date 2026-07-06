@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Auvex Guard — Options</title>
+    <title>GateWise Guard — Options</title>
     <style>
       :root {
         --bg: #f8fafc;
@@ -179,10 +179,10 @@
         <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
           <path d="M12 2 4 5v6c0 5 3.4 8.5 8 11 4.6-2.5 8-6 8-11V5l-8-3Z" />
         </svg>
-        <h1>Auvex Guard — Options</h1>
+        <h1>GateWise Guard — Options</h1>
       </div>
       <p class="lede">
-        Configure the Auvex gateway that screens your prompts. Prompt text is sent only to the
+        Configure the GateWise gateway that screens your prompts. Prompt text is sent only to the
         gateway you set here — nowhere else.
       </p>
 
@@ -192,12 +192,12 @@
           <label for="baseUrl">Gateway base URL</label>
           <input id="baseUrl" type="url" placeholder="http://localhost:8080" spellcheck="false" />
           <div class="hint">
-            The Auvex gateway origin. Prompts are screened via <code>POST /v1/moderations</code>.
+            The GateWise gateway origin. Prompts are screened via <code>POST /v1/moderations</code>.
           </div>
         </div>
         <div class="field">
           <label for="apiKey">API key</label>
-          <input id="apiKey" type="password" placeholder="auvex-…" spellcheck="false" autocomplete="off" />
+          <input id="apiKey" type="password" placeholder="gatewise-…" spellcheck="false" autocomplete="off" />
           <div class="hint">Sent as <code>Authorization: Bearer &lt;key&gt;</code>. Stored locally on this device only.</div>
         </div>
         <div class="row">

@@ -1,5 +1,5 @@
 /*
- * load.k6.js — real k6 load test for the Auvex gateway.
+ * load.k6.js — real k6 load test for the GateWise gateway.
  *
  * For users who have k6 installed (https://k6.io). If you do NOT have k6, use the pure-Node
  * `load.mjs` harness instead (only needs `npm install` + Node 18+).
@@ -16,11 +16,11 @@
  *                                   401s that pollute the error-rate threshold)
  *
  * Config via env vars:
- *   BASE_URL   gateway base URL (default https://auvex.54.170.218.176.nip.io)
- *   API_KEY    Auvex API key — enables the chat-completions leg when set
+ *   BASE_URL   gateway base URL (default https://gatewise.54.170.218.176.nip.io)
+ *   API_KEY    GateWise API key — enables the chat-completions leg when set
  *
  * Run examples:
- *   k6 run -e BASE_URL=http://localhost:8080 -e API_KEY=auvex_sk_... perf/load.k6.js
+ *   k6 run -e BASE_URL=http://localhost:8080 -e API_KEY=gatewise_sk_... perf/load.k6.js
  *   k6 run perf/load.k6.js                       # smoke+load+spike against the default URL
  *
  * IMPORTANT: the default BASE_URL points at the small live DEMO box, which rate-limits
@@ -32,7 +32,7 @@ import http from 'k6/http';
 import { check, sleep } from 'k6';
 import { Rate, Trend } from 'k6/metrics';
 
-const BASE_URL = (__ENV.BASE_URL || 'https://auvex.54.170.218.176.nip.io').replace(/\/+$/, '');
+const BASE_URL = (__ENV.BASE_URL || 'https://gatewise.54.170.218.176.nip.io').replace(/\/+$/, '');
 const API_KEY = __ENV.API_KEY || '';
 
 // Custom metrics so we can see each endpoint independently.

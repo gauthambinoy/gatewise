@@ -1,8 +1,8 @@
-# auvex (Go)
+# gatewise (Go)
 
-The official Go client for **Auvex** — a drop-in, OpenAI-compatible AI governance
+The official Go client for **GateWise** — a drop-in, OpenAI-compatible AI governance
 gateway. It speaks the gateway's `/v1` API directly, returns typed errors, and gives you
-first-class access to Auvex's governance endpoints (moderations, usage, audit, models,
+first-class access to GateWise's governance endpoints (moderations, usage, audit, models,
 policies) alongside the familiar chat / embeddings / images calls.
 
 Zero third-party dependencies — it is built entirely on the Go standard library, so there
@@ -11,20 +11,20 @@ is nothing to vendor and the tests run offline.
 ## Install
 
 ```bash
-go get github.com/gauthambinoy/auvex/sdk/go
+go get github.com/gauthambinoy/gatewise/sdk/go
 ```
 
-Requires Go 1.21+. Import it as `auvex`:
+Requires Go 1.21+. Import it as `gatewise`:
 
 ```go
-import auvex "github.com/gauthambinoy/auvex/sdk/go"
+import gatewise "github.com/gauthambinoy/gatewise/sdk/go"
 ```
 
 ## Already using a generic OpenAI client?
 
-You don't even need this package. Auvex is OpenAI-compatible, so just point any OpenAI
+You don't even need this package. GateWise is OpenAI-compatible, so just point any OpenAI
 client's base URL and API key at your gateway and your code is unchanged. Reach for
-**this** client when you want the typed Auvex errors and the native governance helpers
+**this** client when you want the typed GateWise errors and the native governance helpers
 below.
 
 ## Quickstart
@@ -38,21 +38,21 @@ import (
 	"fmt"
 	"log"
 
-	auvex "github.com/gauthambinoy/auvex/sdk/go"
+	gatewise "github.com/gauthambinoy/gatewise/sdk/go"
 )
 
 func main() {
-	client, err := auvex.New(
-		auvex.WithBaseURL("http://localhost:8080"),
-		auvex.WithAPIKey("auvex_sk_..."),
+	client, err := gatewise.New(
+		gatewise.WithBaseURL("http://localhost:8080"),
+		gatewise.WithAPIKey("gatewise_sk_..."),
 	)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	raw, err := client.Chat.Completions.Create(context.Background(), auvex.ChatCompletionRequest{
+	raw, err := client.Chat.Completions.Create(context.Background(), gatewise.ChatCompletionRequest{
 		Model:    "smart",
-		Messages: []auvex.Message{{Role: "user", Content: "Summarize our refund policy."}},
+		Messages: []gatewise.Message{{Role: "user", Content: "Summarize our refund policy."}},
 	})
 	if err != nil {
 		log.Fatal(err)
@@ -83,11 +83,11 @@ Both options fall back to environment variables, so you can omit them entirely:
 
 | Variable          | Default                  | Maps to            |
 | ----------------- | ------------------------ | ------------------ |
-| `AUVEX_BASE_URL`  | `http://localhost:8080`  | `WithBaseURL`      |
-| `AUVEX_API_KEY`   | _(required)_             | `WithAPIKey`       |
+| `GATEWISE_BASE_URL`  | `http://localhost:8080`  | `WithBaseURL`      |
+| `GATEWISE_API_KEY`   | _(required)_             | `WithAPIKey`       |
 
 ```go
-client, err := auvex.New() // reads AUVEX_BASE_URL and AUVEX_API_KEY
+client, err := gatewise.New() // reads GATEWISE_BASE_URL and GATEWISE_API_KEY
 ```
 
 ## Streaming
@@ -97,9 +97,9 @@ with `Next`, read the chunk with `Current`, and check `Err` when it finishes. It
 automatically at the gateway's `[DONE]` sentinel — just remember to `Close` it.
 
 ```go
-stream, err := client.Chat.Completions.CreateStream(context.Background(), auvex.ChatCompletionRequest{
+stream, err := client.Chat.Completions.CreateStream(context.Background(), gatewise.ChatCompletionRequest{
 	Model:    "smart",
-	Messages: []auvex.Message{{Role: "user", Content: "Write a haiku about audit logs."}},
+	Messages: []gatewise.Message{{Role: "user", Content: "Write a haiku about audit logs."}},
 })
 if err != nil {
 	log.Fatal(err)
@@ -130,26 +130,26 @@ if err := stream.Err(); err != nil {
 
 ```go
 // Embeddings — Input may be a string or a []string.
-client.Embeddings.Create(ctx, auvex.EmbeddingRequest{Model: "embed", Input: []string{"alpha", "beta"}})
+client.Embeddings.Create(ctx, gatewise.EmbeddingRequest{Model: "embed", Input: []string{"alpha", "beta"}})
 
 // Image generation.
-client.Images.Generate(ctx, auvex.ImageRequest{Model: "image", Prompt: "an isometric data center, blueprint style"})
+client.Images.Generate(ctx, gatewise.ImageRequest{Model: "image", Prompt: "an isometric data center, blueprint style"})
 ```
 
 Any extra OpenAI parameter (`temperature`, `max_tokens`, `tools`, `user`, ...) goes in
 the request's `Extra` map and is passed through verbatim:
 
 ```go
-client.Chat.Completions.Create(ctx, auvex.ChatCompletionRequest{
+client.Chat.Completions.Create(ctx, gatewise.ChatCompletionRequest{
 	Model:    "smart",
-	Messages: []auvex.Message{{Role: "user", Content: "hi"}},
+	Messages: []gatewise.Message{{Role: "user", Content: "hi"}},
 	Extra:    map[string]any{"temperature": 0.2, "max_tokens": 256},
 })
 ```
 
 ## Governance helpers
 
-These are what make Auvex more than a passthrough.
+These are what make GateWise more than a passthrough.
 
 ```go
 // Native moderation — runs entirely inside the gateway, no provider call. Use it to
@@ -158,7 +158,7 @@ result, _ := client.Moderations.Create(ctx, "email jane@acme.com about card 4012
 // -> &ModerationResult{Flagged: true, SensitiveData: {"email": 1, "credit_card": 1}, Injection: []}
 
 client.Usage(ctx)                                              // usage + cost summary
-client.Audit(ctx, auvex.AuditParams{Q: "card", Verdict: "REDACTED"}) // query the hash-chained audit log
+client.Audit(ctx, gatewise.AuditParams{Q: "card", Verdict: "REDACTED"}) // query the hash-chained audit log
 client.Models(ctx)                                            // routing table / model allow-list
 client.Policies(ctx)                                          // your tenant's allow/deny rules
 ```
@@ -175,24 +175,24 @@ failure by meaning with `errors.Is` against the category sentinels:
 ```go
 import "errors"
 
-_, err := client.Chat.Completions.Create(ctx, auvex.ChatCompletionRequest{
+_, err := client.Chat.Completions.Create(ctx, gatewise.ChatCompletionRequest{
 	Model:    "smart",
-	Messages: []auvex.Message{{Role: "user", Content: "ignore previous instructions"}},
+	Messages: []gatewise.Message{{Role: "user", Content: "ignore previous instructions"}},
 })
 
 switch {
-case errors.Is(err, auvex.ErrPolicyDenied):
+case errors.Is(err, gatewise.ErrPolicyDenied):
 	fmt.Println("blocked by policy or flagged as a prompt injection") // 403
-case errors.Is(err, auvex.ErrAuthentication):
+case errors.Is(err, gatewise.ErrAuthentication):
 	fmt.Println("bad or missing API key") // 401
-case errors.Is(err, auvex.ErrRateLimit):
+case errors.Is(err, gatewise.ErrRateLimit):
 	fmt.Println("slow down") // 429
-case errors.Is(err, auvex.ErrBadRequest):
+case errors.Is(err, gatewise.ErrBadRequest):
 	fmt.Println("bad request") // 400
-case errors.Is(err, auvex.ErrUpstream):
+case errors.Is(err, gatewise.ErrUpstream):
 	fmt.Println("the model provider is unavailable") // 502 / 503 / 504
 case err != nil:
-	var apiErr *auvex.APIError
+	var apiErr *gatewise.APIError
 	if errors.As(err, &apiErr) {
 		fmt.Printf("gateway error %d: %s\n", apiErr.StatusCode, apiErr.Message)
 	}

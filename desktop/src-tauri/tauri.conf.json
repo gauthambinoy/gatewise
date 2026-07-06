@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "Auvex Desktop",
+  "productName": "GateWise Desktop",
   "version": "0.1.0",
-  "identifier": "com.auvex.desktop",
+  "identifier": "com.gatewise.desktop",
   "build": {
     "frontendDist": "../src",
     "devUrl": "http://localhost:1420",
@@ -13,7 +13,7 @@
     "withGlobalTauri": true,
     "windows": [
       {
-        "title": "Auvex Desktop",
+        "title": "GateWise Desktop",
         "label": "main",
         "width": 460,
         "height": 720,
@@ -28,10 +28,10 @@
       "csp": "default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src 'self' ipc: http://ipc.localhost"
     },
     "trayIcon": {
-      "id": "auvex-tray",
+      "id": "gatewise-tray",
       "iconPath": "icons/icon.png",
       "iconAsTemplate": true,
-      "tooltip": "Auvex Desktop"
+      "tooltip": "GateWise Desktop"
     }
   },
   "bundle": {
@@ -45,7 +45,7 @@
       "icons/icon.ico"
     ],
     "category": "Utility",
-    "shortDescription": "Auvex governance for the whole machine.",
-    "longDescription": "A small tray application that connects a PC to an Auvex governance gateway: it shows live status, toggles the system proxy to route AI traffic through the gateway egress, helps trust the egress root CA, and screens text through the gateway's moderation endpoint."
+    "shortDescription": "GateWise governance for the whole machine.",
+    "longDescription": "A small tray application that connects a PC to an GateWise governance gateway: it shows live status, toggles the system proxy to route AI traffic through the gateway egress, helps trust the egress root CA, and screens text through the gateway's moderation endpoint."
   }
 }

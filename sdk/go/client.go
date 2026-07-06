@@ -1,4 +1,4 @@
-package auvex
+package gatewise
 
 import (
 	"bytes"
@@ -18,10 +18,10 @@ import (
 const (
 	defaultBaseURL = "http://localhost:8080"
 	defaultTimeout = 60 * time.Second
-	userAgent      = "auvex-go/0.1.0"
+	userAgent      = "gatewise-go/0.1.0"
 )
 
-// Client is a thin, typed client over the Auvex gateway's /v1 HTTP API.
+// Client is a thin, typed client over the GateWise gateway's /v1 HTTP API.
 //
 // Create one with New. It is safe for concurrent use by multiple goroutines. The model
 // and governance calls hang off the namespaced services (Chat, Embeddings, Images,
@@ -38,7 +38,7 @@ type Client struct {
 	Embeddings *EmbeddingsService
 	// Images is the OpenAI-compatible image-generation endpoint.
 	Images *ImagesService
-	// Moderations is Auvex's native, provider-free content screen.
+	// Moderations is GateWise's native, provider-free content screen.
 	Moderations *ModerationsService
 }
 
@@ -55,14 +55,14 @@ type config struct {
 type Option func(*config)
 
 // WithBaseURL sets the gateway host (the /v1 prefix is added for you). When omitted, the
-// client falls back to the AUVEX_BASE_URL environment variable, then to
+// client falls back to the GATEWISE_BASE_URL environment variable, then to
 // http://localhost:8080.
 func WithBaseURL(baseURL string) Option {
 	return func(c *config) { c.baseURL = baseURL }
 }
 
-// WithAPIKey sets the Auvex API key (auvex_sk_...). When omitted, the client falls back
-// to the AUVEX_API_KEY environment variable.
+// WithAPIKey sets the GateWise API key (gatewise_sk_...). When omitted, the client falls back
+// to the GATEWISE_API_KEY environment variable.
 func WithAPIKey(apiKey string) Option {
 	return func(c *config) { c.apiKey = apiKey }
 }
@@ -84,8 +84,8 @@ func WithHTTPClient(httpClient *http.Client) Option {
 
 // New creates a Client from the given options.
 //
-// The base URL falls back to AUVEX_BASE_URL (then to http://localhost:8080) and the API
-// key falls back to AUVEX_API_KEY. A missing API key is reported as an error here rather
+// The base URL falls back to GATEWISE_BASE_URL (then to http://localhost:8080) and the API
+// key falls back to GATEWISE_API_KEY. A missing API key is reported as an error here rather
 // than surfacing later as a confusing 401.
 func New(opts ...Option) (*Client, error) {
 	cfg := &config{}
@@ -95,7 +95,7 @@ func New(opts ...Option) (*Client, error) {
 
 	baseURL := cfg.baseURL
 	if baseURL == "" {
-		baseURL = os.Getenv("AUVEX_BASE_URL")
+		baseURL = os.Getenv("GATEWISE_BASE_URL")
 	}
 	if baseURL == "" {
 		baseURL = defaultBaseURL
@@ -104,11 +104,11 @@ func New(opts ...Option) (*Client, error) {
 
 	apiKey := cfg.apiKey
 	if apiKey == "" {
-		apiKey = os.Getenv("AUVEX_API_KEY")
+		apiKey = os.Getenv("GATEWISE_API_KEY")
 	}
 	if apiKey == "" {
 		return nil, errors.New(
-			"auvex: an API key is required; pass auvex.WithAPIKey(...) or set the AUVEX_API_KEY environment variable",
+			"gatewise: an API key is required; pass gatewise.WithAPIKey(...) or set the GATEWISE_API_KEY environment variable",
 		)
 	}
 
@@ -151,7 +151,7 @@ func (c *Client) doRequest(
 	if body != nil {
 		encoded, err := json.Marshal(body)
 		if err != nil {
-			return nil, fmt.Errorf("auvex: encoding request body: %w", err)
+			return nil, fmt.Errorf("gatewise: encoding request body: %w", err)
 		}
 		reader = bytes.NewReader(encoded)
 	}
@@ -163,7 +163,7 @@ func (c *Client) doRequest(
 
 	req, err := http.NewRequestWithContext(ctx, method, u, reader)
 	if err != nil {
-		return nil, fmt.Errorf("auvex: building request: %w", err)
+		return nil, fmt.Errorf("gatewise: building request: %w", err)
 	}
 	req.Header.Set("Authorization", "Bearer "+c.apiKey)
 	req.Header.Set("Content-Type", "application/json")

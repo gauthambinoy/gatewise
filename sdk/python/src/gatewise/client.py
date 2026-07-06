@@ -1,6 +1,6 @@
-"""Synchronous client for the Auvex AI governance gateway.
+"""Synchronous client for the GateWise AI governance gateway.
 
-Auvex is an OpenAI-compatible HTTP gateway. This client speaks its ``/v1`` API directly,
+GateWise is an OpenAI-compatible HTTP gateway. This client speaks its ``/v1`` API directly,
 adds typed errors, and exposes the gateway's native governance endpoints (moderations,
 usage, audit, models, policies) alongside the familiar chat / embeddings / images calls.
 
@@ -21,11 +21,11 @@ import httpx
 from ._errors import (
     APIConnectionError,
     APITimeoutError,
-    AuvexError,
+    GateWiseError,
     error_from_response,
 )
 
-__all__ = ["AuvexClient"]
+__all__ = ["GateWiseClient"]
 
 DEFAULT_BASE_URL = "http://localhost:8080"
 DEFAULT_TIMEOUT = 60.0
@@ -35,16 +35,16 @@ JSON = Any
 Messages = Sequence[Mapping[str, Any]]
 
 
-class AuvexClient:
-    """A thin, typed client over the Auvex gateway's ``/v1`` HTTP API.
+class GateWiseClient:
+    """A thin, typed client over the GateWise gateway's ``/v1`` HTTP API.
 
     The base URL is the gateway host (the ``/v1`` prefix is added for you), e.g.
-    ``http://localhost:8080`` locally or ``https://auvex.<host>.nip.io`` for a hosted
+    ``http://localhost:8080`` locally or ``https://gatewise.<host>.nip.io`` for a hosted
     deployment.
 
     Args:
-        base_url: Gateway host. Falls back to ``AUVEX_BASE_URL``, then ``http://localhost:8080``.
-        api_key: Auvex API key (``auvex_sk_...``). Falls back to ``AUVEX_API_KEY``.
+        base_url: Gateway host. Falls back to ``GATEWISE_BASE_URL``, then ``http://localhost:8080``.
+        api_key: GateWise API key (``gatewise_sk_...``). Falls back to ``GATEWISE_API_KEY``.
         timeout: Per-request timeout in seconds.
         http_client: An existing ``httpx.Client`` to reuse (advanced). When supplied, its
             configuration is used as-is and is not closed by this client.
@@ -52,7 +52,7 @@ class AuvexClient:
     The client is usable as a context manager so the underlying connection pool is closed
     promptly::
 
-        with AuvexClient(api_key="auvex_sk_...") as client:
+        with GateWiseClient(api_key="gatewise_sk_...") as client:
             client.chat.completions.create(model="smart", messages=[...])
     """
 
@@ -64,11 +64,11 @@ class AuvexClient:
         timeout: Optional[float] = DEFAULT_TIMEOUT,
         http_client: Optional[httpx.Client] = None,
     ) -> None:
-        resolved_base = (base_url or os.environ.get("AUVEX_BASE_URL") or DEFAULT_BASE_URL).rstrip("/")
-        resolved_key = api_key if api_key is not None else os.environ.get("AUVEX_API_KEY")
+        resolved_base = (base_url or os.environ.get("GATEWISE_BASE_URL") or DEFAULT_BASE_URL).rstrip("/")
+        resolved_key = api_key if api_key is not None else os.environ.get("GATEWISE_API_KEY")
         if not resolved_key:
             raise ValueError(
-                "An Auvex API key is required. Pass api_key=... or set the AUVEX_API_KEY "
+                "An GateWise API key is required. Pass api_key=... or set the GATEWISE_API_KEY "
                 "environment variable."
             )
 
@@ -86,7 +86,7 @@ class AuvexClient:
             "Authorization": f"Bearer {resolved_key}",
             "Content-Type": "application/json",
             "Accept": "application/json",
-            "User-Agent": "auvex-python/0.1.0",
+            "User-Agent": "gatewise-python/0.1.0",
         }
         # Merge onto any headers the caller pre-configured on a supplied client.
         self._http.headers.update(headers)
@@ -104,7 +104,7 @@ class AuvexClient:
         if self._owns_client:
             self._http.close()
 
-    def __enter__(self) -> "AuvexClient":
+    def __enter__(self) -> "GateWiseClient":
         return self
 
     def __exit__(self, *exc: object) -> None:
@@ -133,15 +133,15 @@ class AuvexClient:
                 params=_clean_params(params),
             )
         except httpx.TimeoutException as exc:
-            raise APITimeoutError(f"Request to Auvex timed out: {exc}") from exc
+            raise APITimeoutError(f"Request to GateWise timed out: {exc}") from exc
         except httpx.HTTPError as exc:
-            raise APIConnectionError(f"Could not reach the Auvex gateway: {exc}") from exc
+            raise APIConnectionError(f"Could not reach the GateWise gateway: {exc}") from exc
 
         return self._handle(response)
 
     @staticmethod
     def _handle(response: httpx.Response) -> JSON:
-        """Decode a response, raising a typed ``AuvexError`` for any non-2xx status."""
+        """Decode a response, raising a typed ``GateWiseError`` for any non-2xx status."""
         body: Any
         try:
             body = response.json() if response.content else None
@@ -186,9 +186,9 @@ class AuvexClient:
                     if chunk is not None:
                         yield chunk
         except httpx.TimeoutException as exc:
-            raise APITimeoutError(f"Streaming request to Auvex timed out: {exc}") from exc
+            raise APITimeoutError(f"Streaming request to GateWise timed out: {exc}") from exc
         except httpx.HTTPError as exc:
-            raise APIConnectionError(f"Could not reach the Auvex gateway: {exc}") from exc
+            raise APIConnectionError(f"Could not reach the GateWise gateway: {exc}") from exc
 
     # -- governance + metadata endpoints -----------------------------------------------
 
@@ -226,14 +226,14 @@ class AuvexClient:
 class Chat:
     """The ``chat`` namespace, holding ``completions``."""
 
-    def __init__(self, client: AuvexClient) -> None:
+    def __init__(self, client: GateWiseClient) -> None:
         self.completions = ChatCompletions(client)
 
 
 class ChatCompletions:
     """``client.chat.completions`` — the OpenAI-compatible chat endpoint."""
 
-    def __init__(self, client: AuvexClient) -> None:
+    def __init__(self, client: GateWiseClient) -> None:
         self._client = client
 
     def create(
@@ -269,7 +269,7 @@ class ChatCompletions:
 class Embeddings:
     """``client.embeddings`` — the OpenAI-compatible embeddings endpoint."""
 
-    def __init__(self, client: AuvexClient) -> None:
+    def __init__(self, client: GateWiseClient) -> None:
         self._client = client
 
     def create(
@@ -296,7 +296,7 @@ class Embeddings:
 class Images:
     """``client.images`` — the OpenAI-compatible image-generation endpoint."""
 
-    def __init__(self, client: AuvexClient) -> None:
+    def __init__(self, client: GateWiseClient) -> None:
         self._client = client
 
     def generate(
@@ -321,9 +321,9 @@ class Images:
 
 
 class Moderations:
-    """``client.moderations`` — Auvex's native, provider-free content screen."""
+    """``client.moderations`` — GateWise's native, provider-free content screen."""
 
-    def __init__(self, client: AuvexClient) -> None:
+    def __init__(self, client: GateWiseClient) -> None:
         self._client = client
 
     def create(self, *, input: str) -> JSON:

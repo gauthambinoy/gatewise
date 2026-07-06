@@ -1,7 +1,7 @@
-// Auvex Guard content script.
+// GateWise Guard content script.
 //
 // Runs on the supported AI sites. It intercepts the user's "send" action, lifts the prompt text out
-// of the page, asks the background worker to screen it through the Auvex gateway, and — if anything
+// of the page, asks the background worker to screen it through the GateWise gateway, and — if anything
 // sensitive or adversarial is found — shows an in-page modal letting the user cancel or send anyway
 // (or blocks outright in fail-closed mode).
 //
@@ -298,7 +298,7 @@
     closeModal();
 
     const overlay = document.createElement('div');
-    overlay.setAttribute('data-auvex-guard', 'overlay');
+    overlay.setAttribute('data-gatewise-guard', 'overlay');
     overlay.style.cssText =
       'position:fixed;inset:0;z-index:2147483647;background:rgba(15,23,42,0.55);' +
       'display:flex;align-items:center;justify-content:center;';
@@ -337,7 +337,7 @@
     head.className = 'head';
     head.appendChild(shieldIcon());
     const h1 = document.createElement('h1');
-    h1.textContent = mode === 'block' ? 'Auvex Guard blocked this prompt' : 'Auvex Guard: sensitive content found';
+    h1.textContent = mode === 'block' ? 'GateWise Guard blocked this prompt' : 'GateWise Guard: sensitive content found';
     head.appendChild(h1);
     card.appendChild(head);
 

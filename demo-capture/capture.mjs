@@ -64,7 +64,7 @@ await browser.close();
 
 const vids = fs.readdirSync('videos').filter((f) => f.endsWith('.webm'));
 if (vids.length) {
-  fs.renameSync('videos/' + vids[0], 'videos/auvex-walkthrough.webm');
-  console.log('video -> videos/auvex-walkthrough.webm');
+  fs.renameSync('videos/' + vids[0], 'videos/gatewise-walkthrough.webm');
+  console.log('video -> videos/gatewise-walkthrough.webm');
 }
 console.log('done — screenshots/ + videos/');

@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Auvex Desktop</title>
+    <title>GateWise Desktop</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
@@ -23,7 +23,7 @@
         />
       </svg>
       <div>
-        <h1>Auvex Desktop</h1>
+        <h1>GateWise Desktop</h1>
         <p class="subtitle">Machine-wide AI governance</p>
       </div>
     </header>
@@ -88,7 +88,7 @@
       <section class="card">
         <h2>CA trust</h2>
         <p class="hint">
-          TLS interception needs the Auvex Egress CA trusted on this machine. Fetch it
+          TLS interception needs the GateWise Egress CA trusted on this machine. Fetch it
           from the gateway if available, then follow the install steps for your OS.
         </p>
         <div class="row">
@@ -97,13 +97,13 @@
         <pre id="ca-output" class="output hidden"></pre>
         <details class="instructions">
           <summary>How to install the root CA</summary>
-          <p><strong>Windows:</strong> save the PEM as <code>auvex-ca.crt</code>, then run
-            <code>certutil -addstore -user Root auvex-ca.crt</code> (current user) or open the
+          <p><strong>Windows:</strong> save the PEM as <code>gatewise-ca.crt</code>, then run
+            <code>certutil -addstore -user Root gatewise-ca.crt</code> (current user) or open the
             file and choose <em>Install Certificate → Local Machine → Trusted Root</em>.</p>
           <p><strong>macOS:</strong> double-click the PEM to add it to the login keychain,
             then set it to <em>Always Trust</em>; or
-            <code>security add-trusted-cert -d -r trustRoot -k ~/Library/Keychains/login.keychain auvex-ca.pem</code>.</p>
-          <p><strong>Linux:</strong> copy to <code>/usr/local/share/ca-certificates/auvex-ca.crt</code>
+            <code>security add-trusted-cert -d -r trustRoot -k ~/Library/Keychains/login.keychain gatewise-ca.pem</code>.</p>
+          <p><strong>Linux:</strong> copy to <code>/usr/local/share/ca-certificates/gatewise-ca.crt</code>
             and run <code>sudo update-ca-certificates</code>. Firefox/Chrome keep their own
             stores — import there too if needed.</p>
         </details>

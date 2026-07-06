@@ -1,14 +1,14 @@
-"""Auvex — Python client for the Auvex AI governance gateway.
+"""GateWise — Python client for the GateWise AI governance gateway.
 
 The gateway is OpenAI-compatible, so existing OpenAI code works by pointing it at your
-gateway. This package adds typed errors and first-class access to Auvex's governance
+gateway. This package adds typed errors and first-class access to GateWise's governance
 endpoints (moderations, usage, audit, models, policies).
 
 Quickstart::
 
-    from auvex import AuvexClient
+    from gatewise import GateWiseClient
 
-    client = AuvexClient(base_url="http://localhost:8080", api_key="auvex_sk_...")
+    client = GateWiseClient(base_url="http://localhost:8080", api_key="gatewise_sk_...")
     reply = client.chat.completions.create(
         model="smart",
         messages=[{"role": "user", "content": "Hello"}],
@@ -20,20 +20,20 @@ from ._errors import (
     APIConnectionError,
     APITimeoutError,
     AuthenticationError,
-    AuvexError,
+    GateWiseError,
     BadRequestError,
     NotFoundError,
     PolicyDeniedError,
     RateLimitError,
     UpstreamError,
 )
-from .client import AuvexClient
+from .client import GateWiseClient
 
 __version__ = "0.1.0"
 
 __all__ = [
-    "AuvexClient",
-    "AuvexError",
+    "GateWiseClient",
+    "GateWiseError",
     "APIConnectionError",
     "APITimeoutError",
     "AuthenticationError",

@@ -1,8 +1,8 @@
-# @auvex/sdk (TypeScript / JavaScript)
+# @gatewise/sdk (TypeScript / JavaScript)
 
-The official TypeScript/JavaScript client for **Auvex** — a drop-in, OpenAI-compatible AI
+The official TypeScript/JavaScript client for **GateWise** — a drop-in, OpenAI-compatible AI
 governance gateway. It speaks the gateway's `/v1` API directly, raises typed errors, and
-gives you first-class access to Auvex's governance endpoints (moderations, usage, audit,
+gives you first-class access to GateWise's governance endpoints (moderations, usage, audit,
 models, policies) alongside the familiar chat / embeddings / images calls.
 
 Zero runtime dependencies — it uses the global `fetch`, so it runs on **Node 18+** and in
@@ -11,33 +11,33 @@ the **browser**.
 ## Install
 
 ```bash
-npm install @auvex/sdk
+npm install @gatewise/sdk
 ```
 
 ## Already using the OpenAI Node SDK?
 
-You don't even need this package. Auvex is OpenAI-compatible, so just point the OpenAI
+You don't even need this package. GateWise is OpenAI-compatible, so just point the OpenAI
 client at your gateway and your code is unchanged:
 
 ```ts
 import OpenAI from 'openai';
 
-const client = new OpenAI({ baseURL: 'http://localhost:8080/v1', apiKey: 'auvex_sk_...' });
+const client = new OpenAI({ baseURL: 'http://localhost:8080/v1', apiKey: 'gatewise_sk_...' });
 await client.chat.completions.create({
   model: 'smart',
   messages: [{ role: 'user', content: 'Hello' }],
 });
 ```
 
-Reach for **this** package when you want the typed Auvex errors and the native governance
+Reach for **this** package when you want the typed GateWise errors and the native governance
 helpers below.
 
 ## Quickstart
 
 ```ts
-import { AuvexClient } from '@auvex/sdk';
+import { GateWiseClient } from '@gatewise/sdk';
 
-const client = new AuvexClient({ baseUrl: 'http://localhost:8080', apiKey: 'auvex_sk_...' });
+const client = new GateWiseClient({ baseUrl: 'http://localhost:8080', apiKey: 'gatewise_sk_...' });
 
 const reply = await client.chat.completions.create({
   model: 'smart',
@@ -55,11 +55,11 @@ Both options fall back to environment variables (Node), so you can omit them ent
 
 | Variable          | Default                  | Maps to    |
 | ----------------- | ------------------------ | ---------- |
-| `AUVEX_BASE_URL`  | `http://localhost:8080`  | `baseUrl`  |
-| `AUVEX_API_KEY`   | _(required)_             | `apiKey`   |
+| `GATEWISE_BASE_URL`  | `http://localhost:8080`  | `baseUrl`  |
+| `GATEWISE_API_KEY`   | _(required)_             | `apiKey`   |
 
 ```ts
-const client = new AuvexClient(); // reads AUVEX_BASE_URL and AUVEX_API_KEY
+const client = new GateWiseClient(); // reads GATEWISE_BASE_URL and GATEWISE_API_KEY
 ```
 
 ## Streaming
@@ -92,7 +92,7 @@ await client.images.generate({ model: 'image', prompt: 'an isometric data center
 
 ## Governance helpers
 
-These are what make Auvex more than a passthrough.
+These are what make GateWise more than a passthrough.
 
 ```ts
 // Native moderation — runs entirely inside the gateway, no provider call. Use it to
@@ -110,21 +110,21 @@ await client.policies();                           // your tenant's allow/deny r
 
 ## Error handling
 
-Every non-2xx response is thrown as a typed error. They all extend `AuvexError`, and each
+Every non-2xx response is thrown as a typed error. They all extend `GateWiseError`, and each
 carries `message`, `statusCode`, `type`, `code` and the raw `body`.
 
 ```ts
 import {
-  AuvexClient,
+  GateWiseClient,
   AuthenticationError,
   BadRequestError,
   PolicyDeniedError,
   RateLimitError,
   UpstreamError,
-  AuvexError,
-} from '@auvex/sdk';
+  GateWiseError,
+} from '@gatewise/sdk';
 
-const client = new AuvexClient({ apiKey: 'auvex_sk_...' });
+const client = new GateWiseClient({ apiKey: 'gatewise_sk_...' });
 
 try {
   await client.chat.completions.create({
@@ -142,7 +142,7 @@ try {
     console.error('bad request:', err.message); // 400
   } else if (err instanceof UpstreamError) {
     console.error('the model provider is unavailable'); // 502 / 503 / 504
-  } else if (err instanceof AuvexError) {
+  } else if (err instanceof GateWiseError) {
     console.error('gateway error:', err.statusCode, err.message);
   } else {
     throw err;

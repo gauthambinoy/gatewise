@@ -1,4 +1,4 @@
-# Auvex performance & contract harness
+# GateWise performance & contract harness
 
 Two independent things live here:
 
@@ -42,7 +42,7 @@ Tunables (env vars, all optional):
 
 | var           | default                                   | meaning                                  |
 | ------------- | ----------------------------------------- | ---------------------------------------- |
-| `BASE_URL`    | `https://auvex.54.170.218.176.nip.io`     | gateway base URL                         |
+| `BASE_URL`    | `https://gatewise.54.170.218.176.nip.io`     | gateway base URL                         |
 | `API_KEY`     | _(none)_                                  | sent as `Bearer` if set (not needed for `/auth/config`) |
 | `DURATION`    | `5`                                       | seconds to run                           |
 | `CONNECTIONS` | `2`                                       | concurrent connections                   |
@@ -66,7 +66,7 @@ If you have [k6](https://k6.io) installed, this runs three staged scenarios back
 k6 run load.k6.js
 
 # local stack, with a key so it also exercises POST /v1/chat/completions
-k6 run -e BASE_URL=http://localhost:8080 -e API_KEY=auvex_sk_... load.k6.js
+k6 run -e BASE_URL=http://localhost:8080 -e API_KEY=gatewise_sk_... load.k6.js
 ```
 
 Env: `BASE_URL` (default the live demo URL) and `API_KEY` (optional — enables the
@@ -76,7 +76,7 @@ run doesn't generate 401s.
 ### Local stack vs live URL
 
 - **Local:** `docker compose up` in the repo root, then `BASE_URL=http://localhost:8080`.
-- **Live demo:** the default URL (`https://auvex.54.170.218.176.nip.io`).
+- **Live demo:** the default URL (`https://gatewise.54.170.218.176.nip.io`).
 
 > **Honest note on the live URL.** The default points at a small, single-node **demo** box
 > (an AWS `t3.medium`) that is **rate-limited (~120 req/min)** and shared with the demo. It is

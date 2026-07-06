@@ -1,7 +1,7 @@
 import { chromium } from 'playwright';
 import fs from 'node:fs';
 
-const BASE = 'https://auvex.54.170.218.176.nip.io';
+const BASE = 'https://gatewise.54.170.218.176.nip.io';
 fs.mkdirSync('shots-v2', { recursive: true });
 fs.mkdirSync('video-v2', { recursive: true });
 
@@ -42,5 +42,5 @@ await wait(1000);
 await ctx.close();
 await browser.close();
 const vids = fs.readdirSync('video-v2').filter((f) => f.endsWith('.webm'));
-if (vids.length) fs.renameSync('video-v2/' + vids[0], 'video-v2/auvex-ui-v2.webm');
-console.log('done -> shots-v2/ + video-v2/auvex-ui-v2.webm');
+if (vids.length) fs.renameSync('video-v2/' + vids[0], 'video-v2/gatewise-ui-v2.webm');
+console.log('done -> shots-v2/ + video-v2/gatewise-ui-v2.webm');

@@ -1,6 +1,6 @@
-# Auvex Desktop
+# GateWise Desktop
 
-A small **system-tray application** that brings an [Auvex](../README.md) governance
+A small **system-tray application** that brings an [GateWise](../README.md) governance
 gateway to a whole machine. Install it on a PC and it can route the machine's AI-bound
 traffic through your gateway, screen prompts before they leave, and keep the egress
 TLS-interception trust in place — so governance is applied everywhere, not just inside
@@ -11,12 +11,12 @@ Built with **Tauri v2** (Rust backend + a tiny dependency-free HTML/JS frontend)
 ## What it does
 
 1. **Connect & status.** Point it at a gateway base URL (e.g. `http://localhost:8080`
-   or `https://auvex.54.170.218.176.nip.io`) and an API key. It polls
+   or `https://gatewise.54.170.218.176.nip.io`) and an API key. It polls
    `GET /actuator/health` (no auth) for reachability and `GET /v1/models` (with the
    key) to confirm the credential, showing a single live status line.
 2. **System-proxy toggle.** Buttons turn the OS HTTP/HTTPS proxy on/off, pointing it at
-   the gateway's egress proxy `host:port`, so AI traffic is forced through Auvex.
-3. **CA-install helper.** Fetches the Auvex Egress root CA from the gateway when an
+   the gateway's egress proxy `host:port`, so AI traffic is forced through GateWise.
+3. **CA-install helper.** Fetches the GateWise Egress root CA from the gateway when an
    endpoint exists, and gives per-OS instructions to trust it (required for TLS
    interception in egress mode).
 4. **Prompt screen.** A test box posts text to `POST /v1/moderations` and renders the
@@ -71,18 +71,18 @@ adapt the service name in `src-tauri/src/proxy.rs`.
 ## CA trust step
 
 In egress/MITM mode the gateway terminates TLS with a leaf certificate signed by the
-**Auvex Egress CA**, so that root must be trusted on each machine. The app's **Fetch CA
+**GateWise Egress CA**, so that root must be trusted on each machine. The app's **Fetch CA
 from gateway** button tries a few conventional endpoints
 (`/egress/ca.pem`, `/v1/egress/ca.pem`, `/actuator/egress-ca`). The current gateway
 generates the egress CA **in memory** and a download endpoint is a planned follow-up;
 until it ships, the button will report that no endpoint exists and you should obtain the
 PEM from the gateway operator and install it manually:
 
-- **Windows:** `certutil -addstore -user Root auvex-ca.crt` (current user), or open the
+- **Windows:** `certutil -addstore -user Root gatewise-ca.crt` (current user), or open the
   `.crt` and choose _Install Certificate → Local Machine → Trusted Root_.
 - **macOS:** add to the login keychain and set _Always Trust_, or
-  `security add-trusted-cert -d -r trustRoot -k ~/Library/Keychains/login.keychain auvex-ca.pem`.
-- **Linux:** copy to `/usr/local/share/ca-certificates/auvex-ca.crt` and run
+  `security add-trusted-cert -d -r trustRoot -k ~/Library/Keychains/login.keychain gatewise-ca.pem`.
+- **Linux:** copy to `/usr/local/share/ca-certificates/gatewise-ca.crt` and run
   `sudo update-ca-certificates`. Browsers with their own stores (Firefox/Chrome) need a
   separate import.
 
@@ -91,9 +91,9 @@ PEM from the gateway operator and install it manually:
 Connection settings (base URL, API key, proxy host/port) are saved as `config.json` in
 the platform app-config directory (Tauri resolves it):
 
-- Windows: `%APPDATA%\com.auvex.desktop\config.json`
-- macOS: `~/Library/Application Support/com.auvex.desktop/config.json`
-- Linux: `~/.config/com.auvex.desktop/config.json`
+- Windows: `%APPDATA%\com.gatewise.desktop\config.json`
+- macOS: `~/Library/Application Support/com.gatewise.desktop/config.json`
+- Linux: `~/.config/com.gatewise.desktop/config.json`
 
 **Security note:** the API key is stored in **plaintext** under your user profile. That
 is acceptable for a developer/operator tool but is not a secret-vault. A follow-up could

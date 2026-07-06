@@ -1,11 +1,11 @@
 {
-  "name": "@auvex/sdk",
+  "name": "@gatewise/sdk",
   "version": "0.1.0",
-  "description": "Official TypeScript/JavaScript client for the Auvex AI governance gateway (OpenAI-compatible).",
+  "description": "Official TypeScript/JavaScript client for the GateWise AI governance gateway (OpenAI-compatible).",
   "type": "module",
   "license": "MIT",
   "keywords": [
-    "auvex",
+    "gatewise",
     "llm",
     "gateway",
     "openai",
@@ -13,10 +13,10 @@
     "ai",
     "compliance"
   ],
-  "homepage": "https://github.com/gauthambinoy/auvex",
+  "homepage": "https://github.com/gauthambinoy/gatewise",
   "repository": {
     "type": "git",
-    "url": "https://github.com/gauthambinoy/auvex.git",
+    "url": "https://github.com/gauthambinoy/gatewise.git",
     "directory": "sdk/js"
   },
   "main": "./dist/index.js",

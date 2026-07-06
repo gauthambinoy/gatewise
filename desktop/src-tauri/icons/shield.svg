@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  Auvex shield — a clean monochrome glyph used as the source for the app and tray
+  GateWise shield — a clean monochrome glyph used as the source for the app and tray
   icons. It is drawn on a 32x32 grid with a single fill so it reads at small sizes and
   works as a macOS template icon (iconAsTemplate). Generate the raster PNG/ICO/ICNS
   variants from this with `tauri icon icons/shield.svg` (see README), which produces

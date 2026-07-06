@@ -1,24 +1,24 @@
 /**
- * Tests for the Auvex client. No network access — `fetch` is replaced with a stub on every
+ * Tests for the GateWise client. No network access — `fetch` is replaced with a stub on every
  * test, so each assertion can inspect the exact URL, verb, headers and body the client sent.
  */
 
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import {
-  AuvexClient,
+  GateWiseClient,
   AuthenticationError,
   BadRequestError,
   NotFoundError,
   PolicyDeniedError,
   RateLimitError,
   UpstreamError,
-  AuvexError,
+  GateWiseError,
   errorFromResponse,
 } from '../src/index.js';
 
 const BASE_URL = 'http://gateway.test';
-const API_KEY = 'auvex_sk_test_123';
+const API_KEY = 'gatewise_sk_test_123';
 
 /** Build a JSON `Response` like the real fetch would return. */
 function jsonResponse(body: unknown, status = 200): Response {
@@ -44,7 +44,7 @@ function stubFetch(
 
 function makeClient(responder: Response | ((url: string, init: RequestInit) => Response)) {
   const stub = stubFetch(responder);
-  const client = new AuvexClient({ baseUrl: BASE_URL, apiKey: API_KEY, fetch: stub.fetch });
+  const client = new GateWiseClient({ baseUrl: BASE_URL, apiKey: API_KEY, fetch: stub.fetch });
   return { client, calls: stub.calls };
 }
 
@@ -55,25 +55,25 @@ afterEach(() => {
 // -- configuration / env ----------------------------------------------------------------
 
 describe('configuration', () => {
-  it('falls back to AUVEX_* environment variables', () => {
-    vi.stubEnv('AUVEX_BASE_URL', 'http://env-host:9000');
-    vi.stubEnv('AUVEX_API_KEY', 'auvex_sk_env');
-    const client = new AuvexClient({ fetch: stubFetch(jsonResponse({})).fetch });
+  it('falls back to GATEWISE_* environment variables', () => {
+    vi.stubEnv('GATEWISE_BASE_URL', 'http://env-host:9000');
+    vi.stubEnv('GATEWISE_API_KEY', 'gatewise_sk_env');
+    const client = new GateWiseClient({ fetch: stubFetch(jsonResponse({})).fetch });
     expect(client.baseUrl).toBe('http://env-host:9000');
-    expect(client.apiKey).toBe('auvex_sk_env');
+    expect(client.apiKey).toBe('gatewise_sk_env');
     vi.unstubAllEnvs();
   });
 
   it('defaults the base URL to localhost:8080', () => {
-    vi.stubEnv('AUVEX_BASE_URL', '');
-    const client = new AuvexClient({ apiKey: 'k', fetch: stubFetch(jsonResponse({})).fetch });
+    vi.stubEnv('GATEWISE_BASE_URL', '');
+    const client = new GateWiseClient({ apiKey: 'k', fetch: stubFetch(jsonResponse({})).fetch });
     expect(client.baseUrl).toBe('http://localhost:8080');
     vi.unstubAllEnvs();
   });
 
   it('throws a clear error when no API key is configured', () => {
-    vi.stubEnv('AUVEX_API_KEY', '');
-    expect(() => new AuvexClient({ baseUrl: BASE_URL, fetch: stubFetch(jsonResponse({})).fetch }))
+    vi.stubEnv('GATEWISE_API_KEY', '');
+    expect(() => new GateWiseClient({ baseUrl: BASE_URL, fetch: stubFetch(jsonResponse({})).fetch }))
       .toThrow(/API key is required/);
     vi.unstubAllEnvs();
   });
@@ -81,7 +81,7 @@ describe('configuration', () => {
   it('strips a trailing slash so the path is not doubled', async () => {
     const { client, calls } = (() => {
       const stub = stubFetch(jsonResponse({ total: 1 }));
-      const c = new AuvexClient({ baseUrl: BASE_URL + '/', apiKey: API_KEY, fetch: stub.fetch });
+      const c = new GateWiseClient({ baseUrl: BASE_URL + '/', apiKey: API_KEY, fetch: stub.fetch });
       return { client: c, calls: stub.calls };
     })();
     await client.usage();
@@ -187,7 +187,7 @@ describe('methods', () => {
 // -- error envelope -> typed exceptions -------------------------------------------------
 
 describe('error mapping', () => {
-  const cases: Array<[number, string, new (...a: never[]) => AuvexError]> = [
+  const cases: Array<[number, string, new (...a: never[]) => GateWiseError]> = [
     [400, 'invalid_request_error', BadRequestError],
     [401, 'invalid_request_error', AuthenticationError],
     [403, 'policy_violation', PolicyDeniedError],
@@ -212,7 +212,7 @@ describe('error mapping', () => {
         .chat.completions.create({ model: 'smart', messages: [{ role: 'user', content: 'x' }] })
         .catch((e) => e);
       expect(err).toBeInstanceOf(Expected);
-      expect(err).toBeInstanceOf(AuvexError);
+      expect(err).toBeInstanceOf(GateWiseError);
     });
   }
 

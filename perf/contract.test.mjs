@@ -29,7 +29,7 @@ const SDK_CLIENT_PATH = resolve(REPO_ROOT, 'sdk/js/src/client.ts');
 /**
  * Parse the JS SDK client source for the gateway paths it calls.
  *
- * The SDK joins every path with `/v1/` (see `AuvexClient.url()`), so a call like
+ * The SDK joins every path with `/v1/` (see `GateWiseClient.url()`), so a call like
  *   this.request('GET', 'usage')      -> GET  /v1/usage
  *   this.client.request<T>('POST', 'moderations', ...) -> POST /v1/moderations
  *   this.client.stream('chat/completions', ...)        -> POST /v1/chat/completions  (SSE is POST)

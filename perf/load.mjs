@@ -1,5 +1,5 @@
 /**
- * load.mjs — pure-Node load test for the Auvex gateway, using `autocannon`.
+ * load.mjs — pure-Node load test for the GateWise gateway, using `autocannon`.
  *
  * WHY a Node path (vs k6): k6 is not installed everywhere, and Docker output capture is
  * unreliable on some boxes. This script needs only `npm install` + Node 18+, so it runs
@@ -17,8 +17,8 @@
  *     the knobs (see README).
  *
  * ENV / config (all optional):
- *   BASE_URL     gateway base URL        (default: https://auvex.54.170.218.176.nip.io)
- *   API_KEY      Auvex API key           (optional; only added as a Bearer header if set —
+ *   BASE_URL     gateway base URL        (default: https://gatewise.54.170.218.176.nip.io)
+ *   API_KEY      GateWise API key           (optional; only added as a Bearer header if set —
  *                                         /auth/config does not need it)
  *   DURATION     seconds to run          (default: 5)
  *   CONNECTIONS  concurrent connections  (default: 2)
@@ -34,7 +34,7 @@
 
 import autocannon from 'autocannon';
 
-const BASE_URL = (process.env.BASE_URL || 'https://auvex.54.170.218.176.nip.io').replace(/\/+$/, '');
+const BASE_URL = (process.env.BASE_URL || 'https://gatewise.54.170.218.176.nip.io').replace(/\/+$/, '');
 const API_KEY = process.env.API_KEY || '';
 const DURATION = numEnv('DURATION', 5);
 const CONNECTIONS = numEnv('CONNECTIONS', 2);
@@ -56,7 +56,7 @@ function ms(n) {
 }
 
 async function main() {
-  console.log('Auvex load test (autocannon)');
+  console.log('GateWise load test (autocannon)');
   console.log(`  target      : GET ${TARGET}`);
   console.log(`  duration    : ${DURATION}s   connections: ${CONNECTIONS}   max rate: ${RATE} req/s`);
   console.log(`  thresholds  : p99 <= ${P99_CEILING_MS} ms, error-rate <= ${(ERROR_RATE_MAX * 100).toFixed(0)}%`);
@@ -64,7 +64,7 @@ async function main() {
 
   const headers = {
     Accept: 'application/json',
-    'User-Agent': 'auvex-perf/0.1.0',
+    'User-Agent': 'gatewise-perf/0.1.0',
   };
   // /auth/config is public, but if a key is provided we still send it so the same script can
   // be aimed at an authenticated endpoint by changing TARGET.

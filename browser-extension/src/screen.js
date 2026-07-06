@@ -1,11 +1,11 @@
-// Pure screening logic for Auvex Guard.
+// Pure screening logic for GateWise Guard.
 //
 // This module deliberately contains NO chrome.* / browser.* API calls and no DOM access. It is the
 // single place that decides "given a prompt and a gateway, what should happen?" so that the decision
 // can be unit-tested in plain Node (see test/screen.test.js) with a mocked fetch and no real network.
 //
 // The two responsibilities are:
-//   1. Talk to the Auvex gateway's /v1/moderations endpoint and parse its envelope into a verdict.
+//   1. Talk to the GateWise gateway's /v1/moderations endpoint and parse its envelope into a verdict.
 //   2. Turn that verdict (or a failure) into an allow / warn / block decision, honouring the
 //      fail-open vs fail-closed policy the user chose in options.
 
@@ -47,7 +47,7 @@ export function normalizeBaseUrl(baseUrl) {
   if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
     throw new Error('Gateway base URL must use http or https.');
   }
-  // Preserve any sub-path the user configured (e.g. behind a reverse proxy at /auvex) but drop a
+  // Preserve any sub-path the user configured (e.g. behind a reverse proxy at /gatewise) but drop a
   // single trailing slash so concatenation stays clean.
   const prefix = parsed.origin + parsed.pathname;
   return prefix.endsWith('/') ? prefix.slice(0, -1) : prefix;
@@ -153,7 +153,7 @@ export async function callModeration({ text, baseUrl, apiKey, fetchImpl, signal 
       ok: false,
       error: SCREEN_ERROR.NETWORK,
       status: 0,
-      message: 'Could not reach the Auvex gateway: ' + (e && e.message ? e.message : 'network error'),
+      message: 'Could not reach the GateWise gateway: ' + (e && e.message ? e.message : 'network error'),
       verdict: null,
     };
   }
@@ -163,7 +163,7 @@ export async function callModeration({ text, baseUrl, apiKey, fetchImpl, signal 
       ok: false,
       error: SCREEN_ERROR.HTTP,
       status: response.status,
-      message: 'Auvex gateway returned HTTP ' + response.status + '.',
+      message: 'GateWise gateway returned HTTP ' + response.status + '.',
       verdict: null,
     };
   }
@@ -176,7 +176,7 @@ export async function callModeration({ text, baseUrl, apiKey, fetchImpl, signal 
       ok: false,
       error: SCREEN_ERROR.BAD_RESPONSE,
       status: response.status,
-      message: 'Auvex gateway response was not valid JSON.',
+      message: 'GateWise gateway response was not valid JSON.',
       verdict: null,
     };
   }
@@ -187,7 +187,7 @@ export async function callModeration({ text, baseUrl, apiKey, fetchImpl, signal 
       ok: false,
       error: SCREEN_ERROR.BAD_RESPONSE,
       status: response.status,
-      message: 'Auvex gateway response was not a recognisable moderation result.',
+      message: 'GateWise gateway response was not a recognisable moderation result.',
       verdict: null,
     };
   }

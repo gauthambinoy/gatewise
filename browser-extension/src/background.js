@@ -1,7 +1,7 @@
-// Auvex Guard background service worker (MV3, type: module).
+// GateWise Guard background service worker (MV3, type: module).
 //
 // Responsibilities:
-//   - Hold the only code path that performs network I/O to the user's Auvex gateway. Content scripts
+//   - Hold the only code path that performs network I/O to the user's GateWise gateway. Content scripts
 //     run in the page origin and must NOT call the gateway directly (the page could read the key and
 //     CORS would fight us); they message us instead.
 //   - Apply the user's settings (gateway URL, key, fail-open/closed, per-site enable) to each screen.
