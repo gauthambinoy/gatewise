@@ -5,7 +5,7 @@
 # is preinstalled (pulled from Docker Hub), so the image build doesn't download the
 # Gradle distribution at build time. Reproducible from a clean clone.
 # ----------------------------------------------------------------------------
-FROM gradle:8.14.5-jdk21 AS build
+FROM gradle:9.6.1-jdk21 AS build
 WORKDIR /workspace
 
 # Copy the build definition first. This layer only changes when the build files
