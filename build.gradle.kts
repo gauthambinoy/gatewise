@@ -15,7 +15,7 @@ plugins {
     id("org.springframework.boot") version "3.5.15" apply false
     id("io.spring.dependency-management") version "1.1.7" apply false
     id("com.diffplug.spotless") version "8.7.0" apply false
-    id("com.github.spotbugs") version "6.5.8" apply false
+    id("com.github.spotbugs") version "6.5.9" apply false
 }
 
 // Everything below is the SHARED quality baseline applied to every JVM module,
