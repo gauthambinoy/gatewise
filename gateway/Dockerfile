@@ -24,7 +24,7 @@ RUN gradle :gateway:bootJar --no-daemon
 # ----------------------------------------------------------------------------
 # Runtime stage: small JRE, unprivileged user, just the jar.
 # ----------------------------------------------------------------------------
-FROM eclipse-temurin:21-jre-alpine AS runtime
+FROM eclipse-temurin:24-jre-alpine AS runtime
 WORKDIR /app
 
 # curl backs the container healthcheck; the user keeps the process off root.
